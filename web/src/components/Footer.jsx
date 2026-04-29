@@ -13,7 +13,7 @@ export default function Footer() {
             <Lock className="w-5 h-5 text-ink-muted" />
             <span className="font-sans font-bold text-lg tracking-tight">VeilPay</span>
           </div>
-          <p className="text-ink-muted text-sm font-medium">Confidential salary matching powered by <strong className="text-accent font-bold">Zama fhEVM</strong></p>
+          <p className="text-ink-muted text-sm font-medium">Confidential salary matching powered by <strong className="text-ink font-black bg-accent px-1.5 py-0.5 rounded shadow-sharp">Zama fhEVM</strong></p>
         </div>
         
         <div className="text-center md:text-right">
@@ -25,9 +25,9 @@ export default function Footer() {
             href={`https://sepolia.etherscan.io/address/${import.meta.env.VITE_CONTRACT_ADDRESS}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-accent bg-accent/10 hover:bg-accent hover:text-white rounded-md transition-colors"
+            className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-ink bg-accent/30 hover:bg-accent hover:shadow-floating border border-accent/20 rounded-md transition-all shadow-recessed"
           >
-            <span className="led led-red w-1.5 h-1.5 shadow-none" />
+            <span className="w-1.5 h-1.5 rounded-full bg-ink animate-pulse" />
             View Contract on Etherscan
           </a>
         </div>

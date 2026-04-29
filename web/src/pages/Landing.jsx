@@ -81,19 +81,19 @@ function MatchVisualizer() {
 const HOW_IT_WORKS_STEPS = [
   {
     number: '01',
-    icon: <Briefcase className="w-6 h-6 text-accent" />,
+    icon: <Briefcase className="w-6 h-6 text-ink" />,
     title: 'Employer Posts',
     desc: 'Max budget encrypted client-side. The number never leaves your device in plaintext.',
   },
   {
     number: '02',
-    icon: <FileDigit className="w-6 h-6 text-accent" />,
+    icon: <FileDigit className="w-6 h-6 text-ink" />,
     title: 'Candidate Applies',
     desc: 'Min salary encrypted client-side. Nobody sees this number — not even us.',
   },
   {
     number: '03',
-    icon: <Cpu className="w-6 h-6 text-accent" />,
+    icon: <Cpu className="w-6 h-6 text-ink" />,
     title: 'On-Chain Eval',
     desc: 'FHE.le(min, max) runs on ciphertext. Salaries stay private forever.',
   },
@@ -113,7 +113,7 @@ export default function Landing() {
             
             <h1 className="font-sans font-extrabold text-5xl md:text-7xl text-ink tracking-tight mb-6 leading-[1.1] drop-shadow-[0_1px_1px_#ffffff]">
               The Salary<br/>Negotiation<br/>
-              <span className="text-accent">Is Dead.</span>
+              <span className="inline-block mt-2 px-4 py-1 bg-accent text-ink rounded-md shadow-floating rotate-[-2deg] border border-ink/10">Is Dead.</span>
             </h1>
             
             <p className="text-lg md:text-xl text-ink-muted font-medium max-w-xl mb-10 leading-relaxed">
@@ -139,7 +139,7 @@ export default function Landing() {
       {/* ── HOW IT WORKS ── */}
       <section className="max-w-[72rem] mx-auto px-6 md:px-12 py-24 relative">
         <FadeIn className="mb-16">
-          <div className="font-mono text-sm font-bold text-accent uppercase tracking-widest mb-4">Architecture Protocol</div>
+          <div className="font-mono text-sm font-bold text-ink uppercase tracking-widest mb-4 inline-block border-b-4 border-accent pb-1">Architecture Protocol</div>
           <h2 className="font-sans font-bold text-4xl text-ink drop-shadow-[0_1px_1px_#ffffff]">Three Steps. Zero Leaks.</h2>
         </FadeIn>
 
@@ -218,7 +218,7 @@ export default function Landing() {
             {/* Top hanging hole */}
             <div className="absolute top-4 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-chassis shadow-recessed" />
             
-            <ShieldCheck className="w-16 h-16 text-accent mx-auto mb-6 shadow-glow rounded-full bg-chassis p-3" />
+            <ShieldCheck className="w-16 h-16 text-ink mx-auto mb-6 shadow-floating rounded-full bg-accent p-3 border border-ink/10" />
             <h2 className="font-sans font-bold text-3xl md:text-4xl text-ink mb-6 drop-shadow-[0_1px_1px_#ffffff]">Ready to Match Fairly?</h2>
             <p className="text-ink-muted text-lg mb-10 max-w-md mx-auto">
               Your salary data never leaves your browser unencrypted. Trust the math.
