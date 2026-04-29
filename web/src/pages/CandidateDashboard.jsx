@@ -122,21 +122,23 @@ export default function CandidateDashboard() {
                     </div>
 
                     {app.matchRevealed && app.matchResult && (
-                      <div style={{
-                        marginTop: '1rem', padding: '0.85rem', borderRadius: 'var(--radius-md)',
-                        background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)'
-                      }}>
-                        <div style={{ fontWeight: 600, color: 'var(--green)', marginBottom: '0.25rem' }}>🎉 It's a Match!</div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--white-70)' }}>
-                          The employer has been notified and may unlock your resume. Your minimum salary was never revealed.
+                      <>
+                        <div style={{
+                          marginTop: '1rem', padding: '0.85rem', borderRadius: 'var(--radius-md)',
+                          background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)'
+                        }}>
+                          <div style={{ fontWeight: 600, color: 'var(--green)', marginBottom: '0.25rem' }}>🎉 It's a Match!</div>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--white-70)' }}>
+                            The employer has been notified and may unlock your resume. Your minimum salary was never revealed.
+                          </div>
                         </div>
-                      </div>
-                      <FheChat
-                        jobId={app.jobId}
-                        applicationId={app.appId}
-                        counterpartyName={app.company}
-                        isEmployer={false}
-                      />
+                        <FheChat
+                          jobId={app.jobId}
+                          applicationId={app.appId}
+                          counterpartyName={app.company}
+                          isEmployer={false}
+                        />
+                      </>
                     )}
 
                     {app.matchRevealed && !app.matchResult && (
