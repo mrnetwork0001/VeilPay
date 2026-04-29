@@ -6,7 +6,7 @@ import BLINDHIRE_ABI from '../abi/BlindHire.json';
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 
 /**
- * useContract — React hook for BlindHire contract interactions
+ * useContract — React hook for VeilPay contract interactions
  *
  * Uses wagmi's useWalletClient for write calls and a public RPC for reads.
  * Wallet connection is handled externally by ConnectWalletButton (MetaMask, Coinbase, Rabby, injected).

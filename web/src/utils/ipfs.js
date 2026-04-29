@@ -23,9 +23,9 @@ async function pinataUpload(file) {
 
   // Optional: add metadata
   const metadata = JSON.stringify({
-    name: `BlindHire-Resume-${Date.now()}`,
+    name: `VeilPay-Resume-${Date.now()}`,
     keyvalues: {
-      app: 'BlindHire',
+      app: 'VeilPay',
       type: 'resume',
       uploadedAt: new Date().toISOString(),
     },

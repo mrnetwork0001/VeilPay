@@ -7,7 +7,7 @@ import {FheType} from "@fhevm/solidity/lib/FheType.sol";
 import {Impl} from "@fhevm/solidity/lib/Impl.sol";
 
 /**
- * @title BlindHire
+ * @title VeilPay
  * @notice Confidential, trustless salary-matching protocol powered by Zama's FHE.
  * @dev Employers post jobs with encrypted max budgets. Candidates apply with encrypted
  *      minimum salary expectations. The Zama fhevm evaluates FHE.le(min, max) 
@@ -15,7 +15,7 @@ import {Impl} from "@fhevm/solidity/lib/Impl.sol";
  *
  *      Built with fhevm-solidity v0.11.x + zama-fhe/relayer-sdk v0.4.x
  */
-contract BlindHire is ZamaEthereumConfig {
+contract VeilPay is ZamaEthereumConfig {
     // ─────────────────────────────────────────────────────────────
     // Data Structures
     // ─────────────────────────────────────────────────────────────
@@ -80,22 +80,22 @@ contract BlindHire is ZamaEthereumConfig {
     // ─────────────────────────────────────────────────────────────
 
     modifier onlyEmployer(uint256 jobId) {
-        require(msg.sender == jobPostings[jobId].employer, "BlindHire: Not the employer");
+        require(msg.sender == jobPostings[jobId].employer, "VeilPay: Not the employer");
         _;
     }
 
     modifier jobExists(uint256 jobId) {
-        require(jobId < jobCount, "BlindHire: Job does not exist");
+        require(jobId < jobCount, "VeilPay: Job does not exist");
         _;
     }
 
     modifier jobIsActive(uint256 jobId) {
-        require(jobPostings[jobId].isActive, "BlindHire: Job is not active");
+        require(jobPostings[jobId].isActive, "VeilPay: Job is not active");
         _;
     }
 
     modifier appExists(uint256 jobId, uint256 appId) {
-        require(appId < jobPostings[jobId].applicationCount, "BlindHire: Application does not exist");
+        require(appId < jobPostings[jobId].applicationCount, "VeilPay: Application does not exist");
         _;
     }
 
@@ -164,7 +164,7 @@ contract BlindHire is ZamaEthereumConfig {
             candidateApplicationId[msg.sender][jobId] == 0 &&
             !(jobApplicationIds[jobId].length > 0 &&
               applications[jobId][0].candidate == msg.sender),
-            "BlindHire: Already applied"
+            "VeilPay: Already applied"
         );
 
         applicationId = jobPostings[jobId].applicationCount++;
@@ -210,7 +210,7 @@ contract BlindHire is ZamaEthereumConfig {
         Application storage app = applications[jobId][applicationId];
         JobPosting storage posting = jobPostings[jobId];
 
-        require(!app.matchRevealed, "BlindHire: Already resolved and revealed");
+        require(!app.matchRevealed, "VeilPay: Already resolved and revealed");
 
         // THE CORE FHE COMPUTATION:
         // Is the candidate's minimum expectation <= the employer's maximum budget?
@@ -245,7 +245,7 @@ contract BlindHire is ZamaEthereumConfig {
         uint256 applicationId
     ) external jobExists(jobId) appExists(jobId, applicationId) onlyEmployer(jobId) {
         Application storage app = applications[jobId][applicationId];
-        require(!app.matchRevealed, "BlindHire: Match already revealed");
+        require(!app.matchRevealed, "VeilPay: Match already revealed");
 
         // The FHE comparison was computed in resolveApplication() via FHE.le()
         // and the result was made publicly decryptable via FHE.makePubliclyDecryptable()
@@ -266,7 +266,7 @@ contract BlindHire is ZamaEthereumConfig {
         uint256 applicationId
     ) external jobExists(jobId) appExists(jobId, applicationId) onlyEmployer(jobId) {
         Application storage app = applications[jobId][applicationId];
-        require(app.matchRevealed && app.matchResult, "BlindHire: No confirmed match");
+        require(app.matchRevealed && app.matchResult, "VeilPay: No confirmed match");
         app.resumeUnlocked = true;
         emit ResumeUnlocked(jobId, applicationId, msg.sender);
     }
@@ -379,7 +379,7 @@ contract BlindHire is ZamaEthereumConfig {
         returns (string memory ipfsCid)
     {
         Application storage app = applications[jobId][applicationId];
-        require(app.resumeUnlocked, "BlindHire: Resume not yet unlocked");
+        require(app.resumeUnlocked, "VeilPay: Resume not yet unlocked");
         return app.resumeIpfsCid;
     }
 
@@ -482,16 +482,16 @@ contract BlindHire is ZamaEthereumConfig {
         JobPosting storage posting = jobPostings[jobId];
 
         // Gate 1: Match must be revealed and confirmed via FHE
-        require(app.matchRevealed && app.matchResult, "BlindHire: No confirmed FHE match");
+        require(app.matchRevealed && app.matchResult, "VeilPay: No confirmed FHE match");
 
         // Gate 2: Only the two matched parties can chat
         require(
             msg.sender == posting.employer || msg.sender == app.candidate,
-            "BlindHire: Not a participant in this match"
+            "VeilPay: Not a participant in this match"
         );
 
         // Gate 3: Message must not be empty
-        require(bytes(content).length > 0, "BlindHire: Empty message");
+        require(bytes(content).length > 0, "VeilPay: Empty message");
 
         uint256 msgIndex = chatMessages[jobId][applicationId].length;
         chatMessages[jobId][applicationId].push(ChatMessage({
@@ -530,10 +530,10 @@ contract BlindHire is ZamaEthereumConfig {
         JobPosting storage posting = jobPostings[jobId];
 
         // Only matched participants can read messages
-        require(app.matchRevealed && app.matchResult, "BlindHire: No confirmed FHE match");
+        require(app.matchRevealed && app.matchResult, "VeilPay: No confirmed FHE match");
         require(
             msg.sender == posting.employer || msg.sender == app.candidate,
-            "BlindHire: Not a participant in this match"
+            "VeilPay: Not a participant in this match"
         );
 
         ChatMessage[] storage msgs = chatMessages[jobId][applicationId];

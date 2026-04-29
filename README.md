@@ -1,11 +1,11 @@
-# 🔐 BlindHire
+# 🔐 VeilPay
 
 **Confidential Salary Matching on Ethereum — Powered by Zama Fully Homomorphic Encryption (FHE)**
 
-BlindHire is a trustless hiring protocol where employers post jobs with **encrypted salary budgets** and candidates apply with **encrypted salary expectations**. The Zama fhEVM evaluates whether there's a match (`candidate_ask ≤ employer_budget`) — **without ever decrypting either value**. No one — not the blockchain, not the employer, not even the contract deployer — ever sees the raw salary numbers.
+VeilPay is a trustless hiring protocol where employers post jobs with **encrypted salary budgets** and candidates apply with **encrypted salary expectations**. The Zama fhEVM evaluates whether there's a match (`candidate_ask ≤ employer_budget`) — **without ever decrypting either value**. No one — not the blockchain, not the employer, not even the contract deployer — ever sees the raw salary numbers.
 
-[![Live on Sepolia](https://img.shields.io/badge/Network-Sepolia%20Testnet-blue)](https://sepolia.etherscan.io/address/0xFCd61C515ba75096C350cEc2011056d70bc091dC)
-[![Verified on Etherscan](https://img.shields.io/badge/Etherscan-Verified-green)](https://sepolia.etherscan.io/address/0xFCd61C515ba75096C350cEc2011056d70bc091dC#code)
+[![Live on Sepolia](https://img.shields.io/badge/Network-Sepolia%20Testnet-blue)](https://sepolia.etherscan.io/address/0x877d969C2aDC90f55D169D449CA01A007541337d)
+[![Verified on Etherscan](https://img.shields.io/badge/Etherscan-Verified-green)](https://sepolia.etherscan.io/address/0x877d969C2aDC90f55D169D449CA01A007541337d#code)
 [![Built with Zama](https://img.shields.io/badge/FHE-Zama%20fhEVM-purple)](https://docs.zama.ai/fhevm)
 
 ---
@@ -21,7 +21,7 @@ Even "blind" hiring tools still process salary data in plaintext on servers — 
 
 ## 💡 The Solution
 
-BlindHire eliminates trust entirely using **Fully Homomorphic Encryption (FHE)**:
+VeilPay eliminates trust entirely using **Fully Homomorphic Encryption (FHE)**:
 
 1. **Employer** posts a job → salary budget is **encrypted in the browser** before it ever leaves their device
 2. **Candidate** applies → salary expectation is **encrypted in the browser** using Zama's relayer SDK
@@ -49,7 +49,7 @@ BlindHire eliminates trust entirely using **Fully Homomorphic Encryption (FHE)**
 ┌─────────────────────────────────────────────────────────────────┐
 │                    ETHEREUM SEPOLIA (On-Chain)                   │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │                   BlindHire.sol                             │ │
+│  │                   VeilPay.sol                             │ │
 │  │  • createJobPosting(title, ..., bytes32 handle, proof)    │ │
 │  │  • applyToJob(jobId, name, resume, bytes32 handle, proof) │ │
 │  │  • resolveApplication() → FHE.le(min, max) → ebool       │ │
@@ -79,8 +79,8 @@ BlindHire eliminates trust entirely using **Fully Homomorphic Encryption (FHE)**
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/mrnetwork0001/BlindHire.git
-cd BlindHire
+git clone https://github.com/mrnetwork0001/VeilPay.git
+cd VeilPay
 ```
 
 ### 2. Install Dependencies
@@ -104,7 +104,7 @@ cp .env.example web/.env
 
 Edit `web/.env`:
 ```env
-VITE_CONTRACT_ADDRESS=0xFCd61C515ba75096C350cEc2011056d70bc091dC
+VITE_CONTRACT_ADDRESS=0x877d969C2aDC90f55D169D449CA01A007541337d
 VITE_FHE_LIVE=true
 VITE_SEPOLIA_RPC=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
 VITE_CHAIN_ID=11155111
@@ -123,7 +123,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ## 📄 Smart Contract
 
-**Deployed & Verified:** [`0xFCd61C515ba75096C350cEc2011056d70bc091dC`](https://sepolia.etherscan.io/address/0xFCd61C515ba75096C350cEc2011056d70bc091dC#code)
+**Deployed & Verified:** [`0x877d969C2aDC90f55D169D449CA01A007541337d`](https://sepolia.etherscan.io/address/0x877d969C2aDC90f55D169D449CA01A007541337d#code)
 
 ### Key Functions
 
@@ -139,7 +139,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 ### How FHE Works On-Chain
 
 ```solidity
-// THE CORE FHE COMPUTATION — line 224 of BlindHire.sol
+// THE CORE FHE COMPUTATION — line 224 of VeilPay.sol
 // Both values are encrypted. The result is an encrypted boolean.
 ebool matched = FHE.le(app.min_expectation, posting.max_budget);
 ```
@@ -188,14 +188,14 @@ The Zama coprocessor evaluates this comparison homomorphically — meaning the m
 ## 📁 Project Structure
 
 ```
-BlindHire/
+VeilPay/
 ├── contracts/                  # Solidity smart contracts
 │   ├── contracts/
-│   │   └── BlindHire.sol       # Main FHE-powered contract
+│   │   └── VeilPay.sol       # Main FHE-powered contract
 │   ├── scripts/
 │   │   └── deploy.js           # Deployment script
 │   ├── test/
-│   │   └── BlindHire.test.js   # Contract tests
+│   │   └── VeilPay.test.js   # Contract tests
 │   ├── deployments/
 │   │   └── sepolia.json        # Deployment addresses
 │   ├── hardhat.config.js
@@ -259,6 +259,6 @@ MIT
 ---
 
 <p align="center">
-  <strong>Built with 🔐 by the BlindHire team — where privacy meets hiring.</strong><br/>
+  <strong>Built with 🔐 by the VeilPay team — where privacy meets hiring.</strong><br/>
   <em>Powered by <a href="https://www.zama.ai/">Zama</a> Fully Homomorphic Encryption</em>
 </p>

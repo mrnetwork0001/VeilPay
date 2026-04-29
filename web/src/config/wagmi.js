@@ -15,7 +15,7 @@ export const wagmiConfig = createConfig({
   connectors: [
     injected(),
     metaMask(),
-    coinbaseWallet({ appName: 'BlindHire' }),
+    coinbaseWallet({ appName: 'VeilPay' }),
   ],
   transports: {
     [sepolia.id]: http(

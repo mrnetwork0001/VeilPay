@@ -160,7 +160,7 @@ export default function Landing() {
 
           <FadeIn delay={0.2}>
             <p className="hero-subtitle">
-              BlindHire is the world's first confidential, trustless salary-matching protocol.
+              VeilPay is the world's first confidential, trustless salary-matching protocol.
               Both sides stay private. The blockchain decides. No one loses.
             </p>
           </FadeIn>
@@ -235,11 +235,11 @@ export default function Landing() {
             <FadeIn delay={0.2}>
               <div className="card card-glass" style={{ fontFamily: 'monospace', padding: '2rem' }}>
                 <div style={{ color: 'var(--white-50)', fontSize: '0.75rem', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
-                  BlindHire.sol — resolveApplication()
+                  VeilPay.sol — resolveApplication()
                 </div>
                 <pre style={{ fontSize: '0.8rem', color: 'var(--white-70)', lineHeight: '1.9', overflowX: 'auto' }}>
 {`// THE CORE FHE COMPUTATION
-ebool matched = TFHE.le(
+ebool matched = FHE.le(
   application.min_expectation,
   posting.max_budget
 );

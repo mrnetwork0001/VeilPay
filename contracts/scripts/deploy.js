@@ -4,7 +4,7 @@ const path = require("path");
 
 async function main() {
   console.log("\n╔═══════════════════════════════════════════╗");
-  console.log("║      BlindHire Contract Deployment        ║");
+  console.log("║      VeilPay Contract Deployment          ║");
   console.log("║      Powered by Zama fhEVM on Sepolia     ║");
   console.log("╚═══════════════════════════════════════════╝\n");
 
@@ -21,15 +21,15 @@ async function main() {
   }
 
   // ─── Deploy ──────────────────────────────────────────────────────────────────
-  console.log("🚀 Deploying BlindHire...");
-  const BlindHire = await ethers.getContractFactory("BlindHire");
-  const blindHire = await BlindHire.deploy();
-  await blindHire.waitForDeployment();
+  console.log("🚀 Deploying VeilPay...");
+  const VeilPay = await ethers.getContractFactory("VeilPay");
+  const veilPay = await VeilPay.deploy();
+  await veilPay.waitForDeployment();
 
-  const contractAddress = await blindHire.getAddress();
-  const deployTx = blindHire.deploymentTransaction();
+  const contractAddress = await veilPay.getAddress();
+  const deployTx = veilPay.deploymentTransaction();
 
-  console.log(`\n✅ BlindHire deployed!`);
+  console.log(`\n✅ VeilPay deployed!`);
   console.log(`   Contract address : ${contractAddress}`);
   console.log(`   Transaction hash : ${deployTx.hash}`);
   console.log(`   Block number     : ${deployTx.blockNumber ?? "pending..."}\n`);

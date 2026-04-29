@@ -20,7 +20,7 @@ export default function Navbar() {
             </linearGradient>
           </defs>
         </svg>
-        BlindHire
+        VeilPay
       </Link>
 
       <ul className="navbar-nav">
