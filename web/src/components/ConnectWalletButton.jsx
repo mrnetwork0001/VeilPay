@@ -128,7 +128,7 @@ export default function ConnectWalletButton({ variant = 'navbar' }) {
       >
         <span className="text-sm">{walletInfo.icon}</span>
         <span className="font-mono text-xs font-bold text-ink">{shortenAddress(address)}</span>
-        <span className="hidden sm:inline-flex px-1.5 py-0.5 rounded text-[9px] font-mono uppercase bg-accent/10 text-accent font-bold">Sepolia</span>
+        <span className="hidden sm:inline-flex px-1.5 py-0.5 rounded text-[9px] font-mono uppercase bg-accent text-ink font-bold border border-ink/10 shadow-floating">Sepolia</span>
       </button>
 
       <AnimatePresence>
@@ -144,7 +144,7 @@ export default function ConnectWalletButton({ variant = 'navbar' }) {
               <div className="text-[10px] font-mono uppercase text-ink-muted font-bold tracking-wider">Connected with {walletInfo.name}</div>
               <div className="font-mono text-sm text-ink break-all">{address}</div>
               {balance && (
-                <div className="mt-2 font-mono text-xl font-bold text-accent">
+                <div className="mt-2 font-mono text-xl font-bold text-ink bg-accent px-2 py-0.5 rounded shadow-floating border border-ink/10 inline-block">
                   {parseFloat(balance.formatted).toFixed(4)} <span className="text-sm">ETH</span>
                 </div>
               )}

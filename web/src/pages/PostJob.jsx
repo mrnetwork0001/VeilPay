@@ -88,7 +88,7 @@ export default function PostJob() {
           
           <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-ink tracking-tight mb-4 drop-shadow-[0_1px_1px_#ffffff]">
             Initialize Posting<br/>
-            <span className="text-accent">Maintain Secrecy</span>
+            <span className="inline-block mt-2 px-3 py-1 bg-accent text-ink rounded shadow-floating border border-ink/10">Maintain Secrecy</span>
           </h1>
           <p className="text-ink-muted text-lg mb-8">
             Your maximum budget is encrypted client-side using Zama FHE before any data leaves your terminal.

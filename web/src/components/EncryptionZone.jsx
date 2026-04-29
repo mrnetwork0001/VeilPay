@@ -69,10 +69,10 @@ export default function EncryptionZone({ label, value, onChange, min = 30000, ma
           animate={isEncrypting ? { scale: [1, 1.1, 1], rotate: [0, -5, 5, 0] } : {}}
           transition={{ duration: 0.5 }}
         >
-          {showEncrypted ? <Lock className="w-6 h-6 text-accent" /> : <Unlock className="w-6 h-6 text-white/50" />}
+          {showEncrypted ? <Lock className="w-6 h-6 text-ink bg-accent rounded-full p-1 shadow-floating" /> : <Unlock className="w-6 h-6 text-white/50" />}
         </motion.div>
         <div>
-          <div className="font-mono text-xs font-bold text-accent uppercase tracking-widest">{label}</div>
+          <div className="font-mono text-xs font-bold text-ink bg-accent px-2 py-0.5 rounded shadow-floating border border-ink/10 uppercase tracking-widest">{label}</div>
           <div className="text-xs font-mono text-white/50 mt-1">
             {showEncrypted ? 'FHE Encryption Active' : 'Adjust physical slider to input parameter'}
           </div>
@@ -91,7 +91,7 @@ export default function EncryptionZone({ label, value, onChange, min = 30000, ma
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="font-mono text-[10px] sm:text-xs text-accent break-all text-center leading-relaxed font-bold tracking-widest shadow-glow drop-shadow-[0_0_8px_rgba(255,71,87,0.8)]"
+                className="font-mono text-[10px] sm:text-xs text-ink bg-accent px-4 py-2 rounded shadow-floating border border-ink/10 break-all text-center leading-relaxed font-bold tracking-widest"
               >
                 {cipherDisplay || randomHex(64)}
               </motion.div>
@@ -142,7 +142,7 @@ export default function EncryptionZone({ label, value, onChange, min = 30000, ma
       </div>
 
       <div className="flex items-start gap-3 relative z-10 bg-dark-panel p-3 rounded-lg border border-white/5">
-        <ShieldCheck className="w-5 h-5 text-accent shrink-0" />
+        <ShieldCheck className="w-5 h-5 text-ink bg-accent rounded p-0.5 shadow-floating shrink-0" />
         <p className="text-[10px] font-mono text-white/60 leading-relaxed uppercase">
           This parameter is encrypted locally via Zama FHE before transmission. Plaintext is never exposed to the network.
         </p>

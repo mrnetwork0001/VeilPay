@@ -129,7 +129,7 @@ function ApplicationRow({ app, jobId, onResolve, onReveal, onUnlockResume, isLoa
                   {resumeCid && (
                     <div className="bg-dark-panel p-4 rounded-lg shadow-recessed border border-white/10">
                       <div className="font-mono text-[10px] text-ink-muted uppercase tracking-widest mb-2">IPFS Payload Address</div>
-                      <div className="font-mono text-xs text-accent break-all mb-4">{resumeCid}</div>
+                      <div className="font-mono text-xs text-ink bg-accent/30 p-2 rounded border border-accent/40 break-all mb-4">{resumeCid}</div>
                       <div className="flex gap-3 flex-wrap">
                         <a
                           href={`https://gateway.pinata.cloud/ipfs/${resumeCid}`}
@@ -407,7 +407,7 @@ export default function EmployerDashboard() {
                 <span className="font-mono text-xs font-bold text-ink-muted uppercase tracking-widest">Admin Control</span>
               </div>
               <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-ink tracking-tight mb-2 drop-shadow-[0_1px_1px_#ffffff]">
-                Module <span className="text-accent">Telemetry</span>
+                Module <span className="inline-block px-2 py-0.5 bg-accent text-ink rounded shadow-floating border border-ink/10">Telemetry</span>
               </h1>
               <p className="text-ink-muted text-lg max-w-xl">
                 Manage applications across deployed modules. Salary data remains encrypted in FHE ciphertext.

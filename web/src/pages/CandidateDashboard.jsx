@@ -82,7 +82,7 @@ export default function CandidateDashboard() {
               <span className="font-mono text-xs font-bold text-ink-muted uppercase tracking-widest">Candidate Terminal</span>
             </div>
             <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-ink tracking-tight mb-2 drop-shadow-[0_1px_1px_#ffffff]">
-              Application <span className="text-accent">Telemetry</span>
+              Application <span className="inline-block px-2 py-0.5 bg-accent text-ink rounded shadow-floating border border-ink/10">Telemetry</span>
             </h1>
             <p className="text-ink-muted text-lg max-w-xl">
               Track module evaluations. Your scalar expectation remains encrypted in FHE ciphertext regardless of computational outcome.
@@ -92,7 +92,7 @@ export default function CandidateDashboard() {
           {/* Stats Row */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
             {[
-              { label: 'Total Payloads', value: applications.length, color: 'text-accent', border: 'border-accent/20' },
+              { label: 'Total Payloads', value: applications.length, color: 'text-ink', border: 'border-ink/10' },
               { label: 'Matched', value: matchCount, color: 'text-green-500', border: 'border-green-500/20' },
               { label: 'Pending Reveal', value: pendingCount, color: 'text-yellow-500', border: 'border-yellow-500/20' },
             ].map(stat => (
@@ -176,8 +176,8 @@ export default function CandidateDashboard() {
                     )}
 
                     <div className="flex gap-2 flex-wrap">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-accent/10 rounded border border-accent/20 text-[10px] font-mono font-bold text-accent uppercase tracking-widest shadow-recessed">
-                        <Lock className="w-3 h-3" /> Parameter Encrypted
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-accent text-ink rounded border border-ink/10 text-[10px] font-mono font-bold uppercase tracking-widest shadow-floating">
+                        <Lock className="w-3 h-3 text-ink" /> Parameter Encrypted
                       </span>
                       <span className="inline-flex items-center px-2.5 py-1 bg-muted/40 rounded border border-white/20 text-[10px] font-mono font-bold text-ink-muted uppercase tracking-widest shadow-recessed">
                         Module ID: #{app.jobId}

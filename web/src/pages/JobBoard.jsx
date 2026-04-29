@@ -39,7 +39,7 @@ function JobCard({ job }) {
 
       <div className="flex flex-wrap gap-2 mb-6">
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-muted/40 rounded border border-white/20 text-[10px] font-mono font-bold text-ink-muted uppercase tracking-widest shadow-recessed">
-          <Lock className="w-3 h-3 text-accent" /> Salary: Encrypted
+          <Lock className="w-3.5 h-3.5 text-ink bg-accent rounded-sm shadow-sharp p-[1px]" /> Salary: Encrypted
         </span>
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-muted/40 rounded border border-white/20 text-[10px] font-mono font-bold text-ink-muted uppercase tracking-widest shadow-recessed">
           <Briefcase className="w-3 h-3 text-ink-muted" /> {job.jobType}
@@ -113,7 +113,7 @@ export default function JobBoard() {
             </div>
             <h1 className="font-sans font-extrabold text-4xl md:text-5xl text-ink tracking-tight mb-4 drop-shadow-[0_1px_1px_#ffffff]">
               Browse Opportunities<br/>
-              <span className="text-accent">Zero Plaintxt Leakage</span>
+              <span className="inline-block mt-2 px-4 py-1 bg-accent text-ink rounded-md shadow-floating border border-ink/10">Zero Plaintxt Leakage</span>
             </h1>
             <p className="text-ink-muted text-lg max-w-2xl">
               Every listing utilizes homomorphic encryption. Neither budget nor expectation is ever visible on-chain.

@@ -133,7 +133,7 @@ export default function ApplyJob() {
                   </div>
                 </div>
                 <div className="hidden sm:block">
-                  <div className="text-[10px] font-mono text-accent uppercase tracking-widest flex items-center gap-1 bg-accent/10 px-2 py-1 border border-accent/20 rounded shadow-glow-sm">
+                  <div className="text-[10px] font-mono text-ink uppercase tracking-widest flex items-center gap-1 bg-accent px-2 py-1 border border-ink/10 rounded shadow-floating">
                     <Lock className="w-3 h-3" /> Budget Encrypted
                   </div>
                 </div>
@@ -148,7 +148,7 @@ export default function ApplyJob() {
           
           <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-ink tracking-tight mb-4 drop-shadow-[0_1px_1px_#ffffff]">
             Initialize Application<br/>
-            <span className="text-accent">Zero Knowledge Required</span>
+            <span className="inline-block mt-2 px-3 py-1 bg-accent text-ink rounded shadow-floating border border-ink/10">Zero Knowledge Required</span>
           </h1>
           <p className="text-ink-muted text-lg mb-8">
             Your minimum salary expectation is encrypted locally via Zama FHE. Neither party learns the other's number unless a match evaluates to true.

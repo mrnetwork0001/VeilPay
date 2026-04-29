@@ -96,7 +96,7 @@ export default function FheChat({ jobId, applicationId, counterpartyName, isEmpl
         onClick={() => setIsOpen(p => !p)}
       >
         <span className="flex items-center gap-2">
-          {isOpen ? <X className="w-4 h-4 text-accent" /> : <MessageSquare className="w-4 h-4 text-ink-muted" />}
+          {isOpen ? <X className="w-5 h-5 text-ink bg-accent rounded p-0.5" /> : <MessageSquare className="w-4 h-4 text-ink-muted" />}
           {isOpen ? 'Close Secure Channel' : `Communicate with ${counterpartyName}`}
         </span>
         {messages.length > 0 && !isOpen && (
@@ -122,7 +122,7 @@ export default function FheChat({ jobId, applicationId, counterpartyName, isEmpl
                 <div className="absolute top-1/2 right-2 -translate-y-1/2 card-screw w-4 h-4"></div>
                 
                 <div className="flex items-center gap-2 ml-4">
-                  <Lock className="w-4 h-4 text-accent" />
+                  <Lock className="w-4 h-4 text-ink" />
                   <span className="font-sans font-bold text-sm tracking-tight text-ink">
                     Secure Relay
                   </span>
@@ -142,7 +142,7 @@ export default function FheChat({ jobId, applicationId, counterpartyName, isEmpl
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="flex-1 flex flex-col items-center justify-center text-ink-muted text-center p-6 bg-chassis/80 rounded-lg shadow-recessed mx-4 my-auto border border-white/40 backdrop-blur-sm">
-                    <Unlock className="w-8 h-8 text-accent mb-3 shadow-glow rounded-full" />
+                    <Unlock className="w-8 h-8 text-ink bg-accent p-1.5 mb-3 shadow-floating rounded-full" />
                     <div className="font-sans font-bold text-ink text-sm">Channel Unlocked</div>
                     <div className="text-xs font-mono mt-2 leading-relaxed">
                       Zama FHE confirmed a salary match.<br/>
@@ -162,7 +162,7 @@ export default function FheChat({ jobId, applicationId, counterpartyName, isEmpl
                             ? 'bg-panel rounded-t-xl rounded-l-xl rounded-br-sm' 
                             : 'bg-muted/40 rounded-t-xl rounded-r-xl rounded-bl-sm shadow-recessed border-none'
                         }`}>
-                          <div className={`text-[10px] font-mono font-bold tracking-wider mb-1 ${self ? 'text-accent' : 'text-ink'}`}>
+                          <div className={`text-[10px] font-mono font-bold tracking-wider mb-1 ${self ? 'text-ink bg-accent px-1.5 py-0.5 rounded inline-block shadow-floating border border-ink/10' : 'text-ink'}`}>
                             {self ? 'LOCAL' : 'REMOTE'}
                           </div>
                           <div className="text-sm text-ink leading-relaxed whitespace-pre-wrap font-sans">
