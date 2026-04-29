@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWalletConnect } from '../components/ConnectWalletButton';
 import toast from 'react-hot-toast';
-import { FadeIn } from '../components/Animations';
-import { TxOverlay } from '../components/Animations';
+import { FadeIn, TxOverlay } from '../components/Animations';
 import EncryptionZone from '../components/EncryptionZone';
 import { useContract } from '../hooks/useContract';
 import { useFhevm } from '../hooks/useFhevm';
+import { Building2, MapPin, Briefcase } from 'lucide-react';
 
 const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Remote', 'Internship'];
 
@@ -52,7 +52,6 @@ export default function PostJob() {
 
     try {
       toast.loading('Encrypting your budget with ZamaFHE...', { id: 'tx' });
-      // Yield to the event loop so the UI updates and the toast appears before the heavy WASM compute blocks the main thread
       await new Promise(r => setTimeout(r, 100));
 
       let handle, inputProof;
@@ -77,75 +76,91 @@ export default function PostJob() {
   };
 
   return (
-    <div className="page-wrapper">
-      {isTxPending && <TxOverlay message="Encrypting your budget and posting to the blockchain..." />}
+    <div className="min-h-screen pt-24 pb-32">
+      {isTxPending && <TxOverlay message="Encrypting payload and broadcasting to network..." />}
 
-      <div className="container" style={{ maxWidth: 680 }}>
+      <div className="max-w-2xl mx-auto px-6">
         <FadeIn>
-          <span className="section-label">For Employers</span>
-          <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', marginBottom: '0.5rem' }}>
-            Post a Job — <span className="gradient-text">Budget Stays Private</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-chassis shadow-recessed rounded-full mb-6 border border-white/40">
+            <span className="led led-green" />
+            <span className="font-mono text-xs font-bold text-ink-muted uppercase tracking-widest">Employer Module</span>
+          </div>
+          
+          <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-ink tracking-tight mb-4 drop-shadow-[0_1px_1px_#ffffff]">
+            Initialize Posting<br/>
+            <span className="text-accent">Maintain Secrecy</span>
           </h1>
-          <p style={{ color: 'var(--white-70)', marginBottom: '2.5rem' }}>
-            Your maximum budget is encrypted client-side using ZamaFHE before anything touches the blockchain.
+          <p className="text-ink-muted text-lg mb-8">
+            Your maximum budget is encrypted client-side using Zama FHE before any data leaves your terminal.
           </p>
 
-          <form id="post-job-form" onSubmit={handleSubmit}>
-            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontFamily: 'var(--font-heading)', marginBottom: '-0.5rem' }}>Position Details</h3>
+          <form id="post-job-form" onSubmit={handleSubmit} className="flex flex-col gap-6">
+            <div className="card">
+              <div className="absolute top-4 left-4 card-screw" />
+              <div className="absolute top-4 right-4 card-screw" />
+              
+              <h3 className="font-sans font-bold text-xl text-ink mb-6 border-b border-ink/10 pb-4">Position Details</h3>
 
-              <div className="form-group">
-                <label className="form-label" htmlFor="title">Job Title *</label>
-                <input
-                  id="title"
-                  name="title"
-                  className="form-input"
-                  placeholder="e.g. Senior Solidity Engineer"
-                  value={formData.title}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="flex flex-col gap-5">
                 <div className="form-group">
-                  <label className="form-label" htmlFor="company">Company Name *</label>
+                  <label className="form-label flex items-center gap-2" htmlFor="title">
+                    <Briefcase className="w-3.5 h-3.5" /> Job Title
+                  </label>
                   <input
-                    id="company"
-                    name="company"
+                    id="title"
+                    name="title"
                     className="form-input"
-                    placeholder="Your company"
-                    value={formData.company}
+                    placeholder="e.g. Senior Solidity Engineer"
+                    value={formData.title}
                     onChange={handleChange}
                     required
                   />
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label" htmlFor="location">Location *</label>
-                  <input
-                    id="location"
-                    name="location"
-                    className="form-input"
-                    placeholder="Remote, New York, etc."
-                    value={formData.location}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="form-group">
+                    <label className="form-label flex items-center gap-2" htmlFor="company">
+                      <Building2 className="w-3.5 h-3.5" /> Company
+                    </label>
+                    <input
+                      id="company"
+                      name="company"
+                      className="form-input"
+                      placeholder="Your organization"
+                      value={formData.company}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
 
-              <div className="form-group">
-                <label className="form-label" htmlFor="jobType">Job Type</label>
-                <select
-                  id="jobType"
-                  name="jobType"
-                  className="form-input"
-                  value={formData.jobType}
-                  onChange={handleChange}
-                >
-                  {JOB_TYPES.map(t => <option key={t}>{t}</option>)}
-                </select>
+                  <div className="form-group">
+                    <label className="form-label flex items-center gap-2" htmlFor="location">
+                      <MapPin className="w-3.5 h-3.5" /> Location
+                    </label>
+                    <input
+                      id="location"
+                      name="location"
+                      className="form-input"
+                      placeholder="e.g. Remote"
+                      value={formData.location}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="jobType">Job Type</label>
+                  <select
+                    id="jobType"
+                    name="jobType"
+                    className="form-input cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3E%3Cpath stroke=\'%234a5568\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'m6 8 4 4 4-4\'/%3E%3C/svg%3E')] bg-no-repeat bg-[position:right_1rem_center] bg-[length:1.5em_1.5em] appearance-none"
+                    value={formData.jobType}
+                    onChange={handleChange}
+                  >
+                    {JOB_TYPES.map(t => <option key={t}>{t}</option>)}
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -159,33 +174,31 @@ export default function PostJob() {
               step={5000}
             />
 
-            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem' }}>
+            <div className="mt-2">
               {!isConnected ? (
                 <button
                   id="connect-to-post-btn"
                   type="button"
-                  className="btn btn-primary btn-lg"
-                  style={{ flex: 1 }}
+                  className="btn btn-primary w-full py-4 text-base"
                   onClick={openConnectModal}
                 >
-                  Connect Wallet to Post
+                  Connect Wallet to Proceed
                 </button>
               ) : (
                 <button
                   id="submit-post-job-btn"
                   type="submit"
-                  className="btn btn-primary btn-lg"
-                  style={{ flex: 1 }}
+                  className="btn btn-primary w-full py-4 text-base disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isTxPending || !fhevmReady}
                 >
-                  {isTxPending ? 'Processing...' : '🔐 Encrypt & Post Job (ZamaFHE)'}
+                  {isTxPending ? 'Processing...' : 'Encrypt & Transmit to Network'}
                 </button>
               )}
             </div>
 
             {isConnected && account && (
-              <p style={{ fontSize: '0.75rem', color: 'var(--white-50)', marginTop: '0.75rem', textAlign: 'center' }}>
-                Connected: {account.slice(0, 10)}...{account.slice(-6)} · Sepolia Testnet
+              <p className="text-center text-xs font-mono text-ink-muted uppercase tracking-widest mt-2">
+                Active Terminal: {account.slice(0, 8)}...{account.slice(-6)} · Sepolia
               </p>
             )}
           </form>

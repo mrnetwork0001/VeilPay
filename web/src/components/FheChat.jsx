@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useContract } from '../hooks/useContract';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MessageSquare, Lock, Send, X, Unlock } from 'lucide-react';
 
 /**
  * FHE-Gated Chat Component
@@ -88,24 +89,18 @@ export default function FheChat({ jobId, applicationId, counterpartyName, isEmpl
   };
 
   return (
-    <div style={{ marginTop: '0.75rem' }}>
+    <div className="mt-4 w-full">
       {/* Toggle Button */}
       <button
-        className="btn btn-secondary btn-sm"
+        className="btn btn-secondary w-full md:w-auto"
         onClick={() => setIsOpen(p => !p)}
-        style={{
-          fontSize: '0.78rem',
-          display: 'flex', alignItems: 'center', gap: '0.4rem',
-        }}
       >
-        💬 {isOpen ? 'Close Chat' : `Chat with ${counterpartyName}`}
+        <span className="flex items-center gap-2">
+          {isOpen ? <X className="w-4 h-4 text-accent" /> : <MessageSquare className="w-4 h-4 text-ink-muted" />}
+          {isOpen ? 'Close Secure Channel' : `Communicate with ${counterpartyName}`}
+        </span>
         {messages.length > 0 && !isOpen && (
-          <span style={{
-            background: 'var(--purple)', color: '#fff',
-            borderRadius: '50%', width: '1.2rem', height: '1.2rem',
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '0.65rem', fontWeight: 700,
-          }}>
+          <span className="bg-accent text-white px-2 py-0.5 rounded-full text-xs font-mono shadow-glow flex items-center justify-center min-w-[20px]">
             {messages.length}
           </span>
         )}
@@ -117,56 +112,41 @@ export default function FheChat({ jobId, applicationId, counterpartyName, isEmpl
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            style={{ overflow: 'hidden' }}
+            transition={{ duration: 0.3, ease: [0.175, 0.885, 0.32, 1.275] }}
+            className="overflow-hidden w-full"
           >
-            <div style={{
-              marginTop: '0.75rem',
-              border: '1px solid var(--border)',
-              borderRadius: '0.75rem',
-              background: 'rgba(255,255,255,0.02)',
-              overflow: 'hidden',
-            }}>
+            <div className="mt-4 bg-chassis border border-white/40 shadow-recessed rounded-xl overflow-hidden">
               {/* Header */}
-              <div style={{
-                padding: '0.6rem 1rem',
-                borderBottom: '1px solid var(--border)',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                background: 'rgba(139,92,246,0.08)',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '0.85rem' }}>🔐</span>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 600, fontFamily: 'var(--font-heading)' }}>
-                    FHE-Gated Chat
+              <div className="bg-muted/30 border-b border-ink/10 p-3 flex justify-between items-center relative">
+                <div className="absolute top-1/2 left-2 -translate-y-1/2 card-screw w-4 h-4"></div>
+                <div className="absolute top-1/2 right-2 -translate-y-1/2 card-screw w-4 h-4"></div>
+                
+                <div className="flex items-center gap-2 ml-4">
+                  <Lock className="w-4 h-4 text-accent" />
+                  <span className="font-sans font-bold text-sm tracking-tight text-ink">
+                    Secure Relay
                   </span>
                 </div>
-                <span style={{
-                  fontSize: '0.65rem', color: 'var(--white-50)',
-                  background: 'rgba(0,255,200,0.1)', padding: '0.15rem 0.5rem',
-                  borderRadius: '1rem', border: '1px solid rgba(0,255,200,0.2)',
-                }}>
-                  Unlocked by FHE.le() match
+                <span className="mr-4 text-[9px] font-mono font-bold text-green-600 bg-green-500/10 px-2 py-1 rounded uppercase tracking-widest border border-green-500/20 flex items-center gap-1.5">
+                  <span className="led led-green w-1.5 h-1.5 shadow-none" />
+                  FHE Match Confirmed
                 </span>
               </div>
 
               {/* Messages Area */}
-              <div style={{
-                height: '280px', overflowY: 'auto',
-                padding: '0.75rem 1rem',
-                display: 'flex', flexDirection: 'column', gap: '0.5rem',
-              }}>
+              <div className="h-[320px] overflow-y-auto p-4 flex flex-col gap-3 bg-[url('data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M1 1h18v18H1V1zm1 1v16h16V2H2z\' fill=\'%23d1d9e6\' fill-opacity=\'0.2\' fill-rule=\'evenodd\'/%3E%3C/svg%3E')]">
                 {loading ? (
-                  <div style={{ textAlign: 'center', color: 'var(--white-50)', padding: '2rem 0' }}>
-                    Loading messages...
+                  <div className="flex-1 flex flex-col items-center justify-center text-ink-muted text-sm font-mono gap-2 animate-pulse">
+                    <span className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin"></span>
+                    Initializing secure connection...
                   </div>
                 ) : messages.length === 0 ? (
-                  <div style={{
-                    textAlign: 'center', color: 'var(--white-50)',
-                    padding: '2rem 0', fontSize: '0.85rem',
-                  }}>
-                    <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔓</div>
-                    <div>Chat channel unlocked by FHE salary match.</div>
-                    <div style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>
-                      Send the first message to start the conversation.
+                  <div className="flex-1 flex flex-col items-center justify-center text-ink-muted text-center p-6 bg-chassis/80 rounded-lg shadow-recessed mx-4 my-auto border border-white/40 backdrop-blur-sm">
+                    <Unlock className="w-8 h-8 text-accent mb-3 shadow-glow rounded-full" />
+                    <div className="font-sans font-bold text-ink text-sm">Channel Unlocked</div>
+                    <div className="text-xs font-mono mt-2 leading-relaxed">
+                      Zama FHE confirmed a salary match.<br/>
+                      Transmit first datagram to begin.
                     </div>
                   </div>
                 ) : (
@@ -175,29 +155,20 @@ export default function FheChat({ jobId, applicationId, counterpartyName, isEmpl
                     return (
                       <div
                         key={i}
-                        style={{
-                          display: 'flex',
-                          justifyContent: self ? 'flex-end' : 'flex-start',
-                        }}
+                        className={`flex w-full ${self ? 'justify-end' : 'justify-start'}`}
                       >
-                        <div style={{
-                          maxWidth: '75%',
-                          padding: '0.5rem 0.75rem',
-                          borderRadius: self
-                            ? '0.75rem 0.75rem 0.15rem 0.75rem'
-                            : '0.75rem 0.75rem 0.75rem 0.15rem',
-                          background: self
-                            ? 'linear-gradient(135deg, var(--purple), var(--purple-light, #a855f7))'
-                            : 'rgba(255,255,255,0.06)',
-                          border: self ? 'none' : '1px solid var(--border)',
-                        }}>
-                          <div style={{ fontSize: '0.65rem', color: self ? 'rgba(255,255,255,0.7)' : 'var(--cyan)', marginBottom: '0.2rem', fontWeight: 600 }}>
-                            {self ? 'You' : counterpartyName}
+                        <div className={`max-w-[80%] p-3 shadow-card border border-white/40 ${
+                          self 
+                            ? 'bg-panel rounded-t-xl rounded-l-xl rounded-br-sm' 
+                            : 'bg-muted/40 rounded-t-xl rounded-r-xl rounded-bl-sm shadow-recessed border-none'
+                        }`}>
+                          <div className={`text-[10px] font-mono font-bold tracking-wider mb-1 ${self ? 'text-accent' : 'text-ink'}`}>
+                            {self ? 'LOCAL' : 'REMOTE'}
                           </div>
-                          <div style={{ fontSize: '0.82rem', lineHeight: 1.4, wordBreak: 'break-word' }}>
+                          <div className="text-sm text-ink leading-relaxed whitespace-pre-wrap font-sans">
                             {msg.content}
                           </div>
-                          <div style={{ fontSize: '0.6rem', color: self ? 'rgba(255,255,255,0.5)' : 'var(--white-50)', marginTop: '0.25rem', textAlign: 'right' }}>
+                          <div className="text-[9px] font-mono text-ink-muted mt-2 text-right">
                             {formatTime(msg.timestamp)}
                           </div>
                         </div>
@@ -209,39 +180,26 @@ export default function FheChat({ jobId, applicationId, counterpartyName, isEmpl
               </div>
 
               {/* Input Area */}
-              <div style={{
-                padding: '0.6rem 0.75rem',
-                borderTop: '1px solid var(--border)',
-                display: 'flex', gap: '0.5rem', alignItems: 'center',
-                background: 'rgba(0,0,0,0.2)',
-              }}>
+              <div className="p-3 bg-muted/20 border-t border-ink/10 flex gap-2 items-center">
                 <input
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Type a message..."
+                  placeholder="Transmit datagram..."
                   disabled={sending}
-                  style={{
-                    flex: 1, padding: '0.5rem 0.75rem',
-                    background: 'rgba(255,255,255,0.06)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '0.5rem',
-                    color: 'var(--white)',
-                    fontSize: '0.82rem',
-                    outline: 'none',
-                  }}
+                  className="form-input flex-1 py-3 text-sm h-12 placeholder:text-ink-muted/60"
                 />
                 <button
                   onClick={handleSend}
                   disabled={sending || !newMessage.trim()}
-                  className="btn btn-primary btn-sm"
-                  style={{
-                    fontSize: '0.78rem', padding: '0.5rem 1rem',
-                    opacity: sending || !newMessage.trim() ? 0.5 : 1,
-                  }}
+                  className="btn btn-primary h-12 w-12 !p-0 rounded-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {sending ? '⏳' : '📨 Send'}
+                  {sending ? (
+                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Send className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>

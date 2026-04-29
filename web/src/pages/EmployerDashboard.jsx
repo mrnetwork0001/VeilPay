@@ -6,11 +6,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FadeIn, StaggerContainer, StaggerItem } from '../components/Animations';
 import { useContract } from '../hooks/useContract';
 import FheChat from '../components/FheChat';
+import { Briefcase, Settings2, Unlock, Eye, FileDown, ExternalLink, ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle } from 'lucide-react';
 
 function StatusBadge({ app }) {
-  if (!app.matchRevealed) return <span className="badge badge-pending">⏳ Pending Reveal</span>;
-  if (app.matchResult) return <span className="badge badge-match">✓ Match</span>;
-  return <span className="badge badge-no-match">✗ No Match</span>;
+  if (!app.matchRevealed) return (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-yellow-500/10 rounded border border-yellow-500/20 text-[10px] font-mono font-bold text-yellow-600 uppercase tracking-widest shadow-recessed">
+      <Clock className="w-3 h-3" /> Pending Reveal
+    </span>
+  );
+  if (app.matchResult) return (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-500/10 rounded border border-green-500/20 text-[10px] font-mono font-bold text-green-600 uppercase tracking-widest shadow-recessed shadow-glow-green">
+      <CheckCircle2 className="w-3 h-3" /> Match
+    </span>
+  );
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-500/10 rounded border border-red-500/20 text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest shadow-recessed">
+      <XCircle className="w-3 h-3" /> No Match
+    </span>
+  );
 }
 
 function ApplicationRow({ app, jobId, onResolve, onReveal, onUnlockResume, isLoading }) {
@@ -20,7 +33,7 @@ function ApplicationRow({ app, jobId, onResolve, onReveal, onUnlockResume, isLoa
   const { getResumeIfUnlocked } = useContract();
 
   const handleViewResume = async () => {
-    if (resumeCid) return; // Already loaded
+    if (resumeCid) return;
     setLoadingResume(true);
     try {
       const cid = await getResumeIfUnlocked(jobId, app.appId);
@@ -33,22 +46,22 @@ function ApplicationRow({ app, jobId, onResolve, onReveal, onUnlockResume, isLoa
   };
 
   return (
-    <div className="card" style={{ marginBottom: '0.75rem' }}>
+    <div className="bg-muted/20 border border-ink/5 rounded-lg mb-3 overflow-hidden shadow-recessed">
       <div
-        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+        className="p-4 flex justify-between items-center cursor-pointer hover:bg-muted/40 transition-colors"
         onClick={() => setExpanded(p => !p)}
       >
         <div>
-          <div style={{ fontWeight: 600, fontFamily: 'var(--font-heading)' }}>
+          <div className="font-sans font-bold text-ink">
             {app.candidateName}
           </div>
-          <div style={{ fontSize: '0.78rem', color: 'var(--white-50)', marginTop: '0.2rem' }}>
+          <div className="font-mono text-[10px] text-ink-muted uppercase tracking-widest mt-1">
             Applied {new Date(app.appliedAt * 1000).toLocaleDateString()} · App #{app.appId}
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div className="flex items-center gap-4">
           <StatusBadge app={app} />
-          <span style={{ color: 'var(--white-50)', fontSize: '1.2rem' }}>{expanded ? '▲' : '▼'}</span>
+          {expanded ? <ChevronUp className="w-4 h-4 text-ink-muted" /> : <ChevronDown className="w-4 h-4 text-ink-muted" />}
         </div>
       </div>
 
@@ -58,98 +71,86 @@ function ApplicationRow({ app, jobId, onResolve, onReveal, onUnlockResume, isLoa
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            style={{ overflow: 'hidden' }}
+            className="overflow-hidden"
           >
-            <div style={{ borderTop: '1px solid var(--border)', marginTop: '1rem', paddingTop: '1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-              {!app.matchRevealed && (
-                <>
+            <div className="border-t border-ink/10 p-4 bg-chassis/50 flex flex-col gap-4">
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-3 items-center">
+                {!app.matchRevealed && (
+                  <>
+                    <button
+                      id={`resolve-btn-${app.appId}`}
+                      className="btn btn-secondary text-xs h-9 px-4"
+                      onClick={() => onResolve(jobId, app.appId)}
+                      disabled={isLoading}
+                    >
+                      <Settings2 className="w-3.5 h-3.5 mr-1" /> Run FHE Match
+                    </button>
+                    <button
+                      id={`reveal-btn-${app.appId}`}
+                      className="btn btn-primary text-xs h-9 px-4"
+                      onClick={() => onReveal(jobId, app.appId)}
+                      disabled={isLoading}
+                    >
+                      <Eye className="w-3.5 h-3.5 mr-1" /> Reveal Result
+                    </button>
+                  </>
+                )}
+                {app.matchRevealed && app.matchResult && !app.resumeUnlocked && (
                   <button
-                    id={`resolve-btn-${app.appId}`}
-                    className="btn btn-secondary btn-sm"
-                    onClick={() => onResolve(jobId, app.appId)}
+                    id={`unlock-resume-btn-${app.appId}`}
+                    className="btn btn-primary bg-cyan-600 hover:bg-cyan-500 border-cyan-400 text-xs h-9 px-4"
+                    onClick={() => onUnlockResume(jobId, app.appId)}
                     disabled={isLoading}
                   >
-                    ⚙️ Run FHE Match
+                    <Unlock className="w-3.5 h-3.5 mr-1" /> Unlock Resume Payload
                   </button>
-                  <button
-                    id={`reveal-btn-${app.appId}`}
-                    className="btn btn-primary btn-sm"
-                    onClick={() => onReveal(jobId, app.appId)}
-                    disabled={isLoading}
-                  >
-                    🔮 Reveal Match Result
-                  </button>
-                </>
-              )}
-              {app.matchRevealed && app.matchResult && !app.resumeUnlocked && (
-                <button
-                  id={`unlock-resume-btn-${app.appId}`}
-                  className="btn btn-cyan btn-sm"
-                  onClick={() => onUnlockResume(jobId, app.appId)}
-                  disabled={isLoading}
-                >
-                  📄 Unlock Resume
-                </button>
-              )}
+                )}
+              </div>
+
+              {/* Resume Details */}
               {app.resumeUnlocked && (
-                <div style={{ width: '100%' }}>
-                  <div style={{
-                    display: 'flex', gap: '0.75rem', alignItems: 'center',
-                    flexWrap: 'wrap', marginBottom: resumeCid ? '0.75rem' : 0
-                  }}>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--green)' }}>
-                      ✓ Resume unlocked
+                <div className="w-full space-y-4">
+                  <div className="flex gap-3 items-center flex-wrap">
+                    <span className="font-mono text-[10px] text-green-600 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Resume Unlocked
                     </span>
                     {!resumeCid && (
                       <button
-                        className="btn btn-cyan btn-sm"
+                        className="btn btn-secondary text-xs h-8 px-3"
                         onClick={handleViewResume}
                         disabled={loadingResume}
-                        style={{ fontSize: '0.78rem' }}
                       >
-                        {loadingResume ? '⏳ Loading...' : '📄 View Resume'}
+                        {loadingResume ? '⏳ Fetching CID...' : 'Fetch Payload CID'}
                       </button>
                     )}
                   </div>
+                  
                   {resumeCid && (
-                    <div style={{
-                      background: 'rgba(0,255,200,0.05)',
-                      border: '1px solid rgba(0,255,200,0.2)',
-                      borderRadius: '0.5rem',
-                      padding: '0.75rem 1rem',
-                    }}>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--white-50)', marginBottom: '0.5rem' }}>
-                        IPFS Resume CID
-                      </div>
-                      <div style={{
-                        fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--cyan)',
-                        wordBreak: 'break-all', marginBottom: '0.75rem'
-                      }}>
-                        {resumeCid}
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <div className="bg-dark-panel p-4 rounded-lg shadow-recessed border border-white/10">
+                      <div className="font-mono text-[10px] text-ink-muted uppercase tracking-widest mb-2">IPFS Payload Address</div>
+                      <div className="font-mono text-xs text-accent break-all mb-4">{resumeCid}</div>
+                      <div className="flex gap-3 flex-wrap">
                         <a
                           href={`https://gateway.pinata.cloud/ipfs/${resumeCid}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="btn btn-primary btn-sm"
-                          style={{ fontSize: '0.78rem', textDecoration: 'none' }}
+                          className="btn btn-secondary text-xs h-8 px-4"
                         >
-                          🌐 View on IPFS
+                          <ExternalLink className="w-3.5 h-3.5 mr-1" /> View via IPFS Gateway
                         </a>
                         <a
                           href={`https://ipfs.io/ipfs/${resumeCid}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="btn btn-secondary btn-sm"
-                          style={{ fontSize: '0.78rem', textDecoration: 'none' }}
+                          className="btn btn-primary bg-cyan-600 hover:bg-cyan-500 border-cyan-400 text-xs h-8 px-4"
                         >
-                          📥 Download
+                          <FileDown className="w-3.5 h-3.5 mr-1" /> Download
                         </a>
                       </div>
                     </div>
                   )}
-                  {/* FHE-Gated Chat — only appears after match confirmation */}
+
                   <FheChat
                     jobId={jobId}
                     applicationId={app.appId}
@@ -158,7 +159,7 @@ function ApplicationRow({ app, jobId, onResolve, onReveal, onUnlockResume, isLoa
                   />
                 </div>
               )}
-              {/* Chat also available when match confirmed but resume not yet unlocked */}
+
               {app.matchRevealed && app.matchResult && !app.resumeUnlocked && (
                 <FheChat
                   jobId={jobId}
@@ -198,79 +199,84 @@ function JobSection({ jobId, employerJobs, onResolve, onReveal, onBatchResolve, 
     }
   };
 
-  // Determine which apps need batch actions
   const unresolvedApps = apps.filter(a => !a.matchRevealed);
   const showBatchButtons = apps.length > 1 && unresolvedApps.length > 0;
 
   return (
-    <div className="card" style={{ marginBottom: '1rem' }}>
+    <div className="card mb-6 p-0 overflow-hidden">
+      <div className="hidden md:block absolute top-4 left-4 card-screw" />
+      <div className="hidden md:block absolute top-4 right-4 card-screw" />
+      
       <div
-        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+        className="p-6 flex justify-between items-center cursor-pointer hover:bg-white/5 transition-colors"
         onClick={loadApps}
       >
         <div>
-          <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 700 }}>
-            {job?.title || `Job #${jobId}`}
-          </div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--white-50)' }}>
-            {job?.company || ''} · {job?.isActive ? '🟢 Active' : '⚫ Closed'}
+          <h3 className="font-sans font-bold text-lg text-ink mb-1">
+            {job?.title || `Job Module #${jobId}`}
+          </h3>
+          <div className="font-mono text-xs text-ink-muted uppercase tracking-widest flex items-center gap-2">
+            {job?.company || ''} 
+            <span className="w-1 h-1 bg-ink-muted rounded-full" />
+            <span className={`flex items-center gap-1.5 ${job?.isActive ? 'text-green-600' : 'text-red-600'}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${job?.isActive ? 'bg-green-500 shadow-glow-green' : 'bg-red-500'}`} />
+              {job?.isActive ? 'Active' : 'Offline'}
+            </span>
           </div>
         </div>
-        <span style={{ color: 'var(--white-50)' }}>{loadingApps ? '⏳' : expanded ? '▲' : '▼'}</span>
+        <div className="text-ink-muted">
+          {loadingApps ? <span className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin inline-block" /> : expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+        </div>
       </div>
 
       <AnimatePresence>
         {expanded && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
-            <div style={{ borderTop: '1px solid var(--border)', marginTop: '1rem', paddingTop: '1rem' }}>
-              {/* ── Batch Action Buttons ─────────────────────────────── */}
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+            <div className="border-t border-ink/10 p-4 md:p-6 bg-chassis">
               {showBatchButtons && (
-                <div style={{
-                  display: 'flex', gap: '0.75rem', flexWrap: 'wrap',
-                  marginBottom: '1rem', padding: '0.75rem 1rem',
-                  background: 'rgba(255,255,255,0.03)',
-                  borderRadius: '0.5rem',
-                  border: '1px solid var(--border)',
-                  alignItems: 'center',
-                }}>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--white-50)', marginRight: 'auto' }}>
-                    {unresolvedApps.length} applicant{unresolvedApps.length !== 1 ? 's' : ''} pending
+                <div className="flex flex-col sm:flex-row gap-3 items-center justify-between p-4 bg-muted/20 border border-white/20 rounded-lg shadow-recessed mb-6">
+                  <span className="font-mono text-xs font-bold text-ink-muted uppercase tracking-widest">
+                    {unresolvedApps.length} Application{unresolvedApps.length !== 1 ? 's' : ''} Pending
                   </span>
-                  <button
-                    id={`batch-resolve-${jobId}`}
-                    className="btn btn-secondary btn-sm"
-                    onClick={() => onBatchResolve(jobId, unresolvedApps)}
-                    disabled={isLoading}
-                    style={{ fontSize: '0.78rem' }}
-                  >
-                    ⚙️ Resolve All ({unresolvedApps.length})
-                  </button>
-                  <button
-                    id={`batch-reveal-${jobId}`}
-                    className="btn btn-primary btn-sm"
-                    onClick={() => onBatchReveal(jobId, unresolvedApps)}
-                    disabled={isLoading}
-                    style={{ fontSize: '0.78rem' }}
-                  >
-                    🔮 Reveal All ({unresolvedApps.length})
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      id={`batch-resolve-${jobId}`}
+                      className="btn btn-secondary text-xs h-9 px-4"
+                      onClick={() => onBatchResolve(jobId, unresolvedApps)}
+                      disabled={isLoading}
+                    >
+                      <Settings2 className="w-3.5 h-3.5 mr-1" /> Resolve All
+                    </button>
+                    <button
+                      id={`batch-reveal-${jobId}`}
+                      className="btn btn-primary text-xs h-9 px-4"
+                      onClick={() => onBatchReveal(jobId, unresolvedApps)}
+                      disabled={isLoading}
+                    >
+                      <Eye className="w-3.5 h-3.5 mr-1" /> Reveal All
+                    </button>
+                  </div>
                 </div>
               )}
 
               {apps.length === 0 ? (
-                <p style={{ color: 'var(--white-50)', fontSize: '0.85rem' }}>No applications yet.</p>
+                <div className="text-center py-8">
+                  <p className="font-mono text-xs text-ink-muted uppercase tracking-widest">No applications detected.</p>
+                </div>
               ) : (
-                apps.map(app => (
-                  <ApplicationRow
-                    key={app.appId}
-                    app={app}
-                    jobId={jobId}
-                    onResolve={onResolve}
-                    onReveal={onReveal}
-                    onUnlockResume={onUnlockResume}
-                    isLoading={isLoading}
-                  />
-                ))
+                <div className="flex flex-col">
+                  {apps.map(app => (
+                    <ApplicationRow
+                      key={app.appId}
+                      app={app}
+                      jobId={jobId}
+                      onResolve={onResolve}
+                      onReveal={onReveal}
+                      onUnlockResume={onUnlockResume}
+                      isLoading={isLoading}
+                    />
+                  ))}
+                </div>
               )}
             </div>
           </motion.div>
@@ -339,8 +345,6 @@ export default function EmployerDashboard() {
     }
   };
 
-  // ── Batch handlers ──────────────────────────────────────────────────────────
-
   const handleBatchResolve = async (jobId, apps) => {
     setTxLoading(true);
     const total = apps.length;
@@ -379,53 +383,58 @@ export default function EmployerDashboard() {
 
   if (!isConnected) {
     return (
-      <div className="page-wrapper flex-center" style={{ flexDirection: 'column', gap: '1rem' }}>
-        <div style={{ fontSize: '3rem' }}>💼</div>
-        <h2>Connect Your Wallet</h2>
-        <p style={{ color: 'var(--white-70)', textAlign: 'center', maxWidth: 400 }}>
-          Connect the wallet you used to post jobs to view your employer dashboard.
+      <div className="min-h-screen pt-32 pb-32 flex flex-col items-center justify-center px-6">
+        <Briefcase className="w-16 h-16 text-ink-muted mb-6 shadow-glow bg-chassis rounded-xl p-3 border border-white/20" />
+        <h2 className="font-sans font-bold text-3xl text-ink mb-4 text-center">Connect Terminal</h2>
+        <p className="text-ink-muted text-center max-w-sm mb-8 font-mono text-sm leading-relaxed">
+          Establish connection with the wallet utilized to deploy job modules to access the administration dashboard.
         </p>
-        <button id="employer-connect-btn" className="btn btn-primary btn-lg" onClick={openConnectModal}>
-          Connect Wallet
+        <button id="employer-connect-btn" className="btn btn-primary px-8 py-4 shadow-floating" onClick={openConnectModal}>
+          Initialize Connection
         </button>
       </div>
     );
   }
 
   return (
-    <div className="page-wrapper">
-      <div className="container">
+    <div className="min-h-screen pt-24 pb-32">
+      <div className="max-w-[72rem] mx-auto px-6 md:px-12">
         <FadeIn>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
             <div>
-              <span className="section-label">Employer Dashboard</span>
-              <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)' }}>
-                Your <span className="gradient-text">Active Postings</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-chassis shadow-recessed rounded-full mb-6 border border-white/40">
+                <span className="led led-green" />
+                <span className="font-mono text-xs font-bold text-ink-muted uppercase tracking-widest">Admin Control</span>
+              </div>
+              <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-ink tracking-tight mb-2 drop-shadow-[0_1px_1px_#ffffff]">
+                Module <span className="text-accent">Telemetry</span>
               </h1>
-              <p style={{ color: 'var(--white-70)' }}>
-                Manage applications — all salary data remains encrypted on-chain.
+              <p className="text-ink-muted text-lg max-w-xl">
+                Manage applications across deployed modules. Salary data remains encrypted in FHE ciphertext.
               </p>
             </div>
-            <Link to="/post-job" id="dashboard-post-new-btn" className="btn btn-primary">
-              + Post New Job
+            <Link to="/post-job" id="dashboard-post-new-btn" className="btn btn-primary shrink-0 shadow-floating px-6 py-3">
+              Deploy New Module
             </Link>
           </div>
 
           {loading ? (
-            <div className="flex-center" style={{ minHeight: 300 }}>
-              <div className="tx-spinner" />
+            <div className="flex flex-col items-center justify-center min-h-[300px] text-ink-muted">
+              <span className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin mb-4 shadow-glow"></span>
+              <span className="font-mono text-xs uppercase tracking-widest font-bold">Retrieving Data...</span>
             </div>
           ) : jobIds.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">📭</div>
-              <h3>No jobs posted yet</h3>
-              <p style={{ marginBottom: '1.5rem' }}>Start by posting your first job with a confidential salary budget.</p>
-              <Link to="/post-job" className="btn btn-primary">Post Your First Job</Link>
+            <div className="card text-center py-20 bg-muted/20 border-dashed border-2 border-white/20">
+              <Briefcase className="w-12 h-12 text-ink-muted mx-auto mb-4 opacity-50" />
+              <h3 className="font-sans font-bold text-2xl text-ink mb-3">No Active Modules</h3>
+              <p className="text-ink-muted text-sm font-mono uppercase tracking-widest mb-8">Deploy a module to accept confidential applications.</p>
+              <Link to="/post-job" className="btn btn-primary shadow-floating px-8">Initialize Deployment</Link>
             </div>
           ) : (
-            <div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--white-50)', marginBottom: '1rem' }}>
-                {jobIds.length} job{jobIds.length !== 1 ? 's' : ''} posted · Click a job to see applications
+            <div className="space-y-2">
+              <div className="font-mono text-xs font-bold text-ink-muted uppercase tracking-widest mb-6 px-2 flex justify-between border-b border-ink/10 pb-4">
+                <span>{jobIds.length} Module{jobIds.length !== 1 ? 's' : ''} Online</span>
+                <span>Select module to view ingress</span>
               </div>
               {jobIds.map(id => (
                 <JobSection

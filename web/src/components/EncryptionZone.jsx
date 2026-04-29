@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Lock, Unlock, ShieldCheck } from 'lucide-react';
 
 const FAKE_CIPHER_CHARS = '0123456789abcdef';
 
@@ -58,71 +59,94 @@ export default function EncryptionZone({ label, value, onChange, min = 30000, ma
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
 
   return (
-    <div className="encryption-zone">
-      <div className="encryption-zone-header">
+    <div className="bg-dark-bg p-6 rounded-xl shadow-card relative overflow-hidden border-2 border-chassis">
+      {/* Carbon Fiber Overlay */}
+      <div className="absolute inset-0 opacity-10 mix-blend-overlay pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+      
+      <div className="flex items-center gap-4 mb-6 relative z-10">
         <motion.div
-          className={`lock-icon ${isEncrypting ? 'encrypting' : ''}`}
-          animate={isEncrypting ? { scale: [1, 1.2, 1], rotate: [0, -10, 10, 0] } : {}}
+          className={`w-12 h-12 flex items-center justify-center rounded-lg shadow-card border border-white/20 bg-dark-panel ${isEncrypting ? 'shadow-glow' : ''}`}
+          animate={isEncrypting ? { scale: [1, 1.1, 1], rotate: [0, -5, 5, 0] } : {}}
           transition={{ duration: 0.5 }}
         >
-          {showEncrypted ? '🔒' : '🔓'}
+          {showEncrypted ? <Lock className="w-6 h-6 text-accent" /> : <Unlock className="w-6 h-6 text-white/50" />}
         </motion.div>
         <div>
-          <div className="encryption-zone-title">{label}</div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--white-50)' }}>
-            {showEncrypted ? 'Encrypted via ZamaFHE · Never revealed on-chain' : 'Drag slider or enter amount'}
+          <div className="font-mono text-xs font-bold text-accent uppercase tracking-widest">{label}</div>
+          <div className="text-xs font-mono text-white/50 mt-1">
+            {showEncrypted ? 'FHE Encryption Active' : 'Adjust physical slider to input parameter'}
           </div>
         </div>
       </div>
 
-      <div className="salary-slider-wrapper">
-        <AnimatePresence mode="wait">
-          {showEncrypted ? (
-            <motion.div
-              key="encrypted"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="salary-display encrypted"
-            >
-              {cipherDisplay || randomHex(64)}
-            </motion.div>
-          ) : (
-            <motion.div
-              key="plain"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="salary-display"
-            >
-              {formatSalary(value)}
-            </motion.div>
-          )}
-        </AnimatePresence>
+      <div className="relative z-10 bg-black/40 rounded-lg p-6 shadow-recessed border border-white/5 mb-4">
+        {/* CRT Scanlines */}
+        <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] opacity-30 rounded-lg" />
+        
+        <div className="h-16 flex items-center justify-center mb-6">
+          <AnimatePresence mode="wait">
+            {showEncrypted ? (
+              <motion.div
+                key="encrypted"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="font-mono text-[10px] sm:text-xs text-accent break-all text-center leading-relaxed font-bold tracking-widest shadow-glow drop-shadow-[0_0_8px_rgba(255,71,87,0.8)]"
+              >
+                {cipherDisplay || randomHex(64)}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="plain"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="font-mono text-4xl font-bold text-white tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+              >
+                {formatSalary(value)}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={handleSliderChange}
-          onMouseUp={handleBlur}
-          onTouchEnd={handleBlur}
-          style={{ '--val': `${percentage}%` }}
-          id="salary-slider"
-        />
+        <div className="relative h-2 bg-black/60 rounded-full shadow-recessed border border-white/10">
+          <div 
+            className="absolute top-0 left-0 h-full bg-accent rounded-full shadow-glow"
+            style={{ width: `${percentage}%` }}
+          />
+          <input
+            type="range"
+            min={min}
+            max={max}
+            step={step}
+            value={value}
+            onChange={handleSliderChange}
+            onMouseUp={handleBlur}
+            onTouchEnd={handleBlur}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            id="salary-slider"
+          />
+          {/* Custom Physical Thumb */}
+          <div 
+            className="absolute top-1/2 -translate-y-1/2 w-6 h-6 bg-chassis border-2 border-white rounded-full shadow-card pointer-events-none transition-shadow"
+            style={{ left: `calc(${percentage}% - 12px)` }}
+          >
+            <div className="absolute inset-1 rounded-full shadow-recessed bg-muted" />
+          </div>
+        </div>
 
-        <div className="flex-between" style={{ fontSize: '0.75rem', color: 'var(--white-50)' }}>
+        <div className="flex justify-between mt-3 font-mono text-[10px] text-white/40 uppercase tracking-widest">
           <span>{formatSalary(min)}</span>
           <span>{formatSalary(max)}</span>
         </div>
       </div>
 
-      <p className="encryption-zone-hint">
-        🔐 This value is encrypted <strong>inside your browser</strong> using Zama's Fully Homomorphic Encryption
-        before being sent to the blockchain. Nobody — not even us — will ever see this number in plaintext.
-      </p>
+      <div className="flex items-start gap-3 relative z-10 bg-dark-panel p-3 rounded-lg border border-white/5">
+        <ShieldCheck className="w-5 h-5 text-accent shrink-0" />
+        <p className="text-[10px] font-mono text-white/60 leading-relaxed uppercase">
+          This parameter is encrypted locally via Zama FHE before transmission. Plaintext is never exposed to the network.
+        </p>
+      </div>
     </div>
   );
 }

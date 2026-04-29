@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FadeIn, StaggerContainer, StaggerItem } from '../components/Animations';
 import { useContract } from '../hooks/useContract';
+import { MapPin, Briefcase, Search, Lock, Users, Clock } from 'lucide-react';
 
 function timeAgo(timestamp) {
   const diff = Math.floor((Date.now() / 1000) - timestamp);
@@ -20,54 +21,49 @@ function getCompanyInitials(name) {
     .toUpperCase();
 }
 
-const LOGO_COLORS = [
-  'linear-gradient(135deg,#7C3AED,#5B21B6)',
-  'linear-gradient(135deg,#06B6D4,#0891B2)',
-  'linear-gradient(135deg,#7C3AED,#06B6D4)',
-  'linear-gradient(135deg,#8B5CF6,#EC4899)',
-  'linear-gradient(135deg,#10B981,#059669)',
-];
-
-
-
-function JobCard({ job, index }) {
-  const gradient = LOGO_COLORS[index % LOGO_COLORS.length];
-
+function JobCard({ job }) {
   return (
-    <div className="card" id={`job-card-${job.id}`}>
-      <div className="job-card-header">
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', flex: 1 }}>
-          <div
-            className="job-card-company-logo"
-            style={{ background: gradient }}
-          >
-            {getCompanyInitials(job.company)}
-          </div>
-          <div>
-            <div className="job-card-title">{job.title}</div>
-            <div className="job-card-company">{job.company}</div>
-          </div>
+    <div className="card group" id={`job-card-${job.id}`}>
+      <div className="absolute top-4 left-4 card-screw" />
+      <div className="absolute top-4 right-4 card-screw" />
+      
+      <div className="flex gap-4 items-start mb-6 border-b border-ink/10 pb-4">
+        <div className="w-12 h-12 shrink-0 rounded-lg bg-chassis border border-white/40 shadow-floating flex items-center justify-center font-sans font-bold text-xl text-ink">
+          {getCompanyInitials(job.company)}
+        </div>
+        <div>
+          <h3 className="font-sans font-bold text-lg text-ink leading-tight mb-1">{job.title}</h3>
+          <div className="font-mono text-xs text-ink-muted uppercase tracking-wider">{job.company}</div>
         </div>
       </div>
 
-      <div className="job-card-tags">
-        <span className="badge badge-confidential">Salary: Confidential</span>
-        <span className="badge badge-violet">{job.jobType}</span>
-        <span className="badge" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--white-70)', border: '1px solid var(--border)' }}>
-          📍 {job.location}
+      <div className="flex flex-wrap gap-2 mb-6">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-muted/40 rounded border border-white/20 text-[10px] font-mono font-bold text-ink-muted uppercase tracking-widest shadow-recessed">
+          <Lock className="w-3 h-3 text-accent" /> Salary: Encrypted
+        </span>
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-muted/40 rounded border border-white/20 text-[10px] font-mono font-bold text-ink-muted uppercase tracking-widest shadow-recessed">
+          <Briefcase className="w-3 h-3 text-ink-muted" /> {job.jobType}
+        </span>
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-muted/40 rounded border border-white/20 text-[10px] font-mono font-bold text-ink-muted uppercase tracking-widest shadow-recessed">
+          <MapPin className="w-3 h-3 text-ink-muted" /> {job.location}
         </span>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
-        <div style={{ fontSize: '0.78rem', color: 'var(--white-50)' }}>
-          {job.applicationCount} applicants · {timeAgo(job.createdAt)}
+      <div className="flex justify-between items-center bg-muted/20 p-3 rounded-lg border border-ink/5">
+        <div className="flex flex-col gap-1">
+          <span className="inline-flex items-center gap-1 text-[10px] font-mono text-ink-muted uppercase tracking-widest">
+            <Users className="w-3 h-3" /> {job.applicationCount} Applicants
+          </span>
+          <span className="inline-flex items-center gap-1 text-[10px] font-mono text-ink-muted uppercase tracking-widest">
+            <Clock className="w-3 h-3" /> {timeAgo(job.createdAt)}
+          </span>
         </div>
         <Link
           to={`/apply/${job.id}`}
           id={`apply-btn-${job.id}`}
-          className="btn btn-primary btn-sm"
+          className="btn btn-primary px-4 py-2 text-xs h-10 shadow-floating"
         >
-          Apply Now
+          Initialize Match
         </Link>
       </div>
     </div>
@@ -107,75 +103,84 @@ export default function JobBoard() {
   });
 
   return (
-    <div className="page-wrapper">
-      <div className="container">
+    <div className="min-h-screen pt-24 pb-32">
+      <div className="max-w-[72rem] mx-auto px-6 md:px-12">
         <FadeIn>
-          <div className="job-board-header">
-            <span className="section-label">Open Positions</span>
-            <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', marginBottom: '0.5rem' }}>
-              Browse Jobs — <span className="gradient-text">All Salaries Private</span>
+          <div className="mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-chassis shadow-recessed rounded-full mb-6 border border-white/40">
+              <span className="led led-green" />
+              <span className="font-mono text-xs font-bold text-ink-muted uppercase tracking-widest">Active Network Grid</span>
+            </div>
+            <h1 className="font-sans font-extrabold text-4xl md:text-5xl text-ink tracking-tight mb-4 drop-shadow-[0_1px_1px_#ffffff]">
+              Browse Opportunities<br/>
+              <span className="text-accent">Zero Plaintxt Leakage</span>
             </h1>
-            <p style={{ color: 'var(--white-70)' }}>
-              Every listing uses FHE encryption. Neither salary is ever visible on-chain.
+            <p className="text-ink-muted text-lg max-w-2xl">
+              Every listing utilizes homomorphic encryption. Neither budget nor expectation is ever visible on-chain.
             </p>
           </div>
 
           {/* Filter Bar */}
-          <div className="filter-bar">
-            <input
-              id="job-search"
-              type="text"
-              className="form-input"
-              placeholder="Search by title or company..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              style={{ flex: 2 }}
-            />
-            <select
-              id="filter-job-type"
-              className="form-input"
-              value={filterType}
-              onChange={e => setFilterType(e.target.value)}
-            >
-              {jobTypes.map(t => <option key={t}>{t}</option>)}
-            </select>
-            <select
-              id="filter-location"
-              className="form-input"
-              value={filterLocation}
-              onChange={e => setFilterLocation(e.target.value)}
-            >
-              {locations.map(l => <option key={l}>{l}</option>)}
-            </select>
+          <div className="bg-chassis p-4 rounded-xl shadow-card border border-white/40 mb-12 flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" />
+              <input
+                id="job-search"
+                type="text"
+                className="form-input w-full pl-11 py-3 text-sm"
+                placeholder="Search index by designation or company..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-4">
+              <select
+                id="filter-job-type"
+                className="form-input py-3 text-sm cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3E%3Cpath stroke=\'%234a5568\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'m6 8 4 4 4-4\'/%3E%3C/svg%3E')] bg-no-repeat bg-[position:right_1rem_center] bg-[length:1.5em_1.5em] appearance-none"
+                value={filterType}
+                onChange={e => setFilterType(e.target.value)}
+              >
+                {jobTypes.map(t => <option key={t}>{t === 'All' ? 'TYPE: ALL' : t}</option>)}
+              </select>
+              <select
+                id="filter-location"
+                className="form-input py-3 text-sm cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3E%3Cpath stroke=\'%234a5568\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'m6 8 4 4 4-4\'/%3E%3C/svg%3E')] bg-no-repeat bg-[position:right_1rem_center] bg-[length:1.5em_1.5em] appearance-none"
+                value={filterLocation}
+                onChange={e => setFilterLocation(e.target.value)}
+              >
+                {locations.map(l => <option key={l}>{l === 'All' ? 'LOC: ALL' : l}</option>)}
+              </select>
+            </div>
           </div>
         </FadeIn>
 
         {loading ? (
-          <div className="flex-center" style={{ minHeight: 300 }}>
-            <div className="tx-spinner" />
+          <div className="flex flex-col items-center justify-center min-h-[300px] text-ink-muted">
+            <span className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin mb-4 shadow-glow"></span>
+            <span className="font-mono text-xs uppercase tracking-widest font-bold">Querying Network...</span>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state-icon">🔍</div>
-            <h3>No jobs match your filters</h3>
-            <p>Try clearing the filters or check back later.</p>
+          <div className="card text-center py-16 bg-muted/20">
+            <Search className="w-12 h-12 text-ink-muted mx-auto mb-4" />
+            <h3 className="font-sans font-bold text-xl text-ink mb-2">Null result set</h3>
+            <p className="text-ink-muted text-sm font-mono uppercase tracking-widest">Adjust query parameters or stand by.</p>
           </div>
         ) : (
-          <StaggerContainer className="jobs-grid">
-            {filtered.map((job, i) => (
+          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map((job) => (
               <StaggerItem key={job.id}>
-                <JobCard job={job} index={i} />
+                <JobCard job={job} />
               </StaggerItem>
             ))}
           </StaggerContainer>
         )}
 
-        <div style={{ textAlign: 'center', marginTop: '3rem' }}>
-          <p style={{ color: 'var(--white-50)', fontSize: '0.85rem', marginBottom: '1rem' }}>
-            Are you hiring? Post your job confidentially.
+        <div className="text-center mt-20">
+          <p className="text-ink-muted font-mono text-xs uppercase tracking-widest font-bold mb-4">
+            Require Personnel? Deploy Module
           </p>
-          <Link to="/post-job" id="job-board-post-btn" className="btn btn-primary">
-            Post a Job →
+          <Link to="/post-job" id="job-board-post-btn" className="btn btn-secondary shadow-floating">
+            Deploy Post Module
           </Link>
         </div>
       </div>

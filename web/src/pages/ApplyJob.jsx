@@ -7,6 +7,7 @@ import EncryptionZone from '../components/EncryptionZone';
 import { useContract } from '../hooks/useContract';
 import { useFhevm } from '../hooks/useFhevm';
 import { uploadToIPFS, isIPFSConfigured } from '../utils/ipfs';
+import { Lock, MapPin, Briefcase, FileText, User } from 'lucide-react';
 
 export default function ApplyJob() {
   const { jobId } = useParams();
@@ -71,7 +72,6 @@ export default function ApplyJob() {
       const ipfsCid = ipfsResult.cid;
 
       toast.loading('Encrypting salary expectation via ZamaFHE...', { id: 'tx' });
-      // Yield to the event loop so the UI updates before WASM blocks the main thread
       await new Promise(r => setTimeout(r, 100));
 
       let handle, inputProof;
@@ -97,82 +97,108 @@ export default function ApplyJob() {
 
   if (loadingJob) {
     return (
-      <div className="page-wrapper flex-center">
-        <div className="tx-spinner" />
+      <div className="min-h-screen pt-24 pb-32 flex items-center justify-center">
+        <span className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin shadow-glow"></span>
       </div>
     );
   }
 
   return (
-    <div className="page-wrapper">
-      {isTxPending && <TxOverlay message="Uploading resume to IPFS and encrypting your salary expectation..." />}
+    <div className="min-h-screen pt-24 pb-32">
+      {isTxPending && <TxOverlay message="Uploading payload to IPFS and encrypting expectation parameter..." />}
 
-      <div className="container" style={{ maxWidth: 720 }}>
+      <div className="max-w-2xl mx-auto px-6">
         <FadeIn>
           {job && (
-            <div className="card card-glass" style={{ marginBottom: '2rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-              <div style={{ width: 52, height: 52, borderRadius: 12, background: 'linear-gradient(135deg,#7C3AED,#06B6D4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-heading)', fontWeight: 800, color: '#fff', fontSize: '1.1rem', flexShrink: 0 }}>
-                {job.company?.[0] ?? '?'}
-              </div>
-              <div>
-                <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem' }}>
-                  {job.title}
+            <div className="card mb-8">
+              <div className="absolute top-4 left-4 card-screw" />
+              <div className="absolute top-4 right-4 card-screw" />
+              
+              <div className="flex gap-4 items-center">
+                <div className="w-14 h-14 shrink-0 rounded-lg bg-chassis border border-white/40 shadow-floating flex items-center justify-center font-sans font-bold text-2xl text-ink">
+                  {job.company?.[0]?.toUpperCase() ?? '?'}
                 </div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--white-70)' }}>
-                  {job.company} · {job.location} · <span className="badge badge-violet" style={{ fontSize: '0.72rem', padding: '0.15rem 0.5rem' }}>{job.jobType}</span>
+                <div className="flex-1">
+                  <h2 className="font-sans font-bold text-xl text-ink leading-tight mb-1">{job.title}</h2>
+                  <div className="flex flex-wrap gap-2 text-ink-muted mt-2">
+                    <span className="text-[10px] font-mono uppercase tracking-widest bg-muted/40 px-2 py-0.5 rounded border border-white/20 shadow-recessed flex items-center gap-1.5">
+                      <Briefcase className="w-3 h-3 text-ink-muted" /> {job.company}
+                    </span>
+                    <span className="text-[10px] font-mono uppercase tracking-widest bg-muted/40 px-2 py-0.5 rounded border border-white/20 shadow-recessed flex items-center gap-1.5">
+                      <MapPin className="w-3 h-3 text-ink-muted" /> {job.location}
+                    </span>
+                    <span className="text-[10px] font-mono uppercase tracking-widest bg-muted/40 px-2 py-0.5 rounded border border-white/20 shadow-recessed flex items-center gap-1.5">
+                      {job.jobType}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div style={{ marginLeft: 'auto' }}>
-                <span className="badge badge-confidential">Salary: Confidential</span>
+                <div className="hidden sm:block">
+                  <div className="text-[10px] font-mono text-accent uppercase tracking-widest flex items-center gap-1 bg-accent/10 px-2 py-1 border border-accent/20 rounded shadow-glow-sm">
+                    <Lock className="w-3 h-3" /> Budget Encrypted
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
-          <span className="section-label">Apply to This Position</span>
-          <h1 style={{ fontSize: 'clamp(1.6rem, 4vw, 2.4rem)', marginBottom: '0.5rem' }}>
-            Your Expectation — <span className="gradient-text">Never Revealed</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-chassis shadow-recessed rounded-full mb-6 border border-white/40">
+            <span className="led led-green" />
+            <span className="font-mono text-xs font-bold text-ink-muted uppercase tracking-widest">Candidate Module</span>
+          </div>
+          
+          <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-ink tracking-tight mb-4 drop-shadow-[0_1px_1px_#ffffff]">
+            Initialize Application<br/>
+            <span className="text-accent">Zero Knowledge Required</span>
           </h1>
-          <p style={{ color: 'var(--white-70)', marginBottom: '2rem' }}>
-            Your minimum salary expectation is encrypted in your browser using ZamaFHE. Not even the employer will know your number unless you match.
+          <p className="text-ink-muted text-lg mb-8">
+            Your minimum salary expectation is encrypted locally via Zama FHE. Neither party learns the other's number unless a match evaluates to true.
           </p>
 
-          <form id="apply-job-form" onSubmit={handleSubmit}>
-            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontFamily: 'var(--font-heading)', marginBottom: '-0.5rem' }}>Your Details</h3>
+          <form id="apply-job-form" onSubmit={handleSubmit} className="flex flex-col gap-6">
+            <div className="card">
+              <div className="absolute top-4 left-4 card-screw" />
+              <div className="absolute top-4 right-4 card-screw" />
+              
+              <h3 className="font-sans font-bold text-xl text-ink mb-6 border-b border-ink/10 pb-4">Identity Credentials</h3>
 
-              <div className="form-group">
-                <label className="form-label" htmlFor="candidateName">Full Name *</label>
-                <input
-                  id="candidateName"
-                  name="candidateName"
-                  className="form-input"
-                  placeholder="Your full name"
-                  value={formData.candidateName}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+              <div className="flex flex-col gap-5">
+                <div className="form-group">
+                  <label className="form-label flex items-center gap-2" htmlFor="candidateName">
+                    <User className="w-3.5 h-3.5" /> Identity Matrix (Name)
+                  </label>
+                  <input
+                    id="candidateName"
+                    name="candidateName"
+                    className="form-input"
+                    placeholder="Enter designation"
+                    value={formData.candidateName}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
 
-              <div className="form-group">
-                <label className="form-label" htmlFor="resume">Resume (PDF/DOC) *</label>
-                <input
-                  id="resume"
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  className="form-input"
-                  style={{ cursor: 'pointer' }}
-                  onChange={e => setResumeFile(e.target.files[0])}
-                />
-                {resumeFile && (
-                  <p style={{ fontSize: '0.78rem', color: 'var(--green)', marginTop: '0.25rem' }}>
-                    ✓ {resumeFile.name} — will be uploaded to IPFS (revealed only on match)
-                  </p>
-                )}
+                <div className="form-group">
+                  <label className="form-label flex items-center gap-2" htmlFor="resume">
+                    <FileText className="w-3.5 h-3.5" /> Payload (Resume PDF/DOC)
+                  </label>
+                  <input
+                    id="resume"
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    className="form-input py-2.5 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-mono file:font-bold file:bg-chassis file:text-ink-muted file:shadow-floating hover:file:bg-muted/40 cursor-pointer"
+                    onChange={e => setResumeFile(e.target.files[0])}
+                  />
+                  {resumeFile && (
+                    <p className="text-[10px] font-mono font-bold text-green-600 mt-2 uppercase tracking-widest flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full shadow-glow-green" /> Payload Staged: {resumeFile.name}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
             <EncryptionZone
-              label="Minimum Salary Expectation"
+              label="Minimum Acceptable Parameter"
               value={minExpectation}
               onChange={setMinExpectation}
               min={30000}
@@ -180,30 +206,30 @@ export default function ApplyJob() {
               step={5000}
             />
 
-            <div style={{
-              marginTop: '1.25rem', padding: '0.75rem 1rem',
-              background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)',
-              borderRadius: 'var(--radius-md)', fontSize: '0.8rem', color: 'var(--white-70)',
-            }}>
-              🔒 <strong style={{ color: 'var(--green)' }}>What gets revealed on match?</strong>{' '}
-              Only your name and resume link. Your minimum salary is <em>never</em> decrypted — even if there's no match.
+            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex gap-3 shadow-recessed">
+              <Lock className="w-5 h-5 text-green-600 shrink-0" />
+              <p className="text-xs font-mono text-ink-muted leading-relaxed">
+                <strong className="text-green-600 uppercase tracking-widest">Protocol Rules:</strong><br/>
+                Only your identity matrix and payload link are revealed upon a successful match. Your scalar expectation is never decrypted, even in the event of a negative evaluation.
+              </p>
             </div>
 
-            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem' }}>
-              <Link to="/jobs" className="btn btn-secondary btn-lg">← Back</Link>
+            <div className="mt-2 flex gap-4">
+              <Link to="/jobs" className="btn btn-secondary py-4 px-6 shrink-0 shadow-floating">
+                Abort
+              </Link>
               {!isConnected ? (
-                <button id="connect-to-apply-btn" type="button" className="btn btn-primary btn-lg" style={{ flex: 1 }} onClick={openConnectModal}>
-                  Connect Wallet to Apply
+                <button id="connect-to-apply-btn" type="button" className="btn btn-primary w-full py-4 text-base shadow-floating" onClick={openConnectModal}>
+                  Connect Terminal
                 </button>
               ) : (
                 <button
                   id="submit-apply-btn"
                   type="submit"
-                  className="btn btn-primary btn-lg"
-                  style={{ flex: 1 }}
+                  className="btn btn-primary w-full py-4 text-base disabled:opacity-50 disabled:cursor-not-allowed shadow-floating"
                   disabled={isTxPending || !fhevmReady}
                 >
-                  {isTxPending ? 'Processing...' : '🔐 Encrypt & Apply (ZamaFHE)'}
+                  {isTxPending ? 'Processing...' : 'Encrypt & Transmit Request'}
                 </button>
               )}
             </div>
