@@ -1,4 +1,3 @@
-import { Lock } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -10,7 +9,9 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex flex-col items-center md:items-start gap-2">
           <div className="flex items-center gap-2 text-ink">
-            <Lock className="w-5 h-5 text-ink-muted" />
+            <div className="flex h-6 w-6 items-center justify-center rounded overflow-hidden">
+              <img src="/veilpay-logo.png" alt="VeilPay Logo" className="w-full h-full object-cover" />
+            </div>
             <span className="font-sans font-bold text-lg tracking-tight">VeilPay</span>
           </div>
           <p className="text-ink-muted text-sm font-medium">Confidential salary matching powered by <strong className="text-ink font-black bg-accent px-1.5 py-0.5 rounded shadow-sharp">Zama fhEVM</strong></p>
