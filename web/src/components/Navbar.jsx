@@ -1,5 +1,4 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Lock } from 'lucide-react';
 import ConnectWalletButton from './ConnectWalletButton';
 
 export default function Navbar() {
@@ -16,8 +15,8 @@ export default function Navbar() {
   return (
     <nav className="fixed top-0 left-0 right-0 h-[80px] z-50 flex items-center justify-between px-6 md:px-12 bg-chassis border-b border-white/40 shadow-sm">
       <Link to="/" className="flex items-center gap-3" id="nav-logo">
-        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-chassis shadow-card border border-white/20">
-          <Lock className="text-ink bg-accent p-1 rounded shadow-floating h-6 w-6" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-md shadow-card border border-white/20 overflow-hidden">
+          <img src="/veilpay-logo.png" alt="VeilPay Logo" className="w-full h-full object-cover" />
         </div>
         <span className="font-sans font-bold text-xl tracking-tight text-ink">VeilPay</span>
       </Link>
