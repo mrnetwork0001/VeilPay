@@ -189,9 +189,10 @@ export default function ApplyJob() {
                     onChange={e => setResumeFile(e.target.files[0])}
                   />
                   {resumeFile && (
-                    <p className="text-[10px] font-mono font-bold text-green-600 mt-2 uppercase tracking-widest flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full shadow-glow-green" /> Payload Staged: {resumeFile.name}
-                    </p>
+                    <div className="text-[10px] font-mono font-bold text-green-600 mt-2 uppercase tracking-widest flex items-start gap-2">
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full shadow-glow-green shrink-0 mt-1" /> 
+                      <span className="break-all">Payload Staged:<br/>{resumeFile.name}</span>
+                    </div>
                   )}
                 </div>
               </div>
