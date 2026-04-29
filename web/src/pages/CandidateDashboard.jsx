@@ -4,6 +4,7 @@ import { useWalletConnect } from '../components/ConnectWalletButton';
 import toast from 'react-hot-toast';
 import { FadeIn, StaggerContainer, StaggerItem } from '../components/Animations';
 import { useContract } from '../hooks/useContract';
+import FheChat from '../components/FheChat';
 
 function timeAgo(timestamp) {
   const diff = Math.floor((Date.now() / 1000) - timestamp);
@@ -130,6 +131,12 @@ export default function CandidateDashboard() {
                           The employer has been notified and may unlock your resume. Your minimum salary was never revealed.
                         </div>
                       </div>
+                      <FheChat
+                        jobId={app.jobId}
+                        applicationId={app.appId}
+                        counterpartyName={app.company}
+                        isEmployer={false}
+                      />
                     )}
 
                     {app.matchRevealed && !app.matchResult && (

@@ -177,6 +177,31 @@ export function useContract() {
     return await tx.wait();
   }, [getWriteContract]);
 
+  // ─── Chat functions (FHE-gated) ─────────────────────────────────────────────
+
+  const sendMessage = useCallback(async (jobId, appId, content) => {
+    const contract = await getWriteContract();
+    const tx = await contract.sendMessage(jobId, appId, content);
+    return await tx.wait();
+  }, [getWriteContract]);
+
+  const getMessages = useCallback(async (jobId, appId) => {
+    // Requires msg.sender to be a matched participant
+    const contract = await getWriteContract();
+    const [senders, contents, timestamps] = await contract.getMessages(jobId, appId);
+    return senders.map((sender, i) => ({
+      sender,
+      content: contents[i],
+      timestamp: Number(timestamps[i]),
+    }));
+  }, [getWriteContract]);
+
+  const getMessageCount = useCallback(async (jobId, appId) => {
+    const contract = await getReadContract();
+    const count = await contract.getMessageCount(jobId, appId);
+    return Number(count);
+  }, [getReadContract]);
+
   return {
     // Wallet state (from wagmi — driven by ConnectWalletButton)
     account,
@@ -188,6 +213,7 @@ export function useContract() {
     getApplicationsForJob,
     getMyApplications,
     getResumeIfUnlocked,
+    getMessageCount,
     // Write
     createJobPosting,
     applyToJob,
@@ -195,5 +221,8 @@ export function useContract() {
     revealMatchResult,
     unlockResume,
     closeJob,
+    // Chat
+    sendMessage,
+    getMessages,
   };
 }

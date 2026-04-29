@@ -439,4 +439,125 @@ contract BlindHire is ZamaEthereumConfig {
             }
         }
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // FHE-Gated Chat System
+    // ─────────────────────────────────────────────────────────────
+    //
+    // Only employer-candidate pairs with a confirmed FHE match
+    // (salary compatibility verified via encrypted FHE.le comparison)
+    // can exchange messages. The FHE computation is the trust anchor
+    // that unlocks this communication channel.
+
+    struct ChatMessage {
+        address sender;
+        string content;
+        uint256 timestamp;
+    }
+
+    /// @dev (jobId, applicationId) => array of messages
+    mapping(uint256 => mapping(uint256 => ChatMessage[])) private chatMessages;
+
+    event MessageSent(
+        uint256 indexed jobId,
+        uint256 indexed applicationId,
+        address indexed sender,
+        uint256 messageIndex
+    );
+
+    /**
+     * @notice Send a message in an FHE-gated chat channel.
+     * @dev    Only the employer or the matched candidate can send messages.
+     *         The chat channel only exists because FHE.le() confirmed salary compatibility.
+     * @param jobId         Job identifier
+     * @param applicationId Application identifier
+     * @param content       Message content
+     */
+    function sendMessage(
+        uint256 jobId,
+        uint256 applicationId,
+        string calldata content
+    ) external jobExists(jobId) appExists(jobId, applicationId) {
+        Application storage app = applications[jobId][applicationId];
+        JobPosting storage posting = jobPostings[jobId];
+
+        // Gate 1: Match must be revealed and confirmed via FHE
+        require(app.matchRevealed && app.matchResult, "BlindHire: No confirmed FHE match");
+
+        // Gate 2: Only the two matched parties can chat
+        require(
+            msg.sender == posting.employer || msg.sender == app.candidate,
+            "BlindHire: Not a participant in this match"
+        );
+
+        // Gate 3: Message must not be empty
+        require(bytes(content).length > 0, "BlindHire: Empty message");
+
+        uint256 msgIndex = chatMessages[jobId][applicationId].length;
+        chatMessages[jobId][applicationId].push(ChatMessage({
+            sender: msg.sender,
+            content: content,
+            timestamp: block.timestamp
+        }));
+
+        emit MessageSent(jobId, applicationId, msg.sender, msgIndex);
+    }
+
+    /**
+     * @notice Retrieve all messages in an FHE-gated chat channel.
+     * @dev    Only the employer or the matched candidate can read the chat.
+     * @param jobId         Job identifier
+     * @param applicationId Application identifier
+     * @return senders      Array of sender addresses
+     * @return contents     Array of message contents
+     * @return timestamps   Array of message timestamps
+     */
+    function getMessages(
+        uint256 jobId,
+        uint256 applicationId
+    )
+        external
+        view
+        jobExists(jobId)
+        appExists(jobId, applicationId)
+        returns (
+            address[] memory senders,
+            string[] memory contents,
+            uint256[] memory timestamps
+        )
+    {
+        Application storage app = applications[jobId][applicationId];
+        JobPosting storage posting = jobPostings[jobId];
+
+        // Only matched participants can read messages
+        require(app.matchRevealed && app.matchResult, "BlindHire: No confirmed FHE match");
+        require(
+            msg.sender == posting.employer || msg.sender == app.candidate,
+            "BlindHire: Not a participant in this match"
+        );
+
+        ChatMessage[] storage msgs = chatMessages[jobId][applicationId];
+        uint256 count = msgs.length;
+
+        senders = new address[](count);
+        contents = new string[](count);
+        timestamps = new uint256[](count);
+
+        for (uint256 i = 0; i < count; i++) {
+            senders[i] = msgs[i].sender;
+            contents[i] = msgs[i].content;
+            timestamps[i] = msgs[i].timestamp;
+        }
+    }
+
+    /**
+     * @notice Get the message count for a chat channel.
+     * @dev    Public view so either party can check for new messages.
+     */
+    function getMessageCount(
+        uint256 jobId,
+        uint256 applicationId
+    ) external view jobExists(jobId) appExists(jobId, applicationId) returns (uint256) {
+        return chatMessages[jobId][applicationId].length;
+    }
 }

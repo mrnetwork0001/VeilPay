@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FadeIn, StaggerContainer, StaggerItem } from '../components/Animations';
 import { useContract } from '../hooks/useContract';
+import FheChat from '../components/FheChat';
 
 function StatusBadge({ app }) {
   if (!app.matchRevealed) return <span className="badge badge-pending">⏳ Pending Reveal</span>;
@@ -14,6 +15,22 @@ function StatusBadge({ app }) {
 
 function ApplicationRow({ app, jobId, onResolve, onReveal, onUnlockResume, isLoading }) {
   const [expanded, setExpanded] = useState(false);
+  const [resumeCid, setResumeCid] = useState(null);
+  const [loadingResume, setLoadingResume] = useState(false);
+  const { getResumeIfUnlocked } = useContract();
+
+  const handleViewResume = async () => {
+    if (resumeCid) return; // Already loaded
+    setLoadingResume(true);
+    try {
+      const cid = await getResumeIfUnlocked(jobId, app.appId);
+      setResumeCid(cid);
+    } catch (err) {
+      toast.error('Failed to fetch resume: ' + (err.message || 'Unknown error'));
+    } finally {
+      setLoadingResume(false);
+    }
+  };
 
   return (
     <div className="card" style={{ marginBottom: '0.75rem' }}>
@@ -43,7 +60,7 @@ function ApplicationRow({ app, jobId, onResolve, onReveal, onUnlockResume, isLoa
             exit={{ height: 0, opacity: 0 }}
             style={{ overflow: 'hidden' }}
           >
-            <div style={{ borderTop: '1px solid var(--border)', marginTop: '1rem', paddingTop: '1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div style={{ borderTop: '1px solid var(--border)', marginTop: '1rem', paddingTop: '1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
               {!app.matchRevealed && (
                 <>
                   <button
@@ -75,9 +92,80 @@ function ApplicationRow({ app, jobId, onResolve, onReveal, onUnlockResume, isLoa
                 </button>
               )}
               {app.resumeUnlocked && (
-                <span style={{ fontSize: '0.8rem', color: 'var(--green)' }}>
-                  ✓ Resume unlocked — view in Dashboard below
-                </span>
+                <div style={{ width: '100%' }}>
+                  <div style={{
+                    display: 'flex', gap: '0.75rem', alignItems: 'center',
+                    flexWrap: 'wrap', marginBottom: resumeCid ? '0.75rem' : 0
+                  }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--green)' }}>
+                      ✓ Resume unlocked
+                    </span>
+                    {!resumeCid && (
+                      <button
+                        className="btn btn-cyan btn-sm"
+                        onClick={handleViewResume}
+                        disabled={loadingResume}
+                        style={{ fontSize: '0.78rem' }}
+                      >
+                        {loadingResume ? '⏳ Loading...' : '📄 View Resume'}
+                      </button>
+                    )}
+                  </div>
+                  {resumeCid && (
+                    <div style={{
+                      background: 'rgba(0,255,200,0.05)',
+                      border: '1px solid rgba(0,255,200,0.2)',
+                      borderRadius: '0.5rem',
+                      padding: '0.75rem 1rem',
+                    }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--white-50)', marginBottom: '0.5rem' }}>
+                        IPFS Resume CID
+                      </div>
+                      <div style={{
+                        fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--cyan)',
+                        wordBreak: 'break-all', marginBottom: '0.75rem'
+                      }}>
+                        {resumeCid}
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <a
+                          href={`https://gateway.pinata.cloud/ipfs/${resumeCid}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-primary btn-sm"
+                          style={{ fontSize: '0.78rem', textDecoration: 'none' }}
+                        >
+                          🌐 View on IPFS
+                        </a>
+                        <a
+                          href={`https://ipfs.io/ipfs/${resumeCid}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-secondary btn-sm"
+                          style={{ fontSize: '0.78rem', textDecoration: 'none' }}
+                        >
+                          📥 Download
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                  {/* FHE-Gated Chat — only appears after match confirmation */}
+                  <FheChat
+                    jobId={jobId}
+                    applicationId={app.appId}
+                    counterpartyName={app.candidateName}
+                    isEmployer={true}
+                  />
+                </div>
+              )}
+              {/* Chat also available when match confirmed but resume not yet unlocked */}
+              {app.matchRevealed && app.matchResult && !app.resumeUnlocked && (
+                <FheChat
+                  jobId={jobId}
+                  applicationId={app.appId}
+                  counterpartyName={app.candidateName}
+                  isEmployer={true}
+                />
               )}
             </div>
           </motion.div>
