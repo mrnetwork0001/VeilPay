@@ -182,7 +182,7 @@ export default function Landing() {
             <h2 className="font-sans font-bold text-4xl text-white mb-6">
               One Line of Code.<br/>Infinite Privacy.
             </h2>
-            <p className="text-ink-muted text-lg leading-relaxed mb-8 max-w-md">
+            <p className="text-white/70 text-lg leading-relaxed mb-8 max-w-md">
               The entire salary-matching logic is a single homomorphic comparison. Both values go in as ciphertexts. A boolean comes out. The numbers stay encrypted forever.
             </p>
             <Link to="/post-job" id="cta-post-job" className="btn btn-primary text-base">
@@ -193,18 +193,18 @@ export default function Landing() {
           <FadeIn delay={0.2}>
             <div className="bg-dark-panel rounded-xl shadow-card border border-white/10 p-6 font-mono text-sm relative overflow-hidden group">
               <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] opacity-20 pointer-events-none" />
-              <div className="flex items-center gap-2 mb-4 pb-4 border-b border-white/10 text-ink-muted text-xs">
+              <div className="flex items-center gap-2 mb-4 pb-4 border-b border-white/10 text-white/50 text-xs">
                 <Code2 className="w-4 h-4" /> VeilPay.sol — resolveApplication()
               </div>
               <pre className="text-white/80 leading-loose overflow-x-auto">
-<span className="text-ink-muted">// THE CORE FHE COMPUTATION</span><br/>
+<span className="text-white/40">// THE CORE FHE COMPUTATION</span><br/>
 <span className="text-accent font-bold">ebool</span> matched = FHE.le(<br/>
 &nbsp;&nbsp;application.min_expectation,<br/>
 &nbsp;&nbsp;posting.max_budget<br/>
 );<br/><br/>
-<span className="text-ink-muted">// min_expectation: ciphertext ✓</span><br/>
-<span className="text-ink-muted">// max_budget:      ciphertext ✓</span><br/>
-<span className="text-ink-muted">// plaintext seen:  NEVER      ✓</span>
+<span className="text-white/40">// min_expectation: ciphertext ✓</span><br/>
+<span className="text-white/40">// max_budget:      ciphertext ✓</span><br/>
+<span className="text-white/40">// plaintext seen:  NEVER      ✓</span>
               </pre>
             </div>
           </FadeIn>
