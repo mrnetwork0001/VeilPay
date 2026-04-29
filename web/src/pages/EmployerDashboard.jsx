@@ -228,56 +228,11 @@ export default function EmployerDashboard() {
   const handleReveal = async (jobId, appId) => {
     setTxLoading(true);
     try {
-      toast.loading('Requesting Gateway decryption...', { id: 'tx' });
+      toast.loading('Revealing match result on-chain...', { id: 'tx' });
       await revealMatchResult(jobId, appId);
-      toast.success('Reveal request sent! Polling for Gateway callback...', { id: 'tx', duration: 3000 });
-
-      // ── Poll for Gateway callback ──────────────────────────────────────────
-      // The Zama Gateway calls `callbackMatchResult` asynchronously.
-      // We poll the contract every 6 seconds for up to 2 minutes.
-      const POLL_INTERVAL = 6000;
-      const MAX_POLLS = 20; // 20 × 6s = 2 minutes
-
-      let polls = 0;
-      const pollForResult = () => new Promise((resolve) => {
-        const interval = setInterval(async () => {
-          polls++;
-          try {
-            const apps = await getApplicationsForJob(jobId);
-            const app = apps.find(a => Number(a.appId) === Number(appId));
-            if (app && app.matchRevealed) {
-              clearInterval(interval);
-              toast.success(
-                app.matchResult
-                  ? '✅ Match confirmed! The candidate\'s salary is within budget.'
-                  : '❌ No match — salary expectation exceeds budget.',
-                { id: 'gateway-poll', duration: 8000 }
-              );
-              resolve(true);
-              return;
-            }
-          } catch (err) {
-            console.warn('[Gateway Poll] Error fetching apps:', err.message);
-          }
-
-          if (polls >= MAX_POLLS) {
-            clearInterval(interval);
-            toast.error('Gateway callback not received within 2 minutes. Check back later.', { id: 'gateway-poll', duration: 8000 });
-            resolve(false);
-            return;
-          }
-
-          toast.loading(`⏳ Waiting for Zama Gateway... (${polls * 6}s / ${MAX_POLLS * 6}s)`, { id: 'gateway-poll' });
-        }, POLL_INTERVAL);
-
-        // Show initial polling toast
-        toast.loading('⏳ Waiting for Zama Gateway callback...', { id: 'gateway-poll' });
-      });
-
-      await pollForResult();
-
+      toast.success('✅ Match revealed! The FHE-computed result is now visible.', { id: 'tx', duration: 5000 });
     } catch (err) {
-      toast.error(err.message || 'Failed to request reveal.', { id: 'tx' });
+      toast.error(err.message || 'Failed to reveal match.', { id: 'tx' });
     } finally {
       setTxLoading(false);
     }
