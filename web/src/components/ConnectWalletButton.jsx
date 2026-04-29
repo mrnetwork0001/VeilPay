@@ -3,15 +3,13 @@ import { useAccount, useConnect, useDisconnect, useBalance } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const WALLET_META = {
-  metaMaskSDK: { name: 'MetaMask', icon: '🦊' },
-  metaMask:    { name: 'MetaMask', icon: '🦊' },
-  coinbaseWalletSDK: { name: 'Coinbase', icon: '🔵' },
-  coinbaseWallet:    { name: 'Coinbase', icon: '🔵' },
-  injected:    { name: 'Browser Wallet', icon: '🌐' },
+  injected:      { name: 'Browser Wallet', icon: '🌐' },
+  walletConnect: { name: 'Mobile / QR', icon: '📱' },
 };
 
-function getWalletInfo(connectorId) {
-  return WALLET_META[connectorId] || { name: connectorId, icon: '🔗' };
+function getWalletInfo(connectorId, connectorType) {
+  if (connectorType === 'walletConnect' || connectorId === 'walletConnect') return WALLET_META.walletConnect;
+  return WALLET_META.injected;
 }
 
 function shortenAddress(addr) {
@@ -21,9 +19,6 @@ function shortenAddress(addr) {
 
 /**
  * ConnectWalletButton — Custom wallet connection UI
- *
- * Replaces RainbowKit's ConnectButton. Supports MetaMask, Coinbase Wallet,
- * and any injected EIP-1193 provider. No WalletConnect dependency.
  */
 export default function ConnectWalletButton({ variant = 'navbar' }) {
   const { address, isConnected, connector: activeConnector } = useAccount();
@@ -46,15 +41,23 @@ export default function ConnectWalletButton({ variant = 'navbar' }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Deduplicate connectors by ID (wagmi can register multiples)
-  const uniqueConnectors = connectors.reduce((acc, c) => {
-    // Skip duplicates, prefer the first one found
-    const key = c.id === 'metaMaskSDK' ? 'metaMask' : c.id;
-    if (!acc.find(x => (x.id === 'metaMaskSDK' ? 'metaMask' : x.id) === key)) {
-      acc.push(c);
+  // Consolidate into 2 main options: Browser Wallet & WalletConnect
+  const displayOptions = [
+    {
+      id: 'browser-wallet',
+      name: 'Browser Wallet',
+      icon: '🌐',
+      desc: 'MetaMask, Rabby, OKX',
+      connector: connectors.find(c => c.type === 'injected' || c.id === 'injected')
+    },
+    {
+      id: 'wallet-connect',
+      name: 'Mobile / QR',
+      icon: '📱',
+      desc: 'WalletConnect compatible apps',
+      connector: connectors.find(c => c.type === 'walletConnect' || c.id === 'walletConnect')
     }
-    return acc;
-  }, []);
+  ].filter(opt => opt.connector);
 
   // ── Not connected: show connect button ──────────────────────────────────────
   if (!isConnected) {
@@ -68,7 +71,7 @@ export default function ConnectWalletButton({ variant = 'navbar' }) {
         >
           {isPending ? (
             <span className="flex items-center gap-2">
-              <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span className="w-3 h-3 border-2 border-ink/30 border-t-ink rounded-full animate-spin" />
               Connecting...
             </span>
           ) : (
@@ -79,35 +82,46 @@ export default function ConnectWalletButton({ variant = 'navbar' }) {
         <AnimatePresence>
           {showWalletMenu && (
             <motion.div
-              className="absolute right-0 mt-3 w-64 bg-chassis border border-white/40 shadow-floating rounded-xl overflow-hidden p-2"
+              className="absolute right-0 mt-3 w-72 bg-chassis border border-white/40 shadow-floating rounded-xl overflow-hidden p-3"
               initial={{ opacity: 0, y: -8, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.95 }}
               transition={{ duration: 0.15, ease: [0.175, 0.885, 0.32, 1.275] }}
             >
-              <div className="px-4 py-3 text-xs font-mono font-bold text-ink-muted uppercase tracking-wider border-b border-ink/5 mb-2">Connect a Wallet</div>
-              {uniqueConnectors.map((connector) => {
-                const info = getWalletInfo(connector.id);
-                return (
+              <div className="px-3 py-2 text-[10px] font-mono font-bold text-ink-muted uppercase tracking-wider mb-2 flex items-center justify-between">
+                <span>Select Interface</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse shadow-glow"></span>
+              </div>
+              
+              <div className="flex flex-col gap-2">
+                {displayOptions.map((opt) => (
                   <button
-                    key={connector.uid}
-                    id={`wallet-option-${connector.id}`}
-                    className="w-full flex items-center justify-between px-4 py-3 text-sm font-sans font-medium text-ink bg-transparent hover:bg-muted/30 rounded-lg transition-colors group"
+                    key={opt.id}
+                    id={`wallet-option-${opt.id}`}
+                    className="w-full flex items-center justify-between px-4 py-3 bg-chassis border border-ink/5 shadow-recessed hover:shadow-floating hover:border-white/40 rounded-lg transition-all group"
                     onClick={() => {
-                      connect({ connector });
+                      connect({ connector: opt.connector });
                       setShowWalletMenu(false);
                     }}
                   >
-                    <span className="flex items-center gap-3">
-                      <span className="text-xl grayscale group-hover:grayscale-0 transition-all">{info.icon}</span>
-                      {info.name}
-                    </span>
-                    <span className="text-ink-muted group-hover:translate-x-1 transition-transform">→</span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-md bg-white shadow-sharp text-lg grayscale group-hover:grayscale-0 transition-all">
+                        {opt.icon}
+                      </div>
+                      <div className="flex flex-col items-start text-left">
+                        <span className="text-sm font-sans font-bold text-ink">{opt.name}</span>
+                        <span className="text-[10px] font-mono text-ink-muted uppercase tracking-wider">{opt.desc}</span>
+                      </div>
+                    </div>
+                    <span className="text-ink-muted group-hover:translate-x-1 group-hover:text-ink transition-all">→</span>
                   </button>
-                );
-              })}
-              <div className="px-4 py-3 mt-2 text-[10px] font-mono text-ink-muted uppercase bg-muted/20 rounded-md">
-                Sepolia Testnet
+                ))}
+              </div>
+
+              <div className="mt-3 text-center">
+                <span className="inline-block px-2 py-1 text-[9px] font-mono font-bold text-ink uppercase bg-accent rounded border border-ink/10 shadow-recessed">
+                  Sepolia Testnet
+                </span>
               </div>
             </motion.div>
           )}
@@ -117,7 +131,7 @@ export default function ConnectWalletButton({ variant = 'navbar' }) {
   }
 
   // ── Connected: show address + disconnect ────────────────────────────────────
-  const walletInfo = getWalletInfo(activeConnector?.id);
+  const walletInfo = getWalletInfo(activeConnector?.id, activeConnector?.type);
 
   return (
     <div className="relative z-50" ref={dropdownRef}>

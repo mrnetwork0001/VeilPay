@@ -1,21 +1,23 @@
 import { http, createConfig } from 'wagmi';
 import { sepolia } from 'wagmi/chains';
-import { injected, metaMask, coinbaseWallet } from 'wagmi/connectors';
+import { injected, walletConnect } from 'wagmi/connectors';
 
 /**
- * Wagmi config — direct connectors, no WalletConnect dependency.
+ * Wagmi config — Custom VeilPay Configuration
  *
  * Supports:
- *   • MetaMask (browser extension + mobile)
- *   • Coinbase Wallet (extension + smart wallet)
- *   • Any injected EIP-1193 provider (Brave, Trust, Rabby, etc.)
+ *   • Browser Wallet (Injected EIP-1193 / EIP-6963 like MetaMask, Rabby, OKX)
+ *   • WalletConnect (for Mobile Wallets via QR / App Link)
  */
 export const wagmiConfig = createConfig({
   chains: [sepolia],
   connectors: [
     injected(),
-    metaMask(),
-    coinbaseWallet({ appName: 'VeilPay' }),
+    walletConnect({ 
+      projectId: import.meta.env.VITE_WC_PROJECT_ID || '3fcc6bba6f1de962d911bb5b5c3dba68',
+      name: 'WalletConnect',
+      showQrModal: true 
+    }),
   ],
   transports: {
     [sepolia.id]: http(
