@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AnimatePresence } from 'framer-motion';
+import { TransactionProvider } from './components/TransactionOverlay';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Landing from './pages/Landing';
@@ -30,28 +31,30 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <Navbar />
-      <AppRoutes />
-      <Footer />
-      <Toaster
-        position="bottom-right"
-        toastOptions={{
-          style: {
-            background: '#14141F',
-            color: '#fff',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: '12px',
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '0.875rem',
-          },
-          success: {
-            iconTheme: { primary: '#10B981', secondary: '#14141F' }
-          },
-          error: {
-            iconTheme: { primary: '#EF4444', secondary: '#14141F' }
-          },
-        }}
-      />
+      <TransactionProvider>
+        <Navbar />
+        <AppRoutes />
+        <Footer />
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            style: {
+              background: '#14141F',
+              color: '#fff',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '12px',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '0.875rem',
+            },
+            success: {
+              iconTheme: { primary: '#10B981', secondary: '#14141F' }
+            },
+            error: {
+              iconTheme: { primary: '#EF4444', secondary: '#14141F' }
+            },
+          }}
+        />
+      </TransactionProvider>
     </BrowserRouter>
   );
 }

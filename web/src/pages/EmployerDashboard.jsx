@@ -7,6 +7,7 @@ import { FadeIn, StaggerContainer, StaggerItem } from '../components/Animations'
 import { useContract } from '../hooks/useContract';
 import { useFhevm } from '../hooks/useFhevm';
 import { useWalletClient } from 'wagmi';
+import { useTransaction } from '../components/TransactionOverlay';
 import FheChat from '../components/FheChat';
 import { Briefcase, Settings2, Unlock, Eye, FileDown, ExternalLink, ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle } from 'lucide-react';
 
@@ -275,6 +276,7 @@ export default function EmployerDashboard() {
   const { openConnectModal } = useWalletConnect();
   const { decryptEbool } = useFhevm();
   const { data: walletClient } = useWalletClient();
+  const { startTransaction, updateStep, failTransaction, STATUS } = useTransaction();
   
   const [jobIds, setJobIds] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -295,12 +297,14 @@ export default function EmployerDashboard() {
 
   const handleResolve = async (jobId, appId) => {
     setTxLoading(true);
+    startTransaction('Running FHE Comparison', [
+      'Computing FHE.le() on encrypted salaries',
+    ]);
     try {
-      toast.loading('Running FHE comparison on-chain...', { id: 'tx' });
       await resolveApplication(jobId, appId);
-      toast.success('Match computed via TFHE.le() — encrypted result stored on-chain.', { id: 'tx', duration: 5000 });
+      updateStep(0, STATUS.DONE, 'Encrypted result stored on-chain');
     } catch (err) {
-      toast.error(err.message || 'Failed to resolve.', { id: 'tx' });
+      failTransaction(err.message || 'Failed to resolve.');
     } finally {
       setTxLoading(false);
     }
@@ -308,37 +312,42 @@ export default function EmployerDashboard() {
 
   const handleReveal = async (jobId, appId, _matchHandle) => {
     setTxLoading(true);
+    startTransaction('Revealing Match Result', [
+      'Running FHE comparison on-chain',
+      'Fetching fresh encrypted handle',
+      'Decrypting via Zama coprocessor',
+      'Committing result to contract',
+    ]);
     try {
-      // Step 1: Always re-resolve to get a FRESH handle with fresh ACL flags
-      toast.loading('Step 1/3: Running FHE comparison on-chain...', { id: 'tx' });
+      // Step 1: Re-resolve
       await resolveApplication(jobId, appId);
+      updateStep(0, STATUS.DONE, 'FHE.le() computed successfully');
 
-      // Step 2: Fetch the fresh handle from the contract
-      toast.loading('Step 2/3: Fetching fresh FHE handle...', { id: 'tx' });
+      // Step 2: Fetch fresh handle
       const apps = await getApplicationsForJob(jobId);
       const freshApp = apps.find(a => a.appId === appId);
       if (!freshApp?.matchHandle || BigInt(freshApp.matchHandle) === 0n) {
-        throw new Error("FHE handle is empty after resolve. The coprocessor may not have processed the computation yet.");
+        throw new Error("FHE handle is empty after resolve.");
       }
+      updateStep(1, STATUS.DONE, `Handle: ${freshApp.matchHandle.slice(0, 14)}...`);
 
-      // Step 3: Decrypt via publicDecrypt with retries
-      toast.loading('Step 3/3: Decrypting via Zama coprocessor...', { id: 'tx' });
+      // Step 3: Decrypt
       const decryptedMatch = await decryptEbool(freshApp.matchHandle, walletClient, (progressMsg) => {
-        toast.loading(`⏳ ${progressMsg}`, { id: 'tx' });
+        updateStep(2, STATUS.ACTIVE, progressMsg);
       });
-      
-      toast.loading(`Decrypted: ${decryptedMatch ? 'MATCH ✅' : 'NO MATCH ❌'}. Committing to contract...`, { id: 'tx' });
+      updateStep(2, STATUS.DONE, `Result: ${decryptedMatch ? 'MATCH ✅' : 'NO MATCH ❌'}`);
+
+      // Step 4: Commit
       await revealMatchResult(jobId, appId, decryptedMatch);
-      
-      toast.success(`Match revealed: ${decryptedMatch ? 'MATCH ✅' : 'NO MATCH ❌'}`, { id: 'tx', duration: 5000 });
+      updateStep(3, STATUS.DONE, 'Result confirmed on-chain');
+
       loadJobs();
     } catch (err) {
       const msg = err.message || 'Failed to reveal match.';
-      // Don't show "Already resolved and revealed" as an error — just means step 1 was redundant
       if (msg.includes('Already resolved')) {
-        toast.error('This match has already been revealed.', { id: 'tx' });
+        failTransaction('This match has already been revealed.');
       } else {
-        toast.error(msg, { id: 'tx' });
+        failTransaction(msg);
       }
     } finally {
       setTxLoading(false);
@@ -347,12 +356,14 @@ export default function EmployerDashboard() {
 
   const handleUnlock = async (jobId, appId) => {
     setTxLoading(true);
+    startTransaction('Unlocking Resume', [
+      'Submitting unlock transaction to Sepolia',
+    ]);
     try {
-      toast.loading('Unlocking resume...', { id: 'tx' });
       await unlockResume(jobId, appId);
-      toast.success('Resume unlocked! The candidate\'s IPFS link is now accessible.', { id: 'tx', duration: 5000 });
+      updateStep(0, STATUS.DONE, 'Resume IPFS link is now accessible');
     } catch (err) {
-      toast.error(err.message || 'Failed to unlock resume.', { id: 'tx' });
+      failTransaction(err.message || 'Failed to unlock resume.');
     } finally {
       setTxLoading(false);
     }
@@ -361,16 +372,17 @@ export default function EmployerDashboard() {
   const handleBatchResolve = async (jobId, apps) => {
     setTxLoading(true);
     const total = apps.length;
+    const stepLabels = apps.map(app => `Resolve: ${app.candidateName}`);
+    startTransaction(`Resolving ${total} Applications`, stepLabels);
     let completed = 0;
     try {
       for (const app of apps) {
-        completed++;
-        toast.loading(`⚙️ Running FHE match ${completed}/${total}...`, { id: 'batch-tx' });
         await resolveApplication(jobId, app.appId);
+        updateStep(completed, STATUS.DONE, 'FHE comparison computed');
+        completed++;
       }
-      toast.success(`✅ All ${total} applications resolved via FHE.`, { id: 'batch-tx', duration: 5000 });
     } catch (err) {
-      toast.error(`Failed at applicant ${completed}/${total}: ${err.message || 'Unknown error'}`, { id: 'batch-tx' });
+      failTransaction(`Failed at applicant ${completed + 1}/${total}: ${err.message || 'Unknown error'}`);
     } finally {
       setTxLoading(false);
     }
@@ -379,29 +391,33 @@ export default function EmployerDashboard() {
   const handleBatchReveal = async (jobId, apps) => {
     setTxLoading(true);
     const total = apps.length;
+    const stepLabels = [];
+    apps.forEach(app => {
+      stepLabels.push(`Resolve & decrypt: ${app.candidateName}`);
+      stepLabels.push(`Commit result: ${app.candidateName}`);
+    });
+    startTransaction(`Revealing ${total} Matches`, stepLabels);
+    let stepIdx = 0;
     let completed = 0;
     try {
       for (const app of apps) {
-        completed++;
-        // Step 1: Re-resolve for fresh handle
-        toast.loading(`⚙️ Resolving ${completed}/${total}: ${app.candidateName}...`, { id: 'batch-tx' });
         await resolveApplication(jobId, app.appId);
-
-        // Step 2: Fetch fresh handle
         const freshApps = await getApplicationsForJob(jobId);
         const freshApp = freshApps.find(a => a.appId === app.appId);
-
-        // Step 3: Decrypt + reveal
-        toast.loading(`🔮 Decrypting ${completed}/${total}: ${app.candidateName}...`, { id: 'batch-tx' });
         const decryptedMatch = await decryptEbool(freshApp.matchHandle, walletClient, (msg) => {
-          toast.loading(`⏳ ${completed}/${total}: ${msg}`, { id: 'batch-tx' });
+          updateStep(stepIdx, STATUS.ACTIVE, msg);
         });
+        updateStep(stepIdx, STATUS.DONE, `${decryptedMatch ? 'MATCH ✅' : 'NO MATCH ❌'}`);
+        stepIdx++;
+
         await revealMatchResult(jobId, app.appId, decryptedMatch);
+        updateStep(stepIdx, STATUS.DONE, 'Confirmed on-chain');
+        stepIdx++;
+        completed++;
       }
-      toast.success(`✅ All ${total} matches revealed!`, { id: 'batch-tx', duration: 5000 });
       loadJobs();
     } catch (err) {
-      toast.error(`Failed at applicant ${completed}/${total}: ${err.message || 'Unknown error'}`, { id: 'batch-tx' });
+      failTransaction(`Failed at applicant ${completed + 1}/${total}: ${err.message || 'Unknown error'}`);
     } finally {
       setTxLoading(false);
     }

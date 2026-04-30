@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWalletConnect } from '../components/ConnectWalletButton';
 import toast from 'react-hot-toast';
-import { FadeIn, TxOverlay } from '../components/Animations';
+import { FadeIn } from '../components/Animations';
 import EncryptionZone from '../components/EncryptionZone';
 import { useContract } from '../hooks/useContract';
 import { useFhevm } from '../hooks/useFhevm';
+import { useTransaction } from '../components/TransactionOverlay';
 import { Building2, MapPin, Briefcase } from 'lucide-react';
 
 const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Remote', 'Internship'];
@@ -15,6 +16,7 @@ export default function PostJob() {
   const { account, isConnected, createJobPosting } = useContract();
   const { openConnectModal } = useWalletConnect();
   const { isReady: fhevmReady, fheLoaded, encryptUint64 } = useFhevm();
+  const { startTransaction, updateStep, failTransaction, STATUS } = useTransaction();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -49,27 +51,28 @@ export default function PostJob() {
     }
 
     setIsTxPending(true);
+    startTransaction('Deploying Job Module', [
+      'Encrypting budget via ZamaFHE',
+      'Deploying job module to Sepolia',
+    ]);
 
     try {
-      toast.loading('Encrypting your budget with ZamaFHE...', { id: 'tx' });
-      await new Promise(r => setTimeout(r, 100));
-
       let handle, inputProof;
       try {
         ({ handle, inputProof } = await encryptUint64(maxBudget, account));
       } catch (encErr) {
-        toast.error(`FHE encryption failed: ${encErr.message}`, { id: 'tx', duration: 8000 });
+        failTransaction(`FHE encryption failed: ${encErr.message}`);
         return;
       }
+      updateStep(0, STATUS.DONE, 'Ciphertext generated with ZK proof');
 
-      toast.loading('Submitting to Sepolia...', { id: 'tx' });
       await createJobPosting(title, company, location, jobType, handle, inputProof);
+      updateStep(1, STATUS.DONE, 'Job module deployed on-chain');
 
-      toast.success('Job posted successfully! Salary encrypted forever. 🔐', { id: 'tx', duration: 5000 });
-      navigate('/dashboard/employer');
+      setTimeout(() => navigate('/dashboard/employer'), 2000);
     } catch (err) {
       console.error(err);
-      toast.error(err.message || 'Transaction failed. Check console for details.', { id: 'tx' });
+      failTransaction(err.message || 'Transaction failed.');
     } finally {
       setIsTxPending(false);
     }
@@ -77,7 +80,7 @@ export default function PostJob() {
 
   return (
     <div className="min-h-screen pt-24 pb-32">
-      {isTxPending && <TxOverlay message="Encrypting payload and broadcasting to network..." />}
+
 
       <div className="max-w-2xl mx-auto px-6">
         <FadeIn>

@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useWalletConnect } from '../components/ConnectWalletButton';
 import toast from 'react-hot-toast';
-import { FadeIn, TxOverlay } from '../components/Animations';
+import { FadeIn } from '../components/Animations';
 import EncryptionZone from '../components/EncryptionZone';
 import { useContract } from '../hooks/useContract';
 import { useFhevm } from '../hooks/useFhevm';
+import { useTransaction } from '../components/TransactionOverlay';
 import { uploadToIPFS, isIPFSConfigured } from '../utils/ipfs';
 import { Lock, MapPin, Briefcase, FileText, User } from 'lucide-react';
 
@@ -15,6 +16,7 @@ export default function ApplyJob() {
   const { account, isConnected, getJobPosting, applyToJob } = useContract();
   const { openConnectModal } = useWalletConnect();
   const { isReady: fhevmReady, fheLoaded, encryptUint64 } = useFhevm();
+  const { startTransaction, updateStep, failTransaction, STATUS } = useTransaction();
 
   const [job, setJob] = useState(null);
   const [loadingJob, setLoadingJob] = useState(true);
@@ -65,31 +67,37 @@ export default function ApplyJob() {
     }
 
     setIsTxPending(true);
+    startTransaction('Submitting Application', [
+      'Uploading resume to IPFS via Pinata',
+      'Encrypting salary expectation via ZamaFHE',
+      'Submitting application to Sepolia',
+    ]);
 
     try {
-      toast.loading('Uploading resume to IPFS via Pinata...', { id: 'tx' });
+      // Step 1: Upload resume to IPFS
       const ipfsResult = await uploadToIPFS(resumeFile);
       const ipfsCid = ipfsResult.cid;
+      updateStep(0, STATUS.DONE, `CID: ${ipfsCid.slice(0, 16)}...`);
 
-      toast.loading('Encrypting salary expectation via ZamaFHE...', { id: 'tx' });
-      await new Promise(r => setTimeout(r, 100));
-
+      // Step 2: Encrypt salary
       let handle, inputProof;
       try {
         ({ handle, inputProof } = await encryptUint64(minExpectation, account));
       } catch (encErr) {
-        toast.error(`FHE encryption failed: ${encErr.message}`, { id: 'tx', duration: 8000 });
+        failTransaction(`FHE encryption failed: ${encErr.message}`);
         return;
       }
+      updateStep(1, STATUS.DONE, 'Ciphertext generated with ZK proof');
 
-      toast.loading('Submitting application to Sepolia...', { id: 'tx' });
+      // Step 3: Submit to Sepolia
       await applyToJob(Number(jobId), formData.candidateName, ipfsCid, handle, inputProof);
+      updateStep(2, STATUS.DONE, 'Application confirmed on-chain');
 
-      toast.success('Application submitted! Your salary expectation is encrypted forever. 🔐', { id: 'tx', duration: 5000 });
-      navigate('/dashboard/candidate');
+      // Navigate after a short delay so user can see success
+      setTimeout(() => navigate('/dashboard/candidate'), 2000);
     } catch (err) {
       console.error(err);
-      toast.error(err.message || 'Transaction failed.', { id: 'tx' });
+      failTransaction(err.message || 'Transaction failed.');
     } finally {
       setIsTxPending(false);
     }
@@ -105,8 +113,6 @@ export default function ApplyJob() {
 
   return (
     <div className="min-h-screen pt-24 pb-32">
-      {isTxPending && <TxOverlay message="Uploading payload to IPFS and encrypting expectation parameter..." />}
-
       <div className="max-w-2xl mx-auto px-6">
         <FadeIn>
           {job && (
