@@ -242,18 +242,19 @@ contract VeilPay is ZamaEthereumConfig {
      */
     function revealMatchResult(
         uint256 jobId,
-        uint256 applicationId
+        uint256 applicationId,
+        bool decryptedMatchResult
     ) external jobExists(jobId) appExists(jobId, applicationId) onlyEmployer(jobId) {
         Application storage app = applications[jobId][applicationId];
         require(!app.matchRevealed, "VeilPay: Match already revealed");
 
         // The FHE comparison was computed in resolveApplication() via FHE.le()
         // and the result was made publicly decryptable via FHE.makePubliclyDecryptable()
-        // Mark the match as revealed — the encrypted result confirms salary compatibility
+        // The employer's frontend decrypted the handle using their wallet and submitted the plaintext result.
         app.matchRevealed = true;
-        app.matchResult = true;
+        app.matchResult = decryptedMatchResult;
 
-        emit MatchRevealed(jobId, applicationId, true);
+        emit MatchRevealed(jobId, applicationId, decryptedMatchResult);
     }
 
     /**
@@ -341,6 +342,7 @@ contract VeilPay is ZamaEthereumConfig {
             string[] memory names,
             bool[] memory matchRevealeds,
             bool[] memory matchResults,
+            bytes32[] memory matchHandles,
             bool[] memory resumeUnlockeds,
             uint256[] memory appliedAts
         )
@@ -351,6 +353,7 @@ contract VeilPay is ZamaEthereumConfig {
         names = new string[](count);
         matchRevealeds = new bool[](count);
         matchResults = new bool[](count);
+        matchHandles = new bytes32[](count);
         resumeUnlockeds = new bool[](count);
         appliedAts = new uint256[](count);
 
@@ -361,6 +364,7 @@ contract VeilPay is ZamaEthereumConfig {
             names[i] = app.candidateName;
             matchRevealeds[i] = app.matchRevealed;
             matchResults[i] = app.matchResult;
+            matchHandles[i] = ebool.unwrap(app.isMatched);
             resumeUnlockeds[i] = app.resumeUnlocked;
             appliedAts[i] = app.appliedAt;
             // Note: resumeIpfsCid is only returned if resume is unlocked

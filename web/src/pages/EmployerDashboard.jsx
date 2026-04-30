@@ -5,6 +5,8 @@ import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FadeIn, StaggerContainer, StaggerItem } from '../components/Animations';
 import { useContract } from '../hooks/useContract';
+import { useFhevm } from '../hooks/useFhevm';
+import { useWalletClient } from 'wagmi';
 import FheChat from '../components/FheChat';
 import { Briefcase, Settings2, Unlock, Eye, FileDown, ExternalLink, ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle } from 'lucide-react';
 
@@ -45,6 +47,8 @@ function ApplicationRow({ app, jobId, onResolve, onReveal, onUnlockResume, isLoa
     }
   };
 
+  const isMatchComputed = app.matchHandle && BigInt(app.matchHandle) !== 0n;
+
   return (
     <div className="bg-muted/20 border border-ink/5 rounded-lg mb-3 overflow-hidden shadow-recessed">
       <div
@@ -77,24 +81,14 @@ function ApplicationRow({ app, jobId, onResolve, onReveal, onUnlockResume, isLoa
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-3 items-center">
                 {!app.matchRevealed && (
-                  <>
-                    <button
-                      id={`resolve-btn-${app.appId}`}
-                      className="btn btn-secondary text-xs h-9 px-4"
-                      onClick={() => onResolve(jobId, app.appId)}
-                      disabled={isLoading}
-                    >
-                      <Settings2 className="w-3.5 h-3.5 mr-1" /> Run FHE Match
-                    </button>
-                    <button
-                      id={`reveal-btn-${app.appId}`}
-                      className="btn btn-primary text-xs h-9 px-4"
-                      onClick={() => onReveal(jobId, app.appId)}
-                      disabled={isLoading}
-                    >
-                      <Eye className="w-3.5 h-3.5 mr-1" /> Reveal Result
-                    </button>
-                  </>
+                  <button
+                    id={`reveal-btn-${app.appId}`}
+                    className="btn btn-primary text-xs h-9 px-4"
+                    onClick={() => onReveal(jobId, app.appId, app.matchHandle)}
+                    disabled={isLoading}
+                  >
+                    <Eye className="w-3.5 h-3.5 mr-1" /> Reveal Match
+                  </button>
                 )}
                 {app.matchRevealed && app.matchResult && !app.resumeUnlocked && (
                   <button
@@ -238,24 +232,14 @@ function JobSection({ jobId, employerJobs, onResolve, onReveal, onBatchResolve, 
                   <span className="font-mono text-xs font-bold text-ink-muted uppercase tracking-widest">
                     {unresolvedApps.length} Application{unresolvedApps.length !== 1 ? 's' : ''} Pending
                   </span>
-                  <div className="flex gap-3">
-                    <button
-                      id={`batch-resolve-${jobId}`}
-                      className="btn btn-secondary text-xs h-9 px-4"
-                      onClick={() => onBatchResolve(jobId, unresolvedApps)}
-                      disabled={isLoading}
-                    >
-                      <Settings2 className="w-3.5 h-3.5 mr-1" /> Resolve All
-                    </button>
-                    <button
-                      id={`batch-reveal-${jobId}`}
-                      className="btn btn-primary text-xs h-9 px-4"
-                      onClick={() => onBatchReveal(jobId, unresolvedApps)}
-                      disabled={isLoading}
-                    >
-                      <Eye className="w-3.5 h-3.5 mr-1" /> Reveal All
-                    </button>
-                  </div>
+                  <button
+                    id={`batch-reveal-${jobId}`}
+                    className="btn btn-primary text-xs h-9 px-4"
+                    onClick={() => onBatchReveal(jobId, unresolvedApps)}
+                    disabled={isLoading}
+                  >
+                    <Eye className="w-3.5 h-3.5 mr-1" /> Reveal All Matches
+                  </button>
                 </div>
               )}
 
@@ -289,6 +273,9 @@ function JobSection({ jobId, employerJobs, onResolve, onReveal, onBatchResolve, 
 export default function EmployerDashboard() {
   const { account, isConnected, getJobsByEmployer, getApplicationsForJob, resolveApplication, revealMatchResult, unlockResume } = useContract();
   const { openConnectModal } = useWalletConnect();
+  const { decryptEbool } = useFhevm();
+  const { data: walletClient } = useWalletClient();
+  
   const [jobIds, setJobIds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [txLoading, setTxLoading] = useState(false);
@@ -319,14 +306,40 @@ export default function EmployerDashboard() {
     }
   };
 
-  const handleReveal = async (jobId, appId) => {
+  const handleReveal = async (jobId, appId, _matchHandle) => {
     setTxLoading(true);
     try {
-      toast.loading('Revealing match result on-chain...', { id: 'tx' });
-      await revealMatchResult(jobId, appId);
-      toast.success('✅ Match revealed! The FHE-computed result is now visible.', { id: 'tx', duration: 5000 });
+      // Step 1: Always re-resolve to get a FRESH handle with fresh ACL flags
+      toast.loading('Step 1/3: Running FHE comparison on-chain...', { id: 'tx' });
+      await resolveApplication(jobId, appId);
+
+      // Step 2: Fetch the fresh handle from the contract
+      toast.loading('Step 2/3: Fetching fresh FHE handle...', { id: 'tx' });
+      const apps = await getApplicationsForJob(jobId);
+      const freshApp = apps.find(a => a.appId === appId);
+      if (!freshApp?.matchHandle || BigInt(freshApp.matchHandle) === 0n) {
+        throw new Error("FHE handle is empty after resolve. The coprocessor may not have processed the computation yet.");
+      }
+
+      // Step 3: Decrypt via publicDecrypt with retries
+      toast.loading('Step 3/3: Decrypting via Zama coprocessor...', { id: 'tx' });
+      const decryptedMatch = await decryptEbool(freshApp.matchHandle, walletClient, (progressMsg) => {
+        toast.loading(`⏳ ${progressMsg}`, { id: 'tx' });
+      });
+      
+      toast.loading(`Decrypted: ${decryptedMatch ? 'MATCH ✅' : 'NO MATCH ❌'}. Committing to contract...`, { id: 'tx' });
+      await revealMatchResult(jobId, appId, decryptedMatch);
+      
+      toast.success(`Match revealed: ${decryptedMatch ? 'MATCH ✅' : 'NO MATCH ❌'}`, { id: 'tx', duration: 5000 });
+      loadJobs();
     } catch (err) {
-      toast.error(err.message || 'Failed to reveal match.', { id: 'tx' });
+      const msg = err.message || 'Failed to reveal match.';
+      // Don't show "Already resolved and revealed" as an error — just means step 1 was redundant
+      if (msg.includes('Already resolved')) {
+        toast.error('This match has already been revealed.', { id: 'tx' });
+      } else {
+        toast.error(msg, { id: 'tx' });
+      }
     } finally {
       setTxLoading(false);
     }
@@ -370,10 +383,23 @@ export default function EmployerDashboard() {
     try {
       for (const app of apps) {
         completed++;
-        toast.loading(`🔮 Requesting reveal ${completed}/${total}...`, { id: 'batch-tx' });
-        await revealMatchResult(jobId, app.appId);
+        // Step 1: Re-resolve for fresh handle
+        toast.loading(`⚙️ Resolving ${completed}/${total}: ${app.candidateName}...`, { id: 'batch-tx' });
+        await resolveApplication(jobId, app.appId);
+
+        // Step 2: Fetch fresh handle
+        const freshApps = await getApplicationsForJob(jobId);
+        const freshApp = freshApps.find(a => a.appId === app.appId);
+
+        // Step 3: Decrypt + reveal
+        toast.loading(`🔮 Decrypting ${completed}/${total}: ${app.candidateName}...`, { id: 'batch-tx' });
+        const decryptedMatch = await decryptEbool(freshApp.matchHandle, walletClient, (msg) => {
+          toast.loading(`⏳ ${completed}/${total}: ${msg}`, { id: 'batch-tx' });
+        });
+        await revealMatchResult(jobId, app.appId, decryptedMatch);
       }
-      toast.success(`✅ All ${total} reveal requests submitted. Check back for results.`, { id: 'batch-tx', duration: 5000 });
+      toast.success(`✅ All ${total} matches revealed!`, { id: 'batch-tx', duration: 5000 });
+      loadJobs();
     } catch (err) {
       toast.error(`Failed at applicant ${completed}/${total}: ${err.message || 'Unknown error'}`, { id: 'batch-tx' });
     } finally {

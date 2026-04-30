@@ -121,12 +121,79 @@ export function useFhevm() {
     }
   }, []);
 
+  /**
+   * decryptEbool — Public Decryption with Coprocessor Retry
+   *
+   * The contract calls FHE.makePubliclyDecryptable(matched) in resolveApplication(),
+   * so we use instance.publicDecrypt() which does NOT require per-user ACL permission.
+   *
+   * The Zama coprocessor processes ACL flags asynchronously, so after resolveApplication()
+   * is mined, the public decryptability flag may not be synced yet. We retry with
+   * exponential backoff to handle this propagation delay.
+   */
+  const decryptEbool = useCallback(async (handle, _walletClient, onProgress) => {
+    let instance = fhevmInstance;
+    if (!instance && initPromise) {
+      instance = await initPromise.catch(() => null);
+    }
+    if (!instance) throw new Error("FHE instance not initialized.");
+
+    const MAX_RETRIES = 5;
+    const INITIAL_DELAY_MS = 5000; // 5 seconds
+    let lastError = null;
+
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        if (attempt > 0) {
+          const delayMs = INITIAL_DELAY_MS * Math.pow(2, attempt - 1);
+          const delaySec = Math.round(delayMs / 1000);
+          console.log(`[useFhevm] Retry ${attempt}/${MAX_RETRIES} — waiting ${delaySec}s for coprocessor sync...`);
+          if (onProgress) onProgress(`Waiting for coprocessor sync (${delaySec}s)... attempt ${attempt + 1}/${MAX_RETRIES}`);
+          await new Promise(r => setTimeout(r, delayMs));
+        }
+
+        // publicDecrypt accepts an array of handle bytes32 hex strings
+        const decryptedResults = await instance.publicDecrypt([handle]);
+
+        // clearValues maps handle hex → cleartext value
+        const resultValue = decryptedResults.clearValues[handle];
+        if (resultValue === undefined) {
+          const keys = Object.keys(decryptedResults.clearValues);
+          if (keys.length > 0) {
+            return BigInt(decryptedResults.clearValues[keys[0]]) === 1n;
+          }
+          throw new Error("No decrypted value returned for handle.");
+        }
+        return BigInt(resultValue) === 1n;
+      } catch (err) {
+        lastError = err;
+        const msg = err?.message || '';
+        // Only retry if the error is a coprocessor ACL propagation delay
+        if (msg.includes('not allowed for public decryption') || msg.includes('not_ready_for_decryption')) {
+          console.warn(`[useFhevm] Coprocessor not ready yet (attempt ${attempt + 1}/${MAX_RETRIES}):`, msg);
+          continue;
+        }
+        // For any other error, fail immediately
+        console.error('[useFhevm] Public decryption failed (non-retryable):', err);
+        throw err;
+      }
+    }
+
+    // All retries exhausted
+    console.error('[useFhevm] Public decryption failed after all retries:', lastError);
+    throw new Error(
+      `Coprocessor still processing. The FHE result is not yet available for decryption. ` +
+      `Please wait ~30 seconds after "Run FHE Match" and try again.`
+    );
+  }, []);
+
   return {
     isReady: true,
     fheLoaded,
     initError,
     initStage,
     encryptUint64,
+    decryptEbool,
     instance: fhevmInstance,
   };
 }

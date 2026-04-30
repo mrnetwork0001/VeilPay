@@ -102,7 +102,7 @@ export function useContract() {
     // Must use wallet-connected contract because the on-chain function
     // has an `onlyEmployer` modifier that checks msg.sender.
     const contract = await getWriteContract();
-    const [appIds, candidates, names, matchRevealeds, matchResults, resumeUnlockeds, appliedAts] =
+    const [appIds, candidates, names, matchRevealeds, matchResults, matchHandles, resumeUnlockeds, appliedAts] =
       await contract.getApplicationsForJob(jobId);
 
     return appIds.map((id, i) => ({
@@ -111,6 +111,7 @@ export function useContract() {
       candidateName: names[i],
       matchRevealed: matchRevealeds[i],
       matchResult: matchResults[i],
+      matchHandle: matchHandles[i],
       resumeUnlocked: resumeUnlockeds[i],
       appliedAt: Number(appliedAts[i]),
     }));
@@ -159,9 +160,9 @@ export function useContract() {
     return await tx.wait();
   }, [getWriteContract]);
 
-  const revealMatchResult = useCallback(async (jobId, appId) => {
+  const revealMatchResult = useCallback(async (jobId, appId, isMatch) => {
     const contract = await getWriteContract();
-    const tx = await contract.revealMatchResult(jobId, appId);
+    const tx = await contract.revealMatchResult(jobId, appId, isMatch);
     return await tx.wait();
   }, [getWriteContract]);
 
