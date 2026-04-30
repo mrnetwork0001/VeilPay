@@ -94,7 +94,7 @@ const HOW_IT_WORKS_STEPS = [
   {
     number: '03',
     icon: <Cpu className="w-6 h-6 text-ink" />,
-    title: 'On-Chain Eval',
+    title: 'On-Chain Match',
     desc: 'FHE.le(min, max) runs on ciphertext. Salaries stay private forever.',
   },
 ];
@@ -108,7 +108,7 @@ export default function Landing() {
           <FadeIn>
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-chassis shadow-recessed rounded-full mb-8 border border-white/40">
               <span className="led led-green" />
-              <span className="font-mono text-xs font-bold text-ink-muted uppercase tracking-widest">Sys Operational</span>
+              <span className="font-mono text-xs font-bold text-ink-muted uppercase tracking-widest">Powered by Zama FHE</span>
             </div>
             
             <h1 className="font-sans font-extrabold text-5xl md:text-7xl text-ink tracking-tight mb-6 leading-[1.1] drop-shadow-[0_1px_1px_#ffffff]">
@@ -122,10 +122,10 @@ export default function Landing() {
             
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <Link to="/post-job" id="hero-post-job-btn" className="btn btn-primary w-full sm:w-auto text-base px-8 py-4">
-                Deploy Job Module
+                Post a Job
               </Link>
               <Link to="/jobs" id="hero-browse-jobs-btn" className="btn btn-secondary w-full sm:w-auto text-base px-8 py-4">
-                Access Network
+                Browse Jobs
               </Link>
             </div>
           </FadeIn>
@@ -139,7 +139,7 @@ export default function Landing() {
       {/* ── HOW IT WORKS ── */}
       <section className="max-w-[72rem] mx-auto px-6 md:px-12 py-24 relative">
         <FadeIn className="mb-16">
-          <div className="font-mono text-sm font-bold text-ink uppercase tracking-widest mb-4 inline-block border-b-4 border-accent pb-1">Architecture Protocol</div>
+          <div className="font-mono text-sm font-bold text-ink uppercase tracking-widest mb-4 inline-block border-b-4 border-accent pb-1">How It Works</div>
           <h2 className="font-sans font-bold text-4xl text-ink drop-shadow-[0_1px_1px_#ffffff]">Three Steps. Zero Leaks.</h2>
         </FadeIn>
 
@@ -159,7 +159,7 @@ export default function Landing() {
                   <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-chassis shadow-floating flex items-center justify-center">
                     {step.icon}
                   </div>
-                  <div className="font-mono text-xs font-bold text-ink-muted mb-2">PHASE {step.number}</div>
+                  <div className="font-mono text-xs font-bold text-ink-muted mb-2">STEP {step.number}</div>
                   <h4 className="font-sans font-bold text-xl text-ink mb-3">{step.title}</h4>
                   <p className="text-ink-muted text-sm leading-relaxed">{step.desc}</p>
                 </div>
@@ -186,7 +186,7 @@ export default function Landing() {
               The entire salary-matching logic is a single homomorphic comparison. Both values go in as ciphertexts. A boolean comes out. The numbers stay encrypted forever.
             </p>
             <Link to="/post-job" id="cta-post-job" className="btn btn-primary text-base">
-              Initialize Module
+              Post a Job
             </Link>
           </FadeIn>
 
@@ -224,8 +224,8 @@ export default function Landing() {
               Your salary data never leaves your browser unencrypted. Trust the math.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/post-job" id="final-cta-post" className="btn btn-primary px-8">Deploy Module</Link>
-              <Link to="/jobs" id="final-cta-browse" className="btn btn-secondary px-8">Access Network</Link>
+              <Link to="/post-job" id="final-cta-post" className="btn btn-primary px-8">Post a Job</Link>
+              <Link to="/jobs" id="final-cta-browse" className="btn btn-secondary px-8">Browse Jobs</Link>
             </div>
           </div>
         </FadeIn>

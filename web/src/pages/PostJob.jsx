@@ -86,15 +86,15 @@ export default function PostJob() {
         <FadeIn>
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-chassis shadow-recessed rounded-full mb-6 border border-white/40">
             <span className="led led-green" />
-            <span className="font-mono text-xs font-bold text-ink-muted uppercase tracking-widest">Employer Module</span>
+            <span className="font-mono text-xs font-bold text-ink-muted uppercase tracking-widest">For Employers</span>
           </div>
           
           <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-ink tracking-tight mb-4 drop-shadow-[0_1px_1px_#ffffff]">
-            Initialize Posting<br/>
-            <span className="inline-block mt-2 px-3 py-1 bg-accent text-ink rounded shadow-floating border border-ink/10">Maintain Secrecy</span>
+            Post a Job<br/>
+            <span className="inline-block mt-2 px-3 py-1 bg-accent text-ink rounded shadow-floating border border-ink/10">Salary Stays Encrypted</span>
           </h1>
           <p className="text-ink-muted text-lg mb-8">
-            Your maximum budget is encrypted client-side using Zama FHE before any data leaves your terminal.
+            Your maximum budget is encrypted in your browser using Zama FHE before it ever reaches the blockchain.
           </p>
 
           <form id="post-job-form" onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -194,14 +194,14 @@ export default function PostJob() {
                   className="btn btn-primary w-full py-4 text-base disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isTxPending || !fhevmReady}
                 >
-                  {isTxPending ? 'Processing...' : 'Encrypt & Transmit to Network'}
+                  {isTxPending ? 'Processing...' : 'Post Job Securely'}
                 </button>
               )}
             </div>
 
             {isConnected && account && (
               <p className="text-center text-xs font-mono text-ink-muted uppercase tracking-widest mt-2">
-                Active Terminal: {account.slice(0, 8)}...{account.slice(-6)} · Sepolia
+                Connected: {account.slice(0, 8)}...{account.slice(-6)} · Sepolia
               </p>
             )}
           </form>

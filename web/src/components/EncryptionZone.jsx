@@ -74,7 +74,7 @@ export default function EncryptionZone({ label, value, onChange, min = 30000, ma
         <div>
           <div className="font-mono text-xs font-bold text-ink bg-accent px-2 py-0.5 rounded shadow-floating border border-ink/10 uppercase tracking-widest">{label}</div>
           <div className="text-xs font-mono text-white/50 mt-1">
-            {showEncrypted ? 'FHE Encryption Active' : 'Adjust physical slider to input parameter'}
+            {showEncrypted ? 'Encrypted with FHE' : 'Drag the slider to set your amount'}
           </div>
         </div>
       </div>
@@ -144,7 +144,7 @@ export default function EncryptionZone({ label, value, onChange, min = 30000, ma
       <div className="flex items-start gap-3 relative z-10 bg-dark-panel p-3 rounded-lg border border-white/5">
         <ShieldCheck className="w-5 h-5 text-ink bg-accent rounded p-0.5 shadow-floating shrink-0" />
         <p className="text-[10px] font-mono text-white/60 leading-relaxed uppercase">
-          This parameter is encrypted locally via Zama FHE before transmission. Plaintext is never exposed to the network.
+          This value is encrypted in your browser using Zama FHE before it reaches the blockchain. The plaintext is never exposed.
         </p>
       </div>
     </div>

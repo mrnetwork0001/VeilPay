@@ -33,7 +33,7 @@ export default function Navbar() {
         {/* LED Indicator for 'Online' status */}
         <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-chassis shadow-recessed">
           <div className="led led-green"></div>
-          <span className="font-mono text-[10px] font-bold text-ink-muted uppercase tracking-widest">Sys Online</span>
+          <span className="font-mono text-[10px] font-bold text-ink-muted uppercase tracking-widest">Sepolia</span>
         </div>
         <ConnectWalletButton variant="navbar" />
       </div>

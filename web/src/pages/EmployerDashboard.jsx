@@ -427,12 +427,12 @@ export default function EmployerDashboard() {
     return (
       <div className="min-h-screen pt-32 pb-32 flex flex-col items-center justify-center px-6">
         <Briefcase className="w-16 h-16 text-ink-muted mb-6 shadow-glow bg-chassis rounded-xl p-3 border border-white/20" />
-        <h2 className="font-sans font-bold text-3xl text-ink mb-4 text-center">Connect Terminal</h2>
+        <h2 className="font-sans font-bold text-3xl text-ink mb-4 text-center">Connect Wallet</h2>
         <p className="text-ink-muted text-center max-w-sm mb-8 font-mono text-sm leading-relaxed">
-          Establish connection with the wallet utilized to deploy job modules to access the administration dashboard.
+          Connect the wallet you used to post jobs to access your employer dashboard.
         </p>
         <button id="employer-connect-btn" className="btn btn-primary px-8 py-4 shadow-floating" onClick={openConnectModal}>
-          Initialize Connection
+          Connect Wallet
         </button>
       </div>
     );
@@ -446,37 +446,37 @@ export default function EmployerDashboard() {
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-chassis shadow-recessed rounded-full mb-6 border border-white/40">
                 <span className="led led-green" />
-                <span className="font-mono text-xs font-bold text-ink-muted uppercase tracking-widest">Admin Control</span>
+                <span className="font-mono text-xs font-bold text-ink-muted uppercase tracking-widest">Employer Dashboard</span>
               </div>
               <h1 className="font-sans font-extrabold text-3xl md:text-5xl text-ink tracking-tight mb-2 drop-shadow-[0_1px_1px_#ffffff]">
-                Module <span className="inline-block px-2 py-0.5 bg-accent text-ink rounded shadow-floating border border-ink/10">Telemetry</span>
+                My <span className="inline-block px-2 py-0.5 bg-accent text-ink rounded shadow-floating border border-ink/10">Job Postings</span>
               </h1>
               <p className="text-ink-muted text-lg max-w-xl">
-                Manage applications across deployed modules. Salary data remains encrypted in FHE ciphertext.
+                Manage applications and reveal salary matches. All salary data remains fully encrypted.
               </p>
             </div>
             <Link to="/post-job" id="dashboard-post-new-btn" className="btn btn-primary shrink-0 shadow-floating px-6 py-3">
-              Deploy New Module
+              Post New Job
             </Link>
           </div>
 
           {loading ? (
             <div className="flex flex-col items-center justify-center min-h-[300px] text-ink-muted">
               <span className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin mb-4 shadow-glow"></span>
-              <span className="font-mono text-xs uppercase tracking-widest font-bold">Retrieving Data...</span>
+              <span className="font-mono text-xs uppercase tracking-widest font-bold">Loading jobs...</span>
             </div>
           ) : jobIds.length === 0 ? (
             <div className="card text-center py-20 bg-muted/20 border-dashed border-2 border-white/20">
               <Briefcase className="w-12 h-12 text-ink-muted mx-auto mb-4 opacity-50" />
-              <h3 className="font-sans font-bold text-2xl text-ink mb-3">No Active Modules</h3>
-              <p className="text-ink-muted text-sm font-mono uppercase tracking-widest mb-8">Deploy a module to accept confidential applications.</p>
-              <Link to="/post-job" className="btn btn-primary shadow-floating px-8">Initialize Deployment</Link>
+              <h3 className="font-sans font-bold text-2xl text-ink mb-3">No Jobs Posted Yet</h3>
+              <p className="text-ink-muted text-sm font-mono uppercase tracking-widest mb-8">Post a job to start receiving confidential applications.</p>
+              <Link to="/post-job" className="btn btn-primary shadow-floating px-8">Post Your First Job</Link>
             </div>
           ) : (
             <div className="space-y-2">
               <div className="font-mono text-xs font-bold text-ink-muted uppercase tracking-widest mb-6 px-2 flex justify-between border-b border-ink/10 pb-4">
-                <span>{jobIds.length} Module{jobIds.length !== 1 ? 's' : ''} Online</span>
-                <span>Select module to view ingress</span>
+                <span>{jobIds.length} Job{jobIds.length !== 1 ? 's' : ''} Posted</span>
+                <span>Select a job to view applicants</span>
               </div>
               {jobIds.map(id => (
                 <JobSection
