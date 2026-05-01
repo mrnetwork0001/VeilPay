@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FadeIn, StaggerContainer, StaggerItem } from '../components/Animations';
 import { useContract } from '../hooks/useContract';
-import { MapPin, Briefcase, Search, Lock, Users, Clock } from 'lucide-react';
+import { MapPin, Briefcase, Search, Lock, Users, Clock, Coins, Wifi } from 'lucide-react';
 
 function timeAgo(timestamp) {
   const diff = Math.floor((Date.now() / 1000) - timestamp);
@@ -22,33 +22,68 @@ function getCompanyInitials(name) {
 }
 
 function JobCard({ job }) {
+  const hasLogo = job.logoUrl && job.logoUrl.trim().length > 0;
+  const bountyDisplay = job.bountyPerUnlock ? (Number(job.bountyPerUnlock) / 1e6).toFixed(0) : '0';
+
   return (
     <div className="card group" id={`job-card-${job.id}`}>
       <div className="absolute top-4 left-4 card-screw" />
       <div className="absolute top-4 right-4 card-screw" />
       
-      <div className="flex gap-4 items-start mb-6 border-b border-ink/10 pb-4">
-        <div className="w-12 h-12 shrink-0 rounded-lg bg-chassis border border-white/40 shadow-floating flex items-center justify-center font-sans font-bold text-xl text-ink">
-          {getCompanyInitials(job.company)}
+      {/* Header: Logo + Title + Company */}
+      <div className="flex gap-4 items-start mb-4 border-b border-ink/10 pb-4">
+        <div className="w-12 h-12 shrink-0 rounded-lg bg-chassis border border-white/40 shadow-floating flex items-center justify-center overflow-hidden">
+          {hasLogo ? (
+            <img
+              src={job.logoUrl}
+              alt={`${job.company} logo`}
+              className="w-full h-full object-cover rounded-lg"
+              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+            />
+          ) : null}
+          <span
+            className="font-sans font-bold text-xl text-ink"
+            style={{ display: hasLogo ? 'none' : 'flex' }}
+          >
+            {getCompanyInitials(job.company)}
+          </span>
         </div>
-        <div>
-          <h3 className="font-sans font-bold text-lg text-ink leading-tight mb-1">{job.title}</h3>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-sans font-bold text-lg text-ink leading-tight mb-1 truncate">{job.title}</h3>
           <div className="font-mono text-xs text-ink-muted uppercase tracking-wider">{job.company}</div>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-6">
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-muted/40 rounded border border-white/20 text-[10px] font-mono font-bold text-ink-muted uppercase tracking-widest shadow-recessed">
+      {/* Description */}
+      {job.description && (
+        <p className="text-sm text-ink-muted mb-4 line-clamp-2 leading-relaxed">
+          {job.description}
+        </p>
+      )}
+
+      {/* Tags Row */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-accent/20 rounded border border-accent/30 text-[10px] font-mono font-bold text-ink uppercase tracking-widest shadow-recessed">
           <Lock className="w-3.5 h-3.5 text-ink bg-accent rounded-sm shadow-sharp p-[1px]" /> Salary: Encrypted
         </span>
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-muted/40 rounded border border-white/20 text-[10px] font-mono font-bold text-ink-muted uppercase tracking-widest shadow-recessed">
           <Briefcase className="w-3 h-3 text-ink-muted" /> {job.jobType}
         </span>
+      </div>
+
+      {/* Location & Remote */}
+      <div className="flex flex-wrap gap-2 mb-5">
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-muted/40 rounded border border-white/20 text-[10px] font-mono font-bold text-ink-muted uppercase tracking-widest shadow-recessed">
           <MapPin className="w-3 h-3 text-ink-muted" /> {job.location}
         </span>
+        {parseFloat(bountyDisplay) > 0 && (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-500/10 rounded border border-green-500/20 text-[10px] font-mono font-bold text-green-700 uppercase tracking-widest shadow-recessed">
+            <Coins className="w-3 h-3" /> {bountyDisplay} cUSDC Bounty
+          </span>
+        )}
       </div>
 
+      {/* Footer: Stats + Apply Button */}
       <div className="flex justify-between items-center bg-muted/20 p-3 rounded-lg border border-ink/5">
         <div className="flex flex-col gap-1">
           <span className="inline-flex items-center gap-1 text-[10px] font-mono text-ink-muted uppercase tracking-widest">
@@ -136,7 +171,7 @@ export default function JobBoard() {
             <div className="flex gap-4">
               <select
                 id="filter-job-type"
-                className="form-input py-3 text-sm cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3E%3Cpath stroke=\'%234a5568\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'m6 8 4 4 4-4\'/%3E%3C/svg%3E')] bg-no-repeat bg-[position:right_1rem_center] bg-[length:1.5em_1.5em] appearance-none"
+                className="form-input py-3 text-sm cursor-pointer appearance-none"
                 value={filterType}
                 onChange={e => setFilterType(e.target.value)}
               >
@@ -144,7 +179,7 @@ export default function JobBoard() {
               </select>
               <select
                 id="filter-location"
-                className="form-input py-3 text-sm cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3E%3Cpath stroke=\'%234a5568\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'m6 8 4 4 4-4\'/%3E%3C/svg%3E')] bg-no-repeat bg-[position:right_1rem_center] bg-[length:1.5em_1.5em] appearance-none"
+                className="form-input py-3 text-sm cursor-pointer appearance-none"
                 value={filterLocation}
                 onChange={e => setFilterLocation(e.target.value)}
               >

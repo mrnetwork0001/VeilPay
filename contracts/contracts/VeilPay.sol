@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {FHE, ebool, euint64} from "@fhevm/solidity/lib/FHE.sol";
+import {FHE, ebool, euint8, euint32, euint64} from "@fhevm/solidity/lib/FHE.sol";
 import {ZamaEthereumConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 import {FheType} from "@fhevm/solidity/lib/FheType.sol";
 import {Impl} from "@fhevm/solidity/lib/Impl.sol";
@@ -15,7 +15,24 @@ import {Impl} from "@fhevm/solidity/lib/Impl.sol";
  *
  *      Built with fhevm-solidity v0.11.x + zama-fhe/relayer-sdk v0.4.x
  */
+interface IERC20 {
+    function transferFrom(address from, address to, uint256 amount) external returns (bool);
+    function transfer(address to, uint256 amount) external returns (bool);
+    function balanceOf(address account) external view returns (uint256);
+}
+
 contract VeilPay is ZamaEthereumConfig {
+    // ─────────────────────────────────────────────────────────────
+    // Bounty Token (cUSDC)
+    // ─────────────────────────────────────────────────────────────
+
+    IERC20 public immutable bountyToken;
+
+    constructor(address _bountyToken) {
+        require(_bountyToken != address(0), "VeilPay: Invalid token address");
+        bountyToken = IERC20(_bountyToken);
+    }
+
     // ─────────────────────────────────────────────────────────────
     // Data Structures
     // ─────────────────────────────────────────────────────────────
@@ -26,11 +43,17 @@ contract VeilPay is ZamaEthereumConfig {
         string company;
         string location;
         string jobType;      // "Full-time", "Contract", "Part-time", "Remote"
+        string description;  // Brief 2-sentence job description
+        string logoUrl;      // Company logo URL (IPFS or web)
         euint64 max_budget;  // Encrypted by employer in browser via relayer-sdk
+        euint8 requiredExperience; // Encrypted required years of experience
+        ebool remoteOk;      // Encrypted remote preference
         bool isActive;
         bool isResolved;
         uint256 createdAt;
         uint256 applicationCount;
+        uint256 bountyPool;      // Total ETH deposited as interview bounty
+        uint256 bountyPerUnlock; // ETH paid per resume unlock
     }
 
     struct Application {
@@ -38,9 +61,13 @@ contract VeilPay is ZamaEthereumConfig {
         string candidateName;
         string resumeIpfsCid;    // IPFS CID, revealed only on match
         euint64 min_expectation; // Encrypted by candidate in browser via relayer-sdk
-        ebool isMatched;         // Result of FHE.le — still encrypted
+        euint8 experience;       // Encrypted years of experience
+        ebool remotePreference;  // Encrypted remote preference
+        euint8 matchScore;       // Weighted match score (0-100), encrypted
+        ebool isMatched;         // Result of FHE.le — still encrypted (kept for backward compat)
         bool matchRevealed;      // Has the result been decrypted?
         bool matchResult;        // Plaintext result after public decryption
+        uint8 revealedScore;     // Plaintext score after decryption
         bool resumeUnlocked;     // Has employer unlocked the resume?
         uint256 appliedAt;
     }
@@ -64,6 +91,16 @@ contract VeilPay is ZamaEthereumConfig {
     mapping(address => uint256[]) public candidateJobIds;
     mapping(address => mapping(uint256 => uint256)) public candidateApplicationId;
 
+    // ── Company Reviews (FHE-Aggregated) ──────────────────────────
+    /// @dev employer address => encrypted running total of all ratings
+    mapping(address => euint32) private companyTotalScores;
+    /// @dev employer address => plaintext count of reviews received
+    mapping(address => uint256) public companyReviewCounts;
+    /// @dev employer address => revealed average rating (after decryption)
+    mapping(address => uint8) public companyRevealedRating;
+    /// @dev candidate => employer => has reviewed (prevent double reviews)
+    mapping(address => mapping(address => bool)) public hasReviewed;
+
     // ─────────────────────────────────────────────────────────────
     // Events
     // ─────────────────────────────────────────────────────────────
@@ -74,6 +111,9 @@ contract VeilPay is ZamaEthereumConfig {
     event MatchRevealed(uint256 indexed jobId, uint256 indexed applicationId, bool isMatch);
     event ResumeUnlocked(uint256 indexed jobId, uint256 indexed applicationId, address indexed employer);
     event JobClosed(uint256 indexed jobId);
+    event BountyPaid(uint256 indexed jobId, uint256 indexed applicationId, address indexed candidate, uint256 amount);
+    event BountyRefunded(uint256 indexed jobId, address indexed employer, uint256 amount);
+    event ReviewSubmitted(address indexed employer, address indexed reviewer);
 
     // ─────────────────────────────────────────────────────────────
     // Modifiers
@@ -104,29 +144,49 @@ contract VeilPay is ZamaEthereumConfig {
     // ─────────────────────────────────────────────────────────────
 
     /**
-     * @notice EMPLOYER: Post a new job with an encrypted maximum budget.
-     * @param title         Job title (e.g., "Senior Solidity Engineer")
-     * @param company       Company name
-     * @param location      Job location or "Remote"
-     * @param jobType       "Full-time", "Contract", "Part-time", "Remote"
-     * @param encryptedBudget  Handle produced by relayer-sdk in the browser
-     * @param inputProof    ZKP proof accompanying the ciphertext
-     * @return jobId        The created job's ID
+     * @notice EMPLOYER: Post a new job with an encrypted maximum budget and interview bounty.
+     * @param title              Job title (e.g., "Senior Solidity Engineer")
+     * @param company            Company name
+     * @param location           Job location or "Remote"
+     * @param jobType            "Full-time", "Contract", "Part-time", "Remote"
+     * @param description        Brief 2-sentence job description
+     * @param logoUrl            Company logo URL (IPFS or web URL, can be empty)
+     * @param encryptedBudget    Handle produced by relayer-sdk in the browser
+     * @param encryptedExperience Encrypted required years of experience
+     * @param encryptedRemoteOk  Encrypted remote preference boolean
+     * @param inputProof         ZKP proof accompanying all ciphertexts
+     * @param bountyPerUnlock_   ETH paid to each candidate whose resume is unlocked
+     * @return jobId             The created job's ID
      */
     function createJobPosting(
         string calldata title,
         string calldata company,
         string calldata location,
         string calldata jobType,
+        string calldata description,
+        string calldata logoUrl,
         bytes32 encryptedBudget,
-        bytes calldata inputProof
+        bytes32 encryptedExperience,
+        bytes32 encryptedRemoteOk,
+        bytes calldata inputProof,
+        uint256 bountyPerUnlock_,
+        uint256 totalDeposit_
     ) external returns (uint256 jobId) {
+        require(totalDeposit_ > 0, "VeilPay: Must deposit interview bounty");
+        require(bountyPerUnlock_ > 0 && bountyPerUnlock_ <= totalDeposit_, "VeilPay: Invalid bounty per unlock");
+
+        // Transfer cUSDC from employer to this contract (requires prior approval)
+        require(bountyToken.transferFrom(msg.sender, address(this), totalDeposit_), "VeilPay: Token transfer failed");
+
         jobId = jobCount++;
 
-        // Verify the encrypted input and convert to euint64
+        // Verify the encrypted inputs and convert to FHE types
         euint64 budget = euint64.wrap(Impl.verify(encryptedBudget, inputProof, FheType.Uint64));
-        // Allow this contract to use the ciphertext
+        euint8 reqExp = euint8.wrap(Impl.verify(encryptedExperience, inputProof, FheType.Uint8));
+        ebool remoteFlag = ebool.wrap(Impl.verify(encryptedRemoteOk, inputProof, FheType.Bool));
         FHE.allowThis(budget);
+        FHE.allowThis(reqExp);
+        FHE.allowThis(remoteFlag);
 
         jobPostings[jobId] = JobPosting({
             employer: msg.sender,
@@ -134,30 +194,40 @@ contract VeilPay is ZamaEthereumConfig {
             company: company,
             location: location,
             jobType: jobType,
+            description: description,
+            logoUrl: logoUrl,
             max_budget: budget,
+            requiredExperience: reqExp,
+            remoteOk: remoteFlag,
             isActive: true,
             isResolved: false,
             createdAt: block.timestamp,
-            applicationCount: 0
+            applicationCount: 0,
+            bountyPool: totalDeposit_,
+            bountyPerUnlock: bountyPerUnlock_
         });
 
         emit JobPosted(jobId, msg.sender, title, company);
     }
 
     /**
-     * @notice CANDIDATE: Apply to a job with an encrypted minimum salary expectation.
-     * @param jobId                Job identifier
-     * @param candidateName        Full name shown to employer on match
-     * @param resumeIpfsCid        IPFS CID of the candidate's resume — revealed only on match
-     * @param encryptedExpectation Handle produced by relayer-sdk in the browser
-     * @param inputProof           ZKP proof accompanying the ciphertext
-     * @return applicationId       The created application's ID
+     * @notice CANDIDATE: Apply to a job with encrypted salary, experience, and remote preference.
+     * @param jobId                  Job identifier
+     * @param candidateName          Full name shown to employer on match
+     * @param resumeIpfsCid          IPFS CID of the candidate's resume
+     * @param encryptedExpectation   Encrypted minimum salary expectation
+     * @param encryptedExperience    Encrypted years of experience
+     * @param encryptedRemotePref    Encrypted remote preference boolean
+     * @param inputProof             ZKP proof accompanying the ciphertexts
+     * @return applicationId         The created application's ID
      */
     function applyToJob(
         uint256 jobId,
         string calldata candidateName,
         string calldata resumeIpfsCid,
         bytes32 encryptedExpectation,
+        bytes32 encryptedExperience,
+        bytes32 encryptedRemotePref,
         bytes calldata inputProof
     ) external jobExists(jobId) jobIsActive(jobId) returns (uint256 applicationId) {
         require(
@@ -169,22 +239,32 @@ contract VeilPay is ZamaEthereumConfig {
 
         applicationId = jobPostings[jobId].applicationCount++;
 
-        // Verify the encrypted input and convert to euint64
+        // Verify encrypted inputs
         euint64 expectation = euint64.wrap(Impl.verify(encryptedExpectation, inputProof, FheType.Uint64));
+        euint8 exp = euint8.wrap(Impl.verify(encryptedExperience, inputProof, FheType.Uint8));
+        ebool remotePref = ebool.wrap(Impl.verify(encryptedRemotePref, inputProof, FheType.Bool));
         FHE.allowThis(expectation);
+        FHE.allowThis(exp);
+        FHE.allowThis(remotePref);
 
-        // Initialize with a default ebool (false) — will be set in resolveApplication
+        // Initialize defaults
         ebool defaultMatch = FHE.asEbool(false);
+        euint8 defaultScore = FHE.asEuint8(0);
         FHE.allowThis(defaultMatch);
+        FHE.allowThis(defaultScore);
 
         applications[jobId][applicationId] = Application({
             candidate: msg.sender,
             candidateName: candidateName,
             resumeIpfsCid: resumeIpfsCid,
             min_expectation: expectation,
+            experience: exp,
+            remotePreference: remotePref,
+            matchScore: defaultScore,
             isMatched: defaultMatch,
             matchRevealed: false,
             matchResult: false,
+            revealedScore: 0,
             resumeUnlocked: false,
             appliedAt: block.timestamp
         });
@@ -197,9 +277,9 @@ contract VeilPay is ZamaEthereumConfig {
     }
 
     /**
-     * @notice RESOLVER (anyone can call): Triggers FHE evaluation for one application.
-     *         Uses FHE.le() to compare encrypted values and stores encrypted ebool result.
-     * @dev    The matching result stays encrypted. Call revealMatchResult() to decrypt.
+     * @notice RESOLVER (anyone can call): Triggers multi-variable FHE evaluation.
+     *         Computes a weighted match score (0-100) from salary, experience, and remote pref.
+     * @dev    Score breakdown: Salary match = 50pts, Experience match = 30pts, Remote match = 20pts.
      * @param jobId         Job identifier
      * @param applicationId Application identifier
      */
@@ -212,53 +292,65 @@ contract VeilPay is ZamaEthereumConfig {
 
         require(!app.matchRevealed, "VeilPay: Already resolved and revealed");
 
-        // THE CORE FHE COMPUTATION:
-        // Is the candidate's minimum expectation <= the employer's maximum budget?
-        // Both values remain encrypted throughout. No salary data is ever exposed.
-        ebool matched = FHE.le(app.min_expectation, posting.max_budget);
+        // ── MULTI-VARIABLE WEIGHTED MATCH SCORING ──
+        // Score starts at 0 and accumulates points from three encrypted comparisons.
 
-        // Store the encrypted result and grant access to this contract
-        app.isMatched = matched;
-        FHE.allowThis(matched);
+        // 1. Salary Match (50 points): candidate_ask <= employer_budget
+        ebool salaryMatch = FHE.le(app.min_expectation, posting.max_budget);
+        euint8 salaryScore = FHE.select(salaryMatch, FHE.asEuint8(50), FHE.asEuint8(0));
 
-        // Also allow the employer to later request decryption
-        FHE.allow(matched, posting.employer);
+        // 2. Experience Match (30 points): candidate_exp >= required_exp
+        ebool expMatch = FHE.ge(app.experience, posting.requiredExperience);
+        euint8 expScore = FHE.select(expMatch, FHE.asEuint8(30), FHE.asEuint8(0));
 
-        // Mark as publicly decryptable so anyone can verify the result via checkSignatures
-        FHE.makePubliclyDecryptable(matched);
+        // 3. Remote Preference Match (20 points): both agree on remote
+        ebool remoteMatch = FHE.eq(app.remotePreference, posting.remoteOk);
+        euint8 remoteScore = FHE.select(remoteMatch, FHE.asEuint8(20), FHE.asEuint8(0));
+
+        // Total weighted score (0-100)
+        euint8 totalScore = FHE.add(FHE.add(salaryScore, expScore), remoteScore);
+
+        // Store the encrypted score
+        app.matchScore = totalScore;
+        FHE.allowThis(totalScore);
+        FHE.allow(totalScore, posting.employer);
+        FHE.makePubliclyDecryptable(totalScore);
+
+        // Also keep the salary-only boolean for backward compatibility
+        app.isMatched = salaryMatch;
+        FHE.allowThis(salaryMatch);
+        FHE.allow(salaryMatch, posting.employer);
+        FHE.makePubliclyDecryptable(salaryMatch);
 
         emit ApplicationResolved(jobId, applicationId);
     }
 
     /**
-     * @notice EMPLOYER ONLY: Reveal the match result after FHE comparison has been computed.
-     *         The encrypted comparison was already performed in resolveApplication() via FHE.le().
-     *         This function marks the result as revealed.
-     * @dev    In production, this would integrate with Zama's KMS for on-chain proof verification
-     *         via FHE.checkSignatures(). For the current deployment, the FHE computation in
-     *         resolveApplication() is the source of truth.
-     * @param jobId            Job identifier
-     * @param applicationId    Application identifier
+     * @notice EMPLOYER ONLY: Reveal the match result and score after FHE evaluation.
+     * @param jobId                Job identifier
+     * @param applicationId        Application identifier
+     * @param decryptedMatchResult  Plaintext boolean from decrypting the salary match
+     * @param decryptedScore        Plaintext uint8 from decrypting the weighted score (0-100)
      */
     function revealMatchResult(
         uint256 jobId,
         uint256 applicationId,
-        bool decryptedMatchResult
+        bool decryptedMatchResult,
+        uint8 decryptedScore
     ) external jobExists(jobId) appExists(jobId, applicationId) onlyEmployer(jobId) {
         Application storage app = applications[jobId][applicationId];
         require(!app.matchRevealed, "VeilPay: Match already revealed");
 
-        // The FHE comparison was computed in resolveApplication() via FHE.le()
-        // and the result was made publicly decryptable via FHE.makePubliclyDecryptable()
-        // The employer's frontend decrypted the handle using their wallet and submitted the plaintext result.
         app.matchRevealed = true;
         app.matchResult = decryptedMatchResult;
+        app.revealedScore = decryptedScore;
 
         emit MatchRevealed(jobId, applicationId, decryptedMatchResult);
     }
 
     /**
      * @notice EMPLOYER ONLY: Unlock the candidate's resume on a successful match.
+     *         Automatically pays the interview bounty to the candidate.
      * @param jobId         Job identifier
      * @param applicationId Application identifier
      */
@@ -267,16 +359,37 @@ contract VeilPay is ZamaEthereumConfig {
         uint256 applicationId
     ) external jobExists(jobId) appExists(jobId, applicationId) onlyEmployer(jobId) {
         Application storage app = applications[jobId][applicationId];
+        JobPosting storage posting = jobPostings[jobId];
         require(app.matchRevealed && app.matchResult, "VeilPay: No confirmed match");
+        require(!app.resumeUnlocked, "VeilPay: Resume already unlocked");
+
         app.resumeUnlocked = true;
+
+        // Pay the interview bounty in cUSDC to the candidate if pool has funds
+        if (posting.bountyPool >= posting.bountyPerUnlock) {
+            posting.bountyPool -= posting.bountyPerUnlock;
+            require(bountyToken.transfer(app.candidate, posting.bountyPerUnlock), "VeilPay: Bounty transfer failed");
+            emit BountyPaid(jobId, applicationId, app.candidate, posting.bountyPerUnlock);
+        }
+
         emit ResumeUnlocked(jobId, applicationId, msg.sender);
     }
 
     /**
-     * @notice EMPLOYER ONLY: Close a job posting to stop new applications.
+     * @notice EMPLOYER ONLY: Close a job posting and refund remaining bounty pool.
      */
     function closeJob(uint256 jobId) external jobExists(jobId) onlyEmployer(jobId) {
-        jobPostings[jobId].isActive = false;
+        JobPosting storage posting = jobPostings[jobId];
+        posting.isActive = false;
+
+        // Refund remaining cUSDC bounty pool to employer
+        uint256 refundAmount = posting.bountyPool;
+        if (refundAmount > 0) {
+            posting.bountyPool = 0;
+            require(bountyToken.transfer(msg.sender, refundAmount), "VeilPay: Refund transfer failed");
+            emit BountyRefunded(jobId, msg.sender, refundAmount);
+        }
+
         emit JobClosed(jobId);
     }
 
@@ -294,8 +407,12 @@ contract VeilPay is ZamaEthereumConfig {
         string[] memory companies,
         string[] memory locations,
         string[] memory jobTypes,
+        string[] memory descriptions,
+        string[] memory logoUrls,
         uint256[] memory createdAts,
-        uint256[] memory applicationCounts
+        uint256[] memory applicationCounts,
+        uint256[] memory bountyPools,
+        uint256[] memory bountyPerUnlocks
     ) {
         uint256 activeCount = 0;
         for (uint256 i = 0; i < jobCount; i++) {
@@ -308,8 +425,12 @@ contract VeilPay is ZamaEthereumConfig {
         companies = new string[](activeCount);
         locations = new string[](activeCount);
         jobTypes = new string[](activeCount);
+        descriptions = new string[](activeCount);
+        logoUrls = new string[](activeCount);
         createdAts = new uint256[](activeCount);
         applicationCounts = new uint256[](activeCount);
+        bountyPools = new uint256[](activeCount);
+        bountyPerUnlocks = new uint256[](activeCount);
 
         uint256 idx = 0;
         for (uint256 i = 0; i < jobCount; i++) {
@@ -321,8 +442,12 @@ contract VeilPay is ZamaEthereumConfig {
                 companies[idx] = j.company;
                 locations[idx] = j.location;
                 jobTypes[idx] = j.jobType;
+                descriptions[idx] = j.description;
+                logoUrls[idx] = j.logoUrl;
                 createdAts[idx] = j.createdAt;
                 applicationCounts[idx] = j.applicationCount;
+                bountyPools[idx] = j.bountyPool;
+                bountyPerUnlocks[idx] = j.bountyPerUnlock;
                 idx++;
             }
         }
@@ -343,6 +468,8 @@ contract VeilPay is ZamaEthereumConfig {
             bool[] memory matchRevealeds,
             bool[] memory matchResults,
             bytes32[] memory matchHandles,
+            bytes32[] memory scoreHandles,
+            uint8[] memory revealedScores,
             bool[] memory resumeUnlockeds,
             uint256[] memory appliedAts
         )
@@ -354,6 +481,8 @@ contract VeilPay is ZamaEthereumConfig {
         matchRevealeds = new bool[](count);
         matchResults = new bool[](count);
         matchHandles = new bytes32[](count);
+        scoreHandles = new bytes32[](count);
+        revealedScores = new uint8[](count);
         resumeUnlockeds = new bool[](count);
         appliedAts = new uint256[](count);
 
@@ -365,9 +494,10 @@ contract VeilPay is ZamaEthereumConfig {
             matchRevealeds[i] = app.matchRevealed;
             matchResults[i] = app.matchResult;
             matchHandles[i] = ebool.unwrap(app.isMatched);
+            scoreHandles[i] = euint8.unwrap(app.matchScore);
+            revealedScores[i] = app.revealedScore;
             resumeUnlockeds[i] = app.resumeUnlocked;
             appliedAts[i] = app.appliedAt;
-            // Note: resumeIpfsCid is only returned if resume is unlocked
         }
     }
 
@@ -564,4 +694,83 @@ contract VeilPay is ZamaEthereumConfig {
     ) external view jobExists(jobId) appExists(jobId, applicationId) returns (uint256) {
         return chatMessages[jobId][applicationId].length;
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // FHE-Aggregated Anonymous Company Reviews
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * @notice CANDIDATE: Submit an encrypted anonymous review for an employer.
+     *         Rating is 1-5 stars, encrypted as euint8. The contract sums all
+     *         ratings homomorphically using FHE.add — individual ratings are
+     *         mathematically impossible to extract.
+     * @param employer       The employer's address to review
+     * @param encryptedRating Encrypted rating (1-5) from relayer-sdk
+     * @param inputProof     ZKP proof for the ciphertext
+     */
+    function submitReview(
+        address employer,
+        bytes32 encryptedRating,
+        bytes calldata inputProof
+    ) external {
+        require(employer != address(0), "VeilPay: Invalid employer");
+        require(!hasReviewed[msg.sender][employer], "VeilPay: Already reviewed this employer");
+
+        euint8 rating = euint8.wrap(Impl.verify(encryptedRating, inputProof, FheType.Uint8));
+        FHE.allowThis(rating);
+
+        // Cast to euint32 for aggregation (prevents overflow with many reviews)
+        euint32 rating32 = FHE.asEuint32(rating);
+
+        if (companyReviewCounts[employer] == 0) {
+            // First review — initialize the encrypted total
+            companyTotalScores[employer] = rating32;
+        } else {
+            // Add to running encrypted total
+            companyTotalScores[employer] = FHE.add(companyTotalScores[employer], rating32);
+        }
+        FHE.allowThis(companyTotalScores[employer]);
+
+        companyReviewCounts[employer]++;
+        hasReviewed[msg.sender][employer] = true;
+
+        emit ReviewSubmitted(employer, msg.sender);
+    }
+
+    /**
+     * @notice PUBLIC: Reveal the average company rating by decrypting the sum
+     *         and dividing by count off-chain. Makes the sum publicly decryptable.
+     * @param employer The employer's address
+     */
+    function requestRatingReveal(address employer) external {
+        require(companyReviewCounts[employer] > 0, "VeilPay: No reviews yet");
+        FHE.makePubliclyDecryptable(companyTotalScores[employer]);
+    }
+
+    /**
+     * @notice Store the revealed average rating after off-chain decryption.
+     * @param employer       The employer's address
+     * @param decryptedAvg   The average rating (computed off-chain: sum / count)
+     */
+    function commitRevealedRating(
+        address employer,
+        uint8 decryptedAvg
+    ) external {
+        require(companyReviewCounts[employer] > 0, "VeilPay: No reviews");
+        companyRevealedRating[employer] = decryptedAvg;
+    }
+
+    /**
+     * @notice Get company review info.
+     */
+    function getCompanyReviewInfo(address employer) external view returns (
+        uint256 reviewCount,
+        uint8 revealedAvg,
+        bytes32 totalScoreHandle
+    ) {
+        reviewCount = companyReviewCounts[employer];
+        revealedAvg = companyRevealedRating[employer];
+        totalScoreHandle = euint32.unwrap(companyTotalScores[employer]);
+    }
+
 }

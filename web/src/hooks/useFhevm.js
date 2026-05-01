@@ -187,13 +187,100 @@ export function useFhevm() {
     );
   }, []);
 
+  /**
+   * encryptUint8
+   * Encrypts a small uint value (0-255) for experience years or ratings.
+   */
+  const encryptUint8 = useCallback(async (value, userAddress) => {
+    const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
+    if (!userAddress) throw new Error("User address required for encryption");
+
+    let instance = fhevmInstance;
+    if (!instance && initPromise) {
+      instance = await initPromise.catch(() => null);
+    }
+    if (!instance) throw new Error("FHE instance not initialized. Cannot encrypt.");
+
+    const encrypt = instance.createEncryptedInput(CONTRACT_ADDRESS, userAddress);
+    encrypt.add8(BigInt(value));
+    const result = await encrypt.encrypt();
+    return { handle: result.handles[0], inputProof: result.inputProof };
+  }, []);
+
+  /**
+   * encryptBool
+   * Encrypts a boolean value for remote preference.
+   */
+  const encryptBool = useCallback(async (value, userAddress) => {
+    const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
+    if (!userAddress) throw new Error("User address required for encryption");
+
+    let instance = fhevmInstance;
+    if (!instance && initPromise) {
+      instance = await initPromise.catch(() => null);
+    }
+    if (!instance) throw new Error("FHE instance not initialized. Cannot encrypt.");
+
+    const encrypt = instance.createEncryptedInput(CONTRACT_ADDRESS, userAddress);
+    encrypt.addBool(value);
+    const result = await encrypt.encrypt();
+    return { handle: result.handles[0], inputProof: result.inputProof };
+  }, []);
+
+  /**
+   * decryptUint8 — Public Decryption for match scores
+   * Same retry logic as decryptEbool but returns the raw uint8 value.
+   */
+  const decryptUint8 = useCallback(async (handle, _walletClient, onProgress) => {
+    let instance = fhevmInstance;
+    if (!instance && initPromise) {
+      instance = await initPromise.catch(() => null);
+    }
+    if (!instance) throw new Error("FHE instance not initialized.");
+
+    const MAX_RETRIES = 5;
+    const INITIAL_DELAY_MS = 5000;
+    let lastError = null;
+
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        if (attempt > 0) {
+          const delayMs = INITIAL_DELAY_MS * Math.pow(2, attempt - 1);
+          const delaySec = Math.round(delayMs / 1000);
+          if (onProgress) onProgress(`Waiting for coprocessor sync (${delaySec}s)... attempt ${attempt + 1}/${MAX_RETRIES}`);
+          await new Promise(r => setTimeout(r, delayMs));
+        }
+
+        const decryptedResults = await instance.publicDecrypt([handle]);
+        const resultValue = decryptedResults.clearValues[handle];
+        if (resultValue === undefined) {
+          const keys = Object.keys(decryptedResults.clearValues);
+          if (keys.length > 0) return Number(decryptedResults.clearValues[keys[0]]);
+          throw new Error("No decrypted value returned for handle.");
+        }
+        return Number(resultValue);
+      } catch (err) {
+        lastError = err;
+        const msg = err?.message || '';
+        if (msg.includes('not allowed for public decryption') || msg.includes('not_ready_for_decryption')) {
+          continue;
+        }
+        throw err;
+      }
+    }
+    throw new Error(`Coprocessor still processing. Please wait and try again.`);
+  }, []);
+
   return {
     isReady: true,
     fheLoaded,
     initError,
     initStage,
     encryptUint64,
+    encryptUint8,
+    encryptBool,
     decryptEbool,
+    decryptUint8,
     instance: fhevmInstance,
   };
 }

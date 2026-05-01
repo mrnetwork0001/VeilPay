@@ -4,6 +4,17 @@ import { ethers } from 'ethers';
 import BLINDHIRE_ABI from '../abi/BlindHire.json';
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
+const CUSDC_ADDRESS = import.meta.env.VITE_CUSDC_ADDRESS;
+
+// Minimal ERC-20 ABI for cUSDC interactions
+const ERC20_ABI = [
+  'function approve(address spender, uint256 amount) external returns (bool)',
+  'function balanceOf(address account) external view returns (uint256)',
+  'function allowance(address owner, address spender) external view returns (uint256)',
+  'function faucet() external',
+  'function decimals() external view returns (uint8)',
+  'function symbol() external view returns (string)',
+];
 
 /**
  * useContract — React hook for VeilPay contract interactions
@@ -72,7 +83,7 @@ export function useContract() {
 
   const getActiveJobs = useCallback(async () => {
     const contract = await getReadContract();
-    const [ids, employers, titles, companies, locations, jobTypes, createdAts, appCounts] =
+    const [ids, employers, titles, companies, locations, jobTypes, descriptions, logoUrls, createdAts, appCounts, bountyPools, bountyPerUnlocks] =
       await contract.getActiveJobs();
 
     return ids.map((id, i) => ({
@@ -82,8 +93,12 @@ export function useContract() {
       company: companies[i],
       location: locations[i],
       jobType: jobTypes[i],
+      description: descriptions[i],
+      logoUrl: logoUrls[i],
       createdAt: Number(createdAts[i]),
       applicationCount: Number(appCounts[i]),
+      bountyPool: bountyPools[i],
+      bountyPerUnlock: bountyPerUnlocks[i],
     }));
   }, [getReadContract]);
 
@@ -99,10 +114,8 @@ export function useContract() {
   }, [getReadContract]);
 
   const getApplicationsForJob = useCallback(async (jobId) => {
-    // Must use wallet-connected contract because the on-chain function
-    // has an `onlyEmployer` modifier that checks msg.sender.
     const contract = await getWriteContract();
-    const [appIds, candidates, names, matchRevealeds, matchResults, matchHandles, resumeUnlockeds, appliedAts] =
+    const [appIds, candidates, names, matchRevealeds, matchResults, matchHandles, scoreHandles, revealedScores, resumeUnlockeds, appliedAts] =
       await contract.getApplicationsForJob(jobId);
 
     return appIds.map((id, i) => ({
@@ -112,6 +125,8 @@ export function useContract() {
       matchRevealed: matchRevealeds[i],
       matchResult: matchResults[i],
       matchHandle: matchHandles[i],
+      scoreHandle: scoreHandles[i],
+      revealedScore: Number(revealedScores[i]),
       resumeUnlocked: resumeUnlockeds[i],
       appliedAt: Number(appliedAts[i]),
     }));
@@ -142,15 +157,18 @@ export function useContract() {
 
   // ─── Write functions ────────────────────────────────────────────────────────
 
-  const createJobPosting = useCallback(async (title, company, location, jobType, handle, inputProof) => {
+  const createJobPosting = useCallback(async (title, company, location, jobType, description, logoUrl, budgetHandle, expHandle, remoteHandle, inputProof, bountyPerUnlock, totalDeposit) => {
     const contract = await getWriteContract();
-    const tx = await contract.createJobPosting(title, company, location, jobType, handle, inputProof);
+    const tx = await contract.createJobPosting(
+      title, company, location, jobType, description, logoUrl,
+      budgetHandle, expHandle, remoteHandle, inputProof, bountyPerUnlock, totalDeposit
+    );
     return await tx.wait();
   }, [getWriteContract]);
 
-  const applyToJob = useCallback(async (jobId, candidateName, resumeIpfsCid, handle, inputProof) => {
+  const applyToJob = useCallback(async (jobId, candidateName, resumeIpfsCid, salaryHandle, expHandle, remoteHandle, inputProof) => {
     const contract = await getWriteContract();
-    const tx = await contract.applyToJob(jobId, candidateName, resumeIpfsCid, handle, inputProof);
+    const tx = await contract.applyToJob(jobId, candidateName, resumeIpfsCid, salaryHandle, expHandle, remoteHandle, inputProof);
     return await tx.wait();
   }, [getWriteContract]);
 
@@ -160,9 +178,9 @@ export function useContract() {
     return await tx.wait();
   }, [getWriteContract]);
 
-  const revealMatchResult = useCallback(async (jobId, appId, isMatch) => {
+  const revealMatchResult = useCallback(async (jobId, appId, isMatch, score) => {
     const contract = await getWriteContract();
-    const tx = await contract.revealMatchResult(jobId, appId, isMatch);
+    const tx = await contract.revealMatchResult(jobId, appId, isMatch, score);
     return await tx.wait();
   }, [getWriteContract]);
 
@@ -203,6 +221,59 @@ export function useContract() {
     return Number(count);
   }, [getReadContract]);
 
+  // ── cUSDC Token functions ─────────────────────────────────────────────────────
+
+  const getTokenContract = useCallback(async (needsSigner = false) => {
+    if (needsSigner) {
+      const contract = await getWriteContract();
+      return new ethers.Contract(CUSDC_ADDRESS, ERC20_ABI, contract.runner);
+    }
+    const provider = new ethers.JsonRpcProvider(
+      import.meta.env.VITE_SEPOLIA_RPC || 'https://rpc.sepolia.org'
+    );
+    return new ethers.Contract(CUSDC_ADDRESS, ERC20_ABI, provider);
+  }, [getWriteContract]);
+
+  const approveBountyToken = useCallback(async (amount) => {
+    const token = await getTokenContract(true);
+    const tx = await token.approve(CONTRACT_ADDRESS, amount);
+    return await tx.wait();
+  }, [getTokenContract]);
+
+  const claimFaucet = useCallback(async () => {
+    const token = await getTokenContract(true);
+    const tx = await token.faucet();
+    return await tx.wait();
+  }, [getTokenContract]);
+
+  const getBountyBalance = useCallback(async (address) => {
+    const token = await getTokenContract(false);
+    return await token.balanceOf(address);
+  }, [getTokenContract]);
+
+  const getBountyAllowance = useCallback(async (owner) => {
+    const token = await getTokenContract(false);
+    return await token.allowance(owner, CONTRACT_ADDRESS);
+  }, [getTokenContract]);
+
+  // ── Review functions ──────────────────────────────────────────────────────────
+
+  const submitReview = useCallback(async (employerAddress, ratingHandle, inputProof) => {
+    const contract = await getWriteContract();
+    const tx = await contract.submitReview(employerAddress, ratingHandle, inputProof);
+    return await tx.wait();
+  }, [getWriteContract]);
+
+  const getCompanyReviewInfo = useCallback(async (employerAddress) => {
+    const contract = await getReadContract();
+    const [reviewCount, revealedAvg, totalScoreHandle] = await contract.getCompanyReviewInfo(employerAddress);
+    return {
+      reviewCount: Number(reviewCount),
+      revealedAvg: Number(revealedAvg),
+      totalScoreHandle,
+    };
+  }, [getReadContract]);
+
   return {
     // Wallet state (from wagmi — driven by ConnectWalletButton)
     account,
@@ -215,6 +286,7 @@ export function useContract() {
     getMyApplications,
     getResumeIfUnlocked,
     getMessageCount,
+    getCompanyReviewInfo,
     // Write
     createJobPosting,
     applyToJob,
@@ -222,6 +294,12 @@ export function useContract() {
     revealMatchResult,
     unlockResume,
     closeJob,
+    submitReview,
+    // cUSDC Token
+    approveBountyToken,
+    claimFaucet,
+    getBountyBalance,
+    getBountyAllowance,
     // Chat
     sendMessage,
     getMessages,

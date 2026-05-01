@@ -8,19 +8,22 @@ import { useContract } from '../hooks/useContract';
 import { useFhevm } from '../hooks/useFhevm';
 import { useTransaction } from '../components/TransactionOverlay';
 import { uploadToIPFS, isIPFSConfigured } from '../utils/ipfs';
-import { Lock, MapPin, Briefcase, FileText, User } from 'lucide-react';
+import { Lock, MapPin, Briefcase, FileText, User, Award, Wifi, Coins } from 'lucide-react';
+import { ethers } from 'ethers';
 
 export default function ApplyJob() {
   const { jobId } = useParams();
   const navigate = useNavigate();
   const { account, isConnected, getJobPosting, applyToJob } = useContract();
   const { openConnectModal } = useWalletConnect();
-  const { isReady: fhevmReady, fheLoaded, encryptUint64 } = useFhevm();
+  const { isReady: fhevmReady, fheLoaded, encryptUint64, encryptUint8, encryptBool } = useFhevm();
   const { startTransaction, updateStep, failTransaction, STATUS } = useTransaction();
 
   const [job, setJob] = useState(null);
   const [loadingJob, setLoadingJob] = useState(true);
   const [minExpectation, setMinExpectation] = useState(100000);
+  const [yearsExperience, setYearsExperience] = useState(3);
+  const [remotePreference, setRemotePreference] = useState(true);
   const [isTxPending, setIsTxPending] = useState(false);
   const [resumeFile, setResumeFile] = useState(null);
   const [formData, setFormData] = useState({ candidateName: '' });
@@ -69,7 +72,7 @@ export default function ApplyJob() {
     setIsTxPending(true);
     startTransaction('Submitting Application', [
       'Uploading resume to IPFS via Pinata',
-      'Encrypting salary expectation via ZamaFHE',
+      'Encrypting salary, experience & remote via ZamaFHE',
       'Submitting application to Sepolia',
     ]);
 
@@ -79,18 +82,26 @@ export default function ApplyJob() {
       const ipfsCid = ipfsResult.cid;
       updateStep(0, STATUS.DONE, `CID: ${ipfsCid.slice(0, 16)}...`);
 
-      // Step 2: Encrypt salary
-      let handle, inputProof;
+      // Step 2: Encrypt all three values
+      let salaryHandle, expHandle, remoteHandle, inputProof;
       try {
-        ({ handle, inputProof } = await encryptUint64(minExpectation, account));
+        const salaryResult = await encryptUint64(minExpectation, account);
+        salaryHandle = salaryResult.handle;
+        inputProof = salaryResult.inputProof;
+
+        const expResult = await encryptUint8(yearsExperience, account);
+        expHandle = expResult.handle;
+
+        const remoteResult = await encryptBool(remotePreference, account);
+        remoteHandle = remoteResult.handle;
       } catch (encErr) {
         failTransaction(`FHE encryption failed: ${encErr.message}`);
         return;
       }
-      updateStep(1, STATUS.DONE, 'Ciphertext generated with ZK proof');
+      updateStep(1, STATUS.DONE, 'Salary + Experience + Remote encrypted');
 
       // Step 3: Submit to Sepolia
-      await applyToJob(Number(jobId), formData.candidateName, ipfsCid, handle, inputProof);
+      await applyToJob(Number(jobId), formData.candidateName, ipfsCid, salaryHandle, expHandle, remoteHandle, inputProof);
       updateStep(2, STATUS.DONE, 'Application confirmed on-chain');
 
       // Navigate after a short delay so user can see success
@@ -110,6 +121,8 @@ export default function ApplyJob() {
       </div>
     );
   }
+
+  const bountyDisplay = job?.bountyPerUnlock ? `${Number(job.bountyPerUnlock) / 1e6} cUSDC` : null;
 
   return (
     <div className="min-h-screen pt-24 pb-32">
@@ -136,6 +149,11 @@ export default function ApplyJob() {
                     <span className="text-[10px] font-mono uppercase tracking-widest bg-muted/40 px-2 py-0.5 rounded border border-white/20 shadow-recessed flex items-center gap-1.5">
                       {job.jobType}
                     </span>
+                    {bountyDisplay && (
+                      <span className="text-[10px] font-mono uppercase tracking-widest bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20 shadow-recessed flex items-center gap-1.5 text-green-700">
+                        <Coins className="w-3 h-3" /> {bountyDisplay} per unlock
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="hidden sm:block">
@@ -157,7 +175,7 @@ export default function ApplyJob() {
             <span className="inline-block mt-2 px-3 py-1 bg-accent text-ink rounded shadow-floating border border-ink/10">Your Salary Stays Private</span>
           </h1>
           <p className="text-ink-muted text-lg mb-8">
-            Your minimum salary expectation is encrypted in your browser using Zama FHE. Neither party learns the other's number unless there's a match.
+            Your salary, experience, and remote preference are all encrypted via Zama FHE. Neither party learns the other's values unless there's a match.
           </p>
 
           <form id="apply-job-form" onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -204,6 +222,44 @@ export default function ApplyJob() {
               </div>
             </div>
 
+            {/* Encrypted Requirements Card */}
+            <div className="card">
+              <div className="absolute top-4 left-4 card-screw" />
+              <div className="absolute top-4 right-4 card-screw" />
+              <h3 className="font-sans font-bold text-xl text-ink mb-6 border-b border-ink/10 pb-4 flex items-center gap-2">
+                <Award className="w-5 h-5" /> Encrypted Profile
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="yearsExperience">Years of Experience</label>
+                  <input
+                    id="yearsExperience"
+                    type="number"
+                    min="0"
+                    max="30"
+                    className="form-input"
+                    value={yearsExperience}
+                    onChange={e => setYearsExperience(parseInt(e.target.value) || 0)}
+                  />
+                  <span className="text-[10px] font-mono text-ink-muted uppercase tracking-widest">Encrypted via FHE</span>
+                </div>
+                <div className="form-group">
+                  <label className="form-label flex items-center gap-2" htmlFor="remotePreference">
+                    <Wifi className="w-3.5 h-3.5" /> Open to Remote?
+                  </label>
+                  <button
+                    id="remotePreference"
+                    type="button"
+                    className={`form-input text-left font-bold uppercase tracking-widest cursor-pointer transition-all ${remotePreference ? 'bg-green-500/10 text-green-700 border-green-500/30' : 'bg-red-500/10 text-red-700 border-red-500/30'}`}
+                    onClick={() => setRemotePreference(p => !p)}
+                  >
+                    {remotePreference ? '✅ Yes — Open to Remote' : '❌ No — On-site Only'}
+                  </button>
+                  <span className="text-[10px] font-mono text-ink-muted uppercase tracking-widest">Encrypted via FHE</span>
+                </div>
+              </div>
+            </div>
+
             <EncryptionZone
               label="Minimum Salary Expectation"
               value={minExpectation}
@@ -217,7 +273,7 @@ export default function ApplyJob() {
               <Lock className="w-5 h-5 text-green-600 shrink-0" />
               <p className="text-xs font-mono text-ink-muted leading-relaxed">
                 <strong className="text-green-600 uppercase tracking-widest">How It Works:</strong><br/>
-                Only your name and resume are shared with the employer if salaries match. Your salary expectation is never revealed — not even if there's no match.
+                Your salary, experience, and remote preference are matched against the employer's requirements using FHE. A weighted score (0-100) determines the match quality — all without revealing any values.
               </p>
             </div>
 

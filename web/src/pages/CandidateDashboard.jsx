@@ -5,7 +5,8 @@ import toast from 'react-hot-toast';
 import { FadeIn, StaggerContainer, StaggerItem } from '../components/Animations';
 import { useContract } from '../hooks/useContract';
 import FheChat from '../components/FheChat';
-import { User, CheckCircle2, XCircle, Clock, Lock, Briefcase, FileText } from 'lucide-react';
+import ReviewModal from '../components/ReviewModal';
+import { User, CheckCircle2, XCircle, Clock, Lock, Briefcase, FileText, Star } from 'lucide-react';
 
 function timeAgo(timestamp) {
   const diff = Math.floor((Date.now() / 1000) - timestamp);
@@ -37,6 +38,7 @@ export default function CandidateDashboard() {
   const { openConnectModal } = useWalletConnect();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [reviewTarget, setReviewTarget] = useState(null); // { employer, company }
 
   const loadApplications = useCallback(async () => {
     if (!account) return;
@@ -163,6 +165,13 @@ export default function CandidateDashboard() {
                           counterpartyName={app.company}
                           isEmployer={false}
                         />
+                        <button
+                          type="button"
+                          className="btn btn-secondary text-xs h-9 px-4 shadow-floating mt-2"
+                          onClick={() => setReviewTarget({ employer: app.employer, company: app.company })}
+                        >
+                          <Star className="w-3.5 h-3.5 mr-1.5" /> Rate {app.company}
+                        </button>
                       </div>
                     )}
 
@@ -196,6 +205,14 @@ export default function CandidateDashboard() {
           </div>
         </FadeIn>
       </div>
+
+      {/* Review Modal */}
+      <ReviewModal
+        isOpen={!!reviewTarget}
+        onClose={() => setReviewTarget(null)}
+        employerAddress={reviewTarget?.employer}
+        companyName={reviewTarget?.company}
+      />
     </div>
   );
 }

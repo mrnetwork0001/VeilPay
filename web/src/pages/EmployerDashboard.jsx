@@ -9,7 +9,16 @@ import { useFhevm } from '../hooks/useFhevm';
 import { useWalletClient } from 'wagmi';
 import { useTransaction } from '../components/TransactionOverlay';
 import FheChat from '../components/FheChat';
-import { Briefcase, Settings2, Unlock, Eye, FileDown, ExternalLink, ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { Briefcase, Settings2, Unlock, Eye, FileDown, ExternalLink, ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, Power, Coins } from 'lucide-react';
+
+function ScoreBadge({ score }) {
+  const color = score >= 80 ? 'green' : score >= 50 ? 'yellow' : 'red';
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 bg-${color}-500/10 rounded border border-${color}-500/20 text-[10px] font-mono font-bold text-${color}-600 uppercase tracking-widest`}>
+      Score: {score}/100
+    </span>
+  );
+}
 
 function StatusBadge({ app }) {
   if (!app.matchRevealed) return (
@@ -18,14 +27,20 @@ function StatusBadge({ app }) {
     </span>
   );
   if (app.matchResult) return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-500/10 rounded border border-green-500/20 text-[10px] font-mono font-bold text-green-600 uppercase tracking-widest shadow-recessed shadow-glow-green">
-      <CheckCircle2 className="w-3 h-3" /> Match
-    </span>
+    <div className="flex items-center gap-2">
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-500/10 rounded border border-green-500/20 text-[10px] font-mono font-bold text-green-600 uppercase tracking-widest shadow-recessed shadow-glow-green">
+        <CheckCircle2 className="w-3 h-3" /> Match
+      </span>
+      {app.revealedScore > 0 && <ScoreBadge score={app.revealedScore} />}
+    </div>
   );
   return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-500/10 rounded border border-red-500/20 text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest shadow-recessed">
-      <XCircle className="w-3 h-3" /> No Match
-    </span>
+    <div className="flex items-center gap-2">
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-500/10 rounded border border-red-500/20 text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest shadow-recessed">
+        <XCircle className="w-3 h-3" /> No Match
+      </span>
+      {app.revealedScore > 0 && <ScoreBadge score={app.revealedScore} />}
+    </div>
   );
 }
 
@@ -171,7 +186,7 @@ function ApplicationRow({ app, jobId, onResolve, onReveal, onUnlockResume, isLoa
   );
 }
 
-function JobSection({ jobId, employerJobs, onResolve, onReveal, onBatchResolve, onBatchReveal, onUnlockResume, isLoading }) {
+function JobSection({ jobId, employerJobs, onResolve, onReveal, onBatchResolve, onBatchReveal, onUnlockResume, onCloseJob, isLoading }) {
   const { getApplicationsForJob, getJobPosting } = useContract();
   const [apps, setApps] = useState([]);
   const [job, setJob] = useState(null);
@@ -215,8 +230,17 @@ function JobSection({ jobId, employerJobs, onResolve, onReveal, onBatchResolve, 
             <span className="w-1 h-1 bg-ink-muted rounded-full" />
             <span className={`flex items-center gap-1.5 ${job?.isActive ? 'text-green-600' : 'text-red-600'}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${job?.isActive ? 'bg-green-500 shadow-glow-green' : 'bg-red-500'}`} />
-              {job?.isActive ? 'Active' : 'Offline'}
+              {job?.isActive ? 'Active' : 'Closed'}
             </span>
+            {job?.bountyPool && (
+              <>
+                <span className="w-1 h-1 bg-ink-muted rounded-full" />
+                <span className="flex items-center gap-1 text-green-600">
+                  <Coins className="w-3 h-3" />
+                  {(Number(job.bountyPool) / 1e6).toFixed(0)} cUSDC pool
+                </span>
+              </>
+            )}
           </div>
         </div>
         <div className="text-ink-muted">
@@ -263,6 +287,17 @@ function JobSection({ jobId, employerJobs, onResolve, onReveal, onBatchResolve, 
                   ))}
                 </div>
               )}
+              {job?.isActive && (
+                <div className="mt-4 pt-4 border-t border-ink/10 flex justify-end">
+                  <button
+                    className="btn btn-ghost text-xs text-red-600 hover:bg-red-500/10 h-8 px-3"
+                    onClick={(e) => { e.stopPropagation(); onCloseJob(jobId); }}
+                    disabled={isLoading}
+                  >
+                    <Power className="w-3.5 h-3.5 mr-1" /> Close Job & Refund cUSDC
+                  </button>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -272,9 +307,9 @@ function JobSection({ jobId, employerJobs, onResolve, onReveal, onBatchResolve, 
 }
 
 export default function EmployerDashboard() {
-  const { account, isConnected, getJobsByEmployer, getApplicationsForJob, resolveApplication, revealMatchResult, unlockResume } = useContract();
+  const { account, isConnected, getJobsByEmployer, getApplicationsForJob, resolveApplication, revealMatchResult, unlockResume, closeJob } = useContract();
   const { openConnectModal } = useWalletConnect();
-  const { decryptEbool } = useFhevm();
+  const { decryptEbool, decryptUint8 } = useFhevm();
   const { data: walletClient } = useWalletClient();
   const { startTransaction, updateStep, failTransaction, STATUS } = useTransaction();
   
@@ -314,31 +349,38 @@ export default function EmployerDashboard() {
     setTxLoading(true);
     startTransaction('Revealing Match Result', [
       'Running FHE comparison on-chain',
-      'Fetching fresh encrypted handle',
-      'Decrypting via Zama coprocessor',
+      'Fetching fresh encrypted handles',
+      'Decrypting match & score via Zama coprocessor',
       'Committing result to contract',
     ]);
     try {
       // Step 1: Re-resolve
       await resolveApplication(jobId, appId);
-      updateStep(0, STATUS.DONE, 'FHE.le() computed successfully');
+      updateStep(0, STATUS.DONE, 'FHE weighted scoring computed');
 
-      // Step 2: Fetch fresh handle
+      // Step 2: Fetch fresh handles
       const apps = await getApplicationsForJob(jobId);
       const freshApp = apps.find(a => a.appId === appId);
       if (!freshApp?.matchHandle || BigInt(freshApp.matchHandle) === 0n) {
         throw new Error("FHE handle is empty after resolve.");
       }
-      updateStep(1, STATUS.DONE, `Handle: ${freshApp.matchHandle.slice(0, 14)}...`);
+      updateStep(1, STATUS.DONE, `Match handle: ${freshApp.matchHandle.slice(0, 14)}...`);
 
-      // Step 3: Decrypt
+      // Step 3: Decrypt both the boolean match and the score
       const decryptedMatch = await decryptEbool(freshApp.matchHandle, walletClient, (progressMsg) => {
         updateStep(2, STATUS.ACTIVE, progressMsg);
       });
-      updateStep(2, STATUS.DONE, `Result: ${decryptedMatch ? 'MATCH ✅' : 'NO MATCH ❌'}`);
 
-      // Step 4: Commit
-      await revealMatchResult(jobId, appId, decryptedMatch);
+      let decryptedScore = 0;
+      if (freshApp.scoreHandle && BigInt(freshApp.scoreHandle) !== 0n) {
+        decryptedScore = await decryptUint8(freshApp.scoreHandle, walletClient, (progressMsg) => {
+          updateStep(2, STATUS.ACTIVE, `Score: ${progressMsg}`);
+        });
+      }
+      updateStep(2, STATUS.DONE, `Match: ${decryptedMatch ? '✅' : '❌'} | Score: ${decryptedScore}/100`);
+
+      // Step 4: Commit both result and score
+      await revealMatchResult(jobId, appId, decryptedMatch, decryptedScore);
       updateStep(3, STATUS.DONE, 'Result confirmed on-chain');
 
       loadJobs();
@@ -407,10 +449,14 @@ export default function EmployerDashboard() {
         const decryptedMatch = await decryptEbool(freshApp.matchHandle, walletClient, (msg) => {
           updateStep(stepIdx, STATUS.ACTIVE, msg);
         });
-        updateStep(stepIdx, STATUS.DONE, `${decryptedMatch ? 'MATCH ✅' : 'NO MATCH ❌'}`);
+        let decryptedScore = 0;
+        if (freshApp.scoreHandle && BigInt(freshApp.scoreHandle) !== 0n) {
+          decryptedScore = await decryptUint8(freshApp.scoreHandle, walletClient, () => {});
+        }
+        updateStep(stepIdx, STATUS.DONE, `${decryptedMatch ? 'MATCH ✅' : 'NO MATCH ❌'} (Score: ${decryptedScore}/100)`);
         stepIdx++;
 
-        await revealMatchResult(jobId, app.appId, decryptedMatch);
+        await revealMatchResult(jobId, app.appId, decryptedMatch, decryptedScore);
         updateStep(stepIdx, STATUS.DONE, 'Confirmed on-chain');
         stepIdx++;
         completed++;
@@ -418,6 +464,22 @@ export default function EmployerDashboard() {
       loadJobs();
     } catch (err) {
       failTransaction(`Failed at applicant ${completed + 1}/${total}: ${err.message || 'Unknown error'}`);
+    } finally {
+      setTxLoading(false);
+    }
+  };
+
+  const handleCloseJob = async (jobId) => {
+    setTxLoading(true);
+    startTransaction('Closing Job & Refunding Bounty', [
+      'Closing job and refunding remaining cUSDC',
+    ]);
+    try {
+      await closeJob(jobId);
+      updateStep(0, STATUS.DONE, 'Job closed. Remaining cUSDC refunded.');
+      loadJobs();
+    } catch (err) {
+      failTransaction(err.message || 'Failed to close job.');
     } finally {
       setTxLoading(false);
     }
@@ -487,6 +549,7 @@ export default function EmployerDashboard() {
                   onBatchResolve={handleBatchResolve}
                   onBatchReveal={handleBatchReveal}
                   onUnlockResume={handleUnlock}
+                  onCloseJob={handleCloseJob}
                   isLoading={txLoading}
                 />
               ))}
