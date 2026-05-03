@@ -100,6 +100,45 @@ const HOW_IT_WORKS_STEPS = [
 ];
 
 export default function Landing() {
+  const [typewriterText, setTypewriterText] = useState('');
+  const words = ["Is Dead", "Is Broken", "Is Exposed", "Is Outdated"];
+  const [wordIdx, setWordIdx] = useState(0);
+
+  useEffect(() => {
+    let currentIdx = 0;
+    let isDeleting = false;
+    let timeoutId;
+
+    const tick = () => {
+      const fullWord = words[wordIdx];
+      
+      if (isDeleting) {
+        setTypewriterText(fullWord.substring(0, currentIdx - 1));
+        currentIdx--;
+      } else {
+        setTypewriterText(fullWord.substring(0, currentIdx + 1));
+        currentIdx++;
+      }
+
+      let delta = 150 - Math.random() * 50;
+      if (isDeleting) delta /= 2;
+
+      if (!isDeleting && currentIdx === fullWord.length) {
+        delta = 2500; // Pause at end of word
+        isDeleting = true;
+      } else if (isDeleting && currentIdx === 0) {
+        isDeleting = false;
+        setWordIdx((prev) => (prev + 1) % words.length);
+        delta = 500; // Pause before next word
+      }
+
+      timeoutId = setTimeout(tick, delta);
+    };
+
+    tick();
+    return () => clearTimeout(timeoutId);
+  }, [wordIdx]);
+
   return (
     <div className="pt-8 pb-24">
       {/* ── HERO ── */}
@@ -113,7 +152,10 @@ export default function Landing() {
             
             <h1 className="font-sans font-extrabold text-5xl md:text-7xl text-ink tracking-tight mb-6 leading-[1.1] drop-shadow-[0_1px_1px_#ffffff]">
               The Salary<br/>Negotiation<br/>
-              <span className="inline-block mt-2 px-4 py-1 bg-accent text-ink rounded-md shadow-floating rotate-[-2deg] border border-ink/10">Is Dead.</span>
+              <span className="inline-block mt-2 px-4 py-1 bg-accent text-ink rounded-md shadow-floating rotate-[-2deg] border border-ink/10 min-w-[11ch]">
+                {typewriterText}
+                <span className="animate-pulse">.</span>
+              </span>
             </h1>
             
             <p className="text-lg md:text-xl text-ink-muted font-medium max-w-xl mb-10 leading-relaxed">
