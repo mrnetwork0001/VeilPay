@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FadeIn, StaggerContainer, StaggerItem } from '../components/Animations';
 import { useContract } from '../hooks/useContract';
-import { MapPin, Briefcase, Search, Lock, Users, Clock, Coins, Wifi } from 'lucide-react';
+import { MapPin, Briefcase, Search, Lock, Users, Clock, Coins, Wifi, Star, XCircle } from 'lucide-react';
 
 function timeAgo(timestamp) {
   const diff = Math.floor((Date.now() / 1000) - timestamp);
@@ -21,15 +21,39 @@ function getCompanyInitials(name) {
     .toUpperCase();
 }
 
-function JobCard({ job }) {
-  const hasLogo = job.logoUrl && job.logoUrl.trim().length > 0;
-  const bountyDisplay = job.bountyPerUnlock ? (Number(job.bountyPerUnlock) / 1e6).toFixed(0) : '0';
+function ReviewBadge({ reviewInfo }) {
+  if (!reviewInfo || reviewInfo.reviewCount === 0) return null;
+
+  const avg = reviewInfo.revealedAvg || 0;
+  const count = reviewInfo.reviewCount;
 
   return (
-    <div className="card group" id={`job-card-${job.id}`}>
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-500/10 rounded border border-yellow-500/20 text-[10px] font-mono font-bold text-yellow-700 uppercase tracking-widest shadow-recessed">
+      <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
+      {avg > 0 ? `${avg}/5` : '—'} · {count} {count === 1 ? 'review' : 'reviews'}
+    </span>
+  );
+}
+
+function JobCard({ job, reviewInfo }) {
+  const hasLogo = job.logoUrl && job.logoUrl.trim().length > 0;
+  const bountyDisplay = job.bountyPerUnlock ? (Number(job.bountyPerUnlock) / 1e6).toFixed(0) : '0';
+  const isClosed = !job.isActive;
+
+  return (
+    <div className={`card group ${isClosed ? 'opacity-70' : ''}`} id={`job-card-${job.id}`}>
       <div className="absolute top-4 left-4 card-screw" />
       <div className="absolute top-4 right-4 card-screw" />
       
+      {/* Closed Badge */}
+      {isClosed && (
+        <div className="absolute top-3 right-12 z-10">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-500/15 rounded border border-red-500/30 text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest shadow-recessed">
+            <XCircle className="w-3 h-3" /> Closed
+          </span>
+        </div>
+      )}
+
       {/* Header: Logo + Title + Company */}
       <div className="flex gap-4 items-start mb-4 border-b border-ink/10 pb-4">
         <div className="w-12 h-12 shrink-0 rounded-lg bg-chassis border border-white/40 shadow-floating flex items-center justify-center overflow-hidden">
@@ -69,9 +93,10 @@ function JobCard({ job }) {
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-muted/40 rounded border border-white/20 text-[10px] font-mono font-bold text-ink-muted uppercase tracking-widest shadow-recessed">
           <Briefcase className="w-3 h-3 text-ink-muted" /> {job.jobType}
         </span>
+        <ReviewBadge reviewInfo={reviewInfo} />
       </div>
 
-      {/* Location & Remote */}
+      {/* Location & Bounty */}
       <div className="flex flex-wrap gap-2 mb-5">
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-muted/40 rounded border border-white/20 text-[10px] font-mono font-bold text-ink-muted uppercase tracking-widest shadow-recessed">
           <MapPin className="w-3 h-3 text-ink-muted" /> {job.location}
@@ -93,31 +118,58 @@ function JobCard({ job }) {
             <Clock className="w-3 h-3" /> {timeAgo(job.createdAt)}
           </span>
         </div>
-        <Link
-          to={`/apply/${job.id}`}
-          id={`apply-btn-${job.id}`}
-          className="btn btn-primary px-4 py-2 text-xs h-10 shadow-floating"
-        >
-          Apply Now
-        </Link>
+        {isClosed ? (
+          <span className="btn btn-secondary px-4 py-2 text-xs h-10 opacity-60 cursor-not-allowed">
+            Closed
+          </span>
+        ) : (
+          <Link
+            to={`/apply/${job.id}`}
+            id={`apply-btn-${job.id}`}
+            className="btn btn-primary px-4 py-2 text-xs h-10 shadow-floating"
+          >
+            Apply Now
+          </Link>
+        )}
       </div>
     </div>
   );
 }
 
 export default function JobBoard() {
-  const { getActiveJobs } = useContract();
+  const { getAllJobs, getCompanyReviewInfo } = useContract();
   const [jobs, setJobs] = useState([]);
+  const [reviewMap, setReviewMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState('All');
   const [filterLocation, setFilterLocation] = useState('All');
+  const [filterStatus, setFilterStatus] = useState('All');
   const [search, setSearch] = useState('');
 
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const liveJobs = await getActiveJobs();
-        setJobs(liveJobs);
+        const allJobs = await getAllJobs();
+        // Sort: active first, then by createdAt descending
+        allJobs.sort((a, b) => {
+          if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
+          return b.createdAt - a.createdAt;
+        });
+        setJobs(allJobs);
+
+        // Fetch review info for unique employers
+        const uniqueEmployers = [...new Set(allJobs.map(j => j.employer))];
+        const reviews = {};
+        await Promise.all(
+          uniqueEmployers.map(async (employer) => {
+            try {
+              reviews[employer] = await getCompanyReviewInfo(employer);
+            } catch {
+              reviews[employer] = { reviewCount: 0, revealedAvg: 0 };
+            }
+          })
+        );
+        setReviewMap(reviews);
       } catch (err) {
         console.error("Error fetching jobs:", err);
       } finally {
@@ -125,7 +177,7 @@ export default function JobBoard() {
       }
     };
     fetchJobs();
-  }, [getActiveJobs]);
+  }, [getAllJobs, getCompanyReviewInfo]);
 
   const jobTypes = ['All', ...new Set(jobs.map(j => j.jobType))];
   const locations = ['All', ...new Set(jobs.map(j => j.location))];
@@ -134,8 +186,12 @@ export default function JobBoard() {
     const matchType = filterType === 'All' || j.jobType === filterType;
     const matchLoc = filterLocation === 'All' || j.location === filterLocation;
     const matchSearch = !search || j.title.toLowerCase().includes(search.toLowerCase()) || j.company.toLowerCase().includes(search.toLowerCase());
-    return matchType && matchLoc && matchSearch;
+    const matchStatus = filterStatus === 'All' || (filterStatus === 'Active' && j.isActive) || (filterStatus === 'Closed' && !j.isActive);
+    return matchType && matchLoc && matchSearch && matchStatus;
   });
+
+  const activeCount = jobs.filter(j => j.isActive).length;
+  const closedCount = jobs.filter(j => !j.isActive).length;
 
   return (
     <div className="min-h-screen pt-24 pb-32">
@@ -168,7 +224,7 @@ export default function JobBoard() {
                 onChange={e => setSearch(e.target.value)}
               />
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-wrap">
               <select
                 id="filter-job-type"
                 className="form-input py-3 text-sm cursor-pointer appearance-none"
@@ -184,6 +240,16 @@ export default function JobBoard() {
                 onChange={e => setFilterLocation(e.target.value)}
               >
                 {locations.map(l => <option key={l}>{l === 'All' ? 'LOC: ALL' : l}</option>)}
+              </select>
+              <select
+                id="filter-status"
+                className="form-input py-3 text-sm cursor-pointer appearance-none"
+                value={filterStatus}
+                onChange={e => setFilterStatus(e.target.value)}
+              >
+                <option value="All">STATUS: ALL ({jobs.length})</option>
+                <option value="Active">ACTIVE ({activeCount})</option>
+                <option value="Closed">CLOSED ({closedCount})</option>
               </select>
             </div>
           </div>
@@ -204,7 +270,7 @@ export default function JobBoard() {
           <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((job) => (
               <StaggerItem key={job.id}>
-                <JobCard job={job} />
+                <JobCard job={job} reviewInfo={reviewMap[job.employer]} />
               </StaggerItem>
             ))}
           </StaggerContainer>

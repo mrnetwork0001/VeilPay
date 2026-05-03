@@ -102,6 +102,36 @@ export function useContract() {
     }));
   }, [getReadContract]);
 
+  /** Fetches ALL jobs (active + closed) by iterating jobCount */
+  const getAllJobs = useCallback(async () => {
+    const contract = await getReadContract();
+    const count = Number(await contract.jobCount());
+    const jobs = [];
+    for (let i = 0; i < count; i++) {
+      try {
+        const j = await contract.jobPostings(i);
+        jobs.push({
+          id: i,
+          employer: j.employer || j[0],
+          title: j.title || j[1],
+          company: j.company || j[2],
+          location: j.location || j[3],
+          jobType: j.jobType || j[4],
+          description: j.description || j[5],
+          logoUrl: j.logoUrl || j[6],
+          isActive: j.isActive ?? j[10],
+          createdAt: Number(j.createdAt || j[12]),
+          applicationCount: Number(j.applicationCount || j[13]),
+          bountyPool: j.bountyPool || j[14],
+          bountyPerUnlock: j.bountyPerUnlock || j[15],
+        });
+      } catch (err) {
+        console.warn(`Failed to fetch job ${i}:`, err);
+      }
+    }
+    return jobs;
+  }, [getReadContract]);
+
   const getJobsByEmployer = useCallback(async (address) => {
     const contract = await getReadContract();
     const ids = await contract.getJobsByEmployer(address);
@@ -280,6 +310,7 @@ export function useContract() {
     isConnected,
     // Read
     getActiveJobs,
+    getAllJobs,
     getJobsByEmployer,
     getJobPosting,
     getApplicationsForJob,

@@ -34,7 +34,7 @@ function StatusBadge({ app }) {
 }
 
 export default function CandidateDashboard() {
-  const { account, isConnected, getMyApplications } = useContract();
+  const { account, isConnected, getMyApplications, getJobPosting } = useContract();
   const { openConnectModal } = useWalletConnect();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -45,13 +45,24 @@ export default function CandidateDashboard() {
     setLoading(true);
     try {
       const data = await getMyApplications();
-      setApplications(data);
+      // Enrich with employer address (needed for reviews)
+      const enriched = await Promise.all(
+        data.map(async (app) => {
+          try {
+            const job = await getJobPosting(app.jobId);
+            return { ...app, employer: job.employer || job[0] };
+          } catch {
+            return { ...app, employer: null };
+          }
+        })
+      );
+      setApplications(enriched);
     } catch (err) {
       console.error("Error fetching applications:", err);
     } finally {
       setLoading(false);
     }
-  }, [account, getMyApplications]);
+  }, [account, getMyApplications, getJobPosting]);
 
   useEffect(() => { loadApplications(); }, [loadApplications]);
 

@@ -23,6 +23,11 @@ export default function ReviewModal({ isOpen, onClose, employerAddress, companyN
       return;
     }
 
+    if (!employerAddress) {
+      toast.error('Employer address not found. Please try again.');
+      return;
+    }
+
     setSubmitting(true);
     startTransaction('Submitting Anonymous Review', [
       'Encrypting rating via ZamaFHE',
