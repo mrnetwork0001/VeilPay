@@ -90,6 +90,38 @@ export async function uploadToIPFS(file) {
 }
 
 /**
+ * Upload an image to IPFS (for company logos)
+ * Accepts common image formats: PNG, JPG, GIF, SVG, WebP
+ */
+export async function uploadImageToIPFS(file) {
+  if (!file) throw new Error('No file provided');
+
+  const allowedTypes = [
+    'image/png',
+    'image/jpeg',
+    'image/gif',
+    'image/svg+xml',
+    'image/webp',
+  ];
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error('Only PNG, JPG, GIF, SVG, and WebP images are supported');
+  }
+
+  // Validate file size (max 5MB for logos)
+  const maxSize = 5 * 1024 * 1024;
+  if (file.size > maxSize) {
+    throw new Error('Image size must be under 5MB');
+  }
+
+  if (!PINATA_JWT) {
+    throw new Error('IPFS upload failed: VITE_PINATA_JWT is not configured.');
+  }
+
+  console.log(`[IPFS] Uploading logo ${file.name} (${(file.size / 1024).toFixed(1)}KB) to Pinata...`);
+  return pinataUpload(file);
+}
+
+/**
  * Check if real IPFS is configured
  */
 export function isIPFSConfigured() {

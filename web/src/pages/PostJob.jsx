@@ -7,7 +7,7 @@ import EncryptionZone from '../components/EncryptionZone';
 import { useContract } from '../hooks/useContract';
 import { useFhevm } from '../hooks/useFhevm';
 import { useTransaction } from '../components/TransactionOverlay';
-import { uploadToIPFS } from '../utils/ipfs';
+import { uploadImageToIPFS } from '../utils/ipfs';
 import { Building2, MapPin, Briefcase, FileText, Coins, Award, Wifi, Image } from 'lucide-react';
 
 const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Remote', 'Internship'];
@@ -17,7 +17,7 @@ export default function PostJob() {
   const navigate = useNavigate();
   const { account, isConnected, createJobPosting, approveBountyToken, claimFaucet, getBountyBalance } = useContract();
   const { openConnectModal } = useWalletConnect();
-  const { isReady: fhevmReady, fheLoaded, encryptUint64, encryptUint8, encryptBool } = useFhevm();
+  const { isReady: fhevmReady, fheLoaded, encryptJobPostingInputs } = useFhevm();
   const { startTransaction, updateStep, failTransaction, STATUS } = useTransaction();
 
   const [formData, setFormData] = useState({
@@ -90,7 +90,7 @@ export default function PostJob() {
       return;
     }
 
-    const { title, company, location, jobType, description, logoUrl } = formData;
+    const { title, company, location, jobType, description } = formData;
     if (!title || !company || !location) {
       toast.error('Please fill in all required fields.');
       return;
@@ -109,6 +109,8 @@ export default function PostJob() {
     }
 
     setIsTxPending(true);
+
+    // Show the modal IMMEDIATELY so the user sees progress during FHE encryption
     startTransaction('Deploying Job Module', [
       'Uploading company logo to IPFS',
       'Encrypting budget, experience & remote via ZamaFHE',
@@ -117,11 +119,11 @@ export default function PostJob() {
     ]);
 
     try {
-      // Step 1: Upload logo to IPFS (if provided)
+      // Step 1: Upload logo to IPFS (if provided) — uses image-aware uploader
       let logoUrl = '';
       if (logoFile) {
         try {
-          const logoResult = await uploadToIPFS(logoFile);
+          const logoResult = await uploadImageToIPFS(logoFile);
           logoUrl = `https://gateway.pinata.cloud/ipfs/${logoResult.cid}`;
         } catch (logoErr) {
           console.warn('Logo upload failed, continuing without logo:', logoErr);
@@ -129,18 +131,15 @@ export default function PostJob() {
       }
       updateStep(0, STATUS.DONE, logoUrl ? 'Logo uploaded to IPFS' : 'No logo (using initials)');
 
-      // Step 2: Encrypt all three values
+      // Step 2: Encrypt all three values in ONE call (shared inputProof)
+      // This is critical — the contract verifies all 3 handles against the same proof
       let budgetHandle, expHandle, remoteHandle, inputProof;
       try {
-        const budgetResult = await encryptUint64(maxBudget, account);
-        budgetHandle = budgetResult.handle;
-        inputProof = budgetResult.inputProof;
-
-        const expResult = await encryptUint8(requiredExperience, account);
-        expHandle = expResult.handle;
-
-        const remoteResult = await encryptBool(remoteOk, account);
-        remoteHandle = remoteResult.handle;
+        const encResult = await encryptJobPostingInputs(maxBudget, requiredExperience, remoteOk, account);
+        budgetHandle = encResult.budgetHandle;
+        expHandle = encResult.expHandle;
+        remoteHandle = encResult.remoteHandle;
+        inputProof = encResult.inputProof;
       } catch (encErr) {
         failTransaction(`FHE encryption failed: ${encErr.message}`);
         return;

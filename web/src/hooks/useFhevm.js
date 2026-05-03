@@ -228,6 +228,72 @@ export function useFhevm() {
   }, []);
 
   /**
+   * encryptJobPostingInputs
+   *
+   * CRITICAL: The contract's createJobPosting() calls Impl.verify() three times
+   * with the SAME inputProof parameter. All three encrypted values (budget as uint64,
+   * experience as uint8, remoteOk as bool) must be encrypted in a SINGLE
+   * createEncryptedInput() call so they share one proof.
+   *
+   * Returns { budgetHandle, expHandle, remoteHandle, inputProof }
+   */
+  const encryptJobPostingInputs = useCallback(async (budgetValue, experienceValue, remoteValue, userAddress) => {
+    const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
+    if (!userAddress) throw new Error("User address required for encryption");
+
+    let instance = fhevmInstance;
+    if (!instance && initPromise) {
+      instance = await initPromise.catch(() => null);
+    }
+    if (!instance) throw new Error("FHE instance not initialized. Cannot encrypt.");
+
+    const encrypt = instance.createEncryptedInput(CONTRACT_ADDRESS, userAddress);
+    encrypt.add64(BigInt(budgetValue));
+    encrypt.add8(BigInt(experienceValue));
+    encrypt.addBool(remoteValue);
+    const result = await encrypt.encrypt();
+
+    return {
+      budgetHandle: result.handles[0],
+      expHandle: result.handles[1],
+      remoteHandle: result.handles[2],
+      inputProof: result.inputProof,
+    };
+  }, []);
+
+  /**
+   * encryptApplicationInputs
+   *
+   * Same pattern for candidate applications — bundles salary expectation,
+   * experience, and remote preference into a single encrypted input.
+   *
+   * Returns { salaryHandle, expHandle, remoteHandle, inputProof }
+   */
+  const encryptApplicationInputs = useCallback(async (salaryValue, experienceValue, remoteValue, userAddress) => {
+    const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
+    if (!userAddress) throw new Error("User address required for encryption");
+
+    let instance = fhevmInstance;
+    if (!instance && initPromise) {
+      instance = await initPromise.catch(() => null);
+    }
+    if (!instance) throw new Error("FHE instance not initialized. Cannot encrypt.");
+
+    const encrypt = instance.createEncryptedInput(CONTRACT_ADDRESS, userAddress);
+    encrypt.add64(BigInt(salaryValue));
+    encrypt.add8(BigInt(experienceValue));
+    encrypt.addBool(remoteValue);
+    const result = await encrypt.encrypt();
+
+    return {
+      salaryHandle: result.handles[0],
+      expHandle: result.handles[1],
+      remoteHandle: result.handles[2],
+      inputProof: result.inputProof,
+    };
+  }, []);
+
+  /**
    * decryptUint8 — Public Decryption for match scores
    * Same retry logic as decryptEbool but returns the raw uint8 value.
    */
@@ -279,6 +345,8 @@ export function useFhevm() {
     encryptUint64,
     encryptUint8,
     encryptBool,
+    encryptJobPostingInputs,
+    encryptApplicationInputs,
     decryptEbool,
     decryptUint8,
     instance: fhevmInstance,

@@ -16,7 +16,7 @@ export default function ApplyJob() {
   const navigate = useNavigate();
   const { account, isConnected, getJobPosting, applyToJob } = useContract();
   const { openConnectModal } = useWalletConnect();
-  const { isReady: fhevmReady, fheLoaded, encryptUint64, encryptUint8, encryptBool } = useFhevm();
+  const { isReady: fhevmReady, fheLoaded, encryptApplicationInputs } = useFhevm();
   const { startTransaction, updateStep, failTransaction, STATUS } = useTransaction();
 
   const [job, setJob] = useState(null);
@@ -82,18 +82,15 @@ export default function ApplyJob() {
       const ipfsCid = ipfsResult.cid;
       updateStep(0, STATUS.DONE, `CID: ${ipfsCid.slice(0, 16)}...`);
 
-      // Step 2: Encrypt all three values
+      // Step 2: Encrypt all three values in ONE call (shared inputProof)
+      // Critical — the contract verifies all 3 handles against the same proof
       let salaryHandle, expHandle, remoteHandle, inputProof;
       try {
-        const salaryResult = await encryptUint64(minExpectation, account);
-        salaryHandle = salaryResult.handle;
-        inputProof = salaryResult.inputProof;
-
-        const expResult = await encryptUint8(yearsExperience, account);
-        expHandle = expResult.handle;
-
-        const remoteResult = await encryptBool(remotePreference, account);
-        remoteHandle = remoteResult.handle;
+        const encResult = await encryptApplicationInputs(minExpectation, yearsExperience, remotePreference, account);
+        salaryHandle = encResult.salaryHandle;
+        expHandle = encResult.expHandle;
+        remoteHandle = encResult.remoteHandle;
+        inputProof = encResult.inputProof;
       } catch (encErr) {
         failTransaction(`FHE encryption failed: ${encErr.message}`);
         return;
