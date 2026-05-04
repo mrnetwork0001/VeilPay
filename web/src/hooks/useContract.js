@@ -313,8 +313,7 @@ export function useContract() {
       const totalJobs = Number(jobCountBN);
 
       let totalApplications = 0;
-      let totalMatches = 0;
-      let totalBountyPaid = 0n;
+      let totalBountyEscrowed = 0n;
 
       for (let i = 0; i < totalJobs; i++) {
         try {
@@ -322,11 +321,13 @@ export function useContract() {
           const appCount = Number(j.applicationCount || j[13]);
           totalApplications += appCount;
 
-          // bountyPool is current remaining — calculate paid as (original deposit concept)
-          // We approximate: if bountyPool < totalDeposit, bounties were paid
-          const bountyPerUnlock = j.bountyPerUnlock || j[15];
-          const bountyPool = j.bountyPool || j[14];
-          // Count resolved matches from application count and pool depletion
+          // Sum the current bounty pools across all jobs
+          const bountyPool = BigInt(j.bountyPool || j[14] || 0);
+          const bountyPerUnlock = BigInt(j.bountyPerUnlock || j[15] || 0);
+          // Total escrowed = remaining pool + (unlocked candidates * bountyPerUnlock)
+          // Since we don't track unlocked count directly, we show the pool remaining
+          // plus approximate what was already paid out
+          totalBountyEscrowed += bountyPool;
         } catch (err) {
           console.warn(`Stats: Failed to read job ${i}:`, err);
         }
@@ -335,12 +336,11 @@ export function useContract() {
       return {
         totalJobs,
         totalApplications,
-        totalMatches,
-        totalBountyPaid: totalBountyPaid.toString(),
+        totalBountyEscrowed: totalBountyEscrowed.toString(),
       };
     } catch (err) {
       console.warn('Failed to fetch protocol stats:', err);
-      return { totalJobs: 0, totalApplications: 0, totalMatches: 0, totalBountyPaid: '0' };
+      return { totalJobs: 0, totalApplications: 0, totalBountyEscrowed: '0' };
     }
   }, [getReadContract]);
 

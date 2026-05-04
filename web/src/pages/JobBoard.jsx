@@ -37,7 +37,8 @@ function ReviewBadge({ reviewInfo }) {
 
 function JobCard({ job, reviewInfo }) {
   const hasLogo = job.logoUrl && job.logoUrl.trim().length > 0;
-  const bountyDisplay = job.bountyPerUnlock ? (Number(job.bountyPerUnlock) / 1e6).toFixed(0) : '0';
+  const bountyPool = job.bountyPool ? (Number(job.bountyPool) / 1e6).toFixed(0) : '0';
+  const bountyPerUnlock = job.bountyPerUnlock ? (Number(job.bountyPerUnlock) / 1e6).toFixed(0) : '0';
   const isClosed = !job.isActive;
 
   return (
@@ -101,9 +102,10 @@ function JobCard({ job, reviewInfo }) {
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-muted/40 rounded border border-white/20 text-[10px] font-mono font-bold text-ink-muted uppercase tracking-widest shadow-recessed">
           <MapPin className="w-3 h-3 text-ink-muted" /> {job.location}
         </span>
-        {parseFloat(bountyDisplay) > 0 && (
+        {parseFloat(bountyPool) > 0 && (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-500/10 rounded border border-green-500/20 text-[10px] font-mono font-bold text-green-700 uppercase tracking-widest shadow-recessed">
-            <Coins className="w-3 h-3" /> {bountyDisplay} cUSDC Bounty
+            <Coins className="w-3 h-3" /> {bountyPool} cUSDC Pool
+            {parseFloat(bountyPerUnlock) > 0 && <span className="text-green-600/60 ml-0.5">({bountyPerUnlock}/interview)</span>}
           </span>
         )}
       </div>

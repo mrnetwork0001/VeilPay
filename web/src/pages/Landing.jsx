@@ -160,7 +160,7 @@ function ProtocolStats() {
     {
       icon: <Coins className="w-6 h-6 text-ink" />,
       label: 'cUSDC Escrowed',
-      value: stats ? Number(BigInt(stats.totalBountyPaid || 0)) : 0,
+      value: stats ? Math.floor(Number(BigInt(stats.totalBountyEscrowed || '0')) / 1e6) : 0,
       suffix: '',
     },
   ];
