@@ -233,8 +233,8 @@ export default function FheProof() {
         {
           title: 'Encrypted Result Stored',
           description: functionName === 'resolveApplication'
-            ? 'The encrypted match score (euint8, 0-100) and salary match boolean (ebool) were stored on-chain. Only the employer can decrypt these via the Zama KMS. Individual salary values remain permanently encrypted.'
-            : 'Encrypted handles were stored on-chain. Only authorized parties (per the Zama ACL) can request decryption via the KMS.',
+            ? 'The encrypted match score (euint8, 0-100) and salary match boolean (ebool) were stored onchain. Only the employer can decrypt these via the Zama KMS. Individual salary values remain permanently encrypted.'
+            : 'Encrypted handles were stored onchain. Only authorized parties (per the Zama ACL) can request decryption via the KMS.',
           data: [
             { label: 'Block', value: `#${receipt?.blockNumber || 'N/A'}` },
             { label: 'Tx Index', value: `${receipt?.index ?? 'N/A'}` },

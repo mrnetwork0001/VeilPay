@@ -57,7 +57,7 @@ export default function FheChat({ jobId, applicationId, counterpartyName, isEmpl
     setNewMessage('');
 
     try {
-      toast.loading('Sending message on-chain...', { id: 'chat-tx' });
+      toast.loading('Sending message onchain...', { id: 'chat-tx' });
       await sendMessage(jobId, applicationId, content);
       toast.success('Message sent!', { id: 'chat-tx', duration: 2000 });
       // Reload messages after sending
@@ -135,7 +135,7 @@ export default function FheChat({ jobId, applicationId, counterpartyName, isEmpl
               </div>
               {/* Verify Link */}
               <Link to="/proof" className="flex items-center gap-1.5 px-3 py-1 bg-accent/10 hover:bg-accent/20 border border-accent/20 rounded text-[9px] font-mono font-bold text-ink-muted uppercase tracking-widest transition-colors mx-3 mb-0">
-                <ShieldCheck className="w-3 h-3" /> Verify this match on-chain →
+                <ShieldCheck className="w-3 h-3" /> Verify this match onchain →
               </Link>
 
               {/* Messages Area */}

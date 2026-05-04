@@ -31,7 +31,7 @@ export default function ReviewModal({ isOpen, onClose, employerAddress, companyN
     setSubmitting(true);
     startTransaction('Submitting Anonymous Review', [
       'Encrypting rating via ZamaFHE',
-      'Submitting encrypted review on-chain',
+      'Submitting encrypted review onchain',
     ]);
 
     try {

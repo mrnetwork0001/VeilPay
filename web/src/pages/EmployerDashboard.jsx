@@ -337,7 +337,7 @@ export default function EmployerDashboard() {
     ]);
     try {
       const receipt = await resolveApplication(jobId, appId);
-      updateStep(0, STATUS.DONE, 'Encrypted result stored on-chain', receipt?.hash || null);
+      updateStep(0, STATUS.DONE, 'Encrypted result stored onchain', receipt?.hash || null);
     } catch (err) {
       failTransaction(err.message || 'Failed to resolve.');
     } finally {
@@ -348,7 +348,7 @@ export default function EmployerDashboard() {
   const handleReveal = async (jobId, appId, _matchHandle) => {
     setTxLoading(true);
     startTransaction('Revealing Match Result', [
-      'Running FHE comparison on-chain',
+      'Running FHE comparison onchain',
       'Fetching fresh encrypted handles',
       'Decrypting match & score via Zama coprocessor',
       'Committing result to contract',
@@ -381,7 +381,7 @@ export default function EmployerDashboard() {
 
       // Step 4: Commit both result and score
       const revealReceipt = await revealMatchResult(jobId, appId, decryptedMatch, decryptedScore);
-      updateStep(3, STATUS.DONE, 'Result confirmed on-chain', revealReceipt?.hash || null);
+      updateStep(3, STATUS.DONE, 'Result confirmed onchain', revealReceipt?.hash || null);
 
       loadJobs();
     } catch (err) {
@@ -457,7 +457,7 @@ export default function EmployerDashboard() {
         stepIdx++;
 
         const revealReceipt = await revealMatchResult(jobId, app.appId, decryptedMatch, decryptedScore);
-        updateStep(stepIdx, STATUS.DONE, 'Confirmed on-chain', revealReceipt?.hash || null);
+        updateStep(stepIdx, STATUS.DONE, 'Confirmed onchain', revealReceipt?.hash || null);
         stepIdx++;
         completed++;
       }

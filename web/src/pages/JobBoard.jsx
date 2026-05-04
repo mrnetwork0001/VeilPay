@@ -209,7 +209,7 @@ export default function JobBoard() {
               <span className="inline-block mt-2 px-4 py-1 bg-accent text-ink rounded-md shadow-floating border border-ink/10">Salaries Stay Private</span>
             </h1>
             <p className="text-ink-muted text-lg max-w-2xl">
-              Every listing uses fully homomorphic encryption. Neither the employer's budget nor your expectation is ever visible on-chain.
+              Every listing uses fully homomorphic encryption. Neither the employer's budget nor your expectation is ever visible onchain.
             </p>
           </div>
 

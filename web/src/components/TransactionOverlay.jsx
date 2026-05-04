@@ -262,7 +262,7 @@ function Overlay({ title, steps, error, txHash, onClose }) {
               <>
                 <Loader2 className="w-5 h-5 text-accent shrink-0 animate-spin" />
                 <span className="font-mono text-xs text-ink-muted font-bold uppercase tracking-widest">
-                  Processing on-chain transaction...
+                  Processing onchain transaction...
                 </span>
               </>
             )}

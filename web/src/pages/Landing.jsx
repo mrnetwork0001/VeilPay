@@ -95,7 +95,7 @@ const HOW_IT_WORKS_STEPS = [
   {
     number: '03',
     icon: <Cpu className="w-6 h-6 text-ink" />,
-    title: 'On-Chain Match',
+    title: 'Onchain Match',
     desc: 'FHE.le(min, max) runs on ciphertext. Salaries stay private forever.',
   },
 ];
@@ -169,7 +169,7 @@ function ProtocolStats() {
     <section className="max-w-[72rem] mx-auto px-6 md:px-12 py-20">
       <FadeIn className="mb-12 text-center">
         <div className="font-mono text-sm font-bold text-ink uppercase tracking-widest mb-4 inline-block border-b-4 border-accent pb-1">Live Protocol Stats</div>
-        <h2 className="font-sans font-bold text-4xl text-ink drop-shadow-[0_1px_1px_#ffffff]">On-Chain Activity</h2>
+        <h2 className="font-sans font-bold text-4xl text-ink drop-shadow-[0_1px_1px_#ffffff]">Onchain Activity</h2>
         <p className="text-ink-muted text-sm font-mono mt-3 uppercase tracking-widest">Real-time data from Ethereum Sepolia</p>
       </FadeIn>
 
