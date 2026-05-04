@@ -261,9 +261,9 @@ export default function ApplyJob() {
               label="Minimum Salary Expectation"
               value={minExpectation}
               onChange={setMinExpectation}
-              min={30000}
+              min={1000}
               max={500000}
-              step={5000}
+              step={1000}
             />
 
             <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex gap-3 shadow-recessed">

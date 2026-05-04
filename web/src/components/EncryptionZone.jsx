@@ -16,7 +16,7 @@ function randomHex(length = 64) {
  * Shows a salary input (slider + number), and on blur/change,
  * animates a "lock" icon and shows scrambled ciphertext in place of the value.
  */
-export default function EncryptionZone({ label, value, onChange, min = 30000, max = 500000, step = 5000 }) {
+export default function EncryptionZone({ label, value, onChange, min = 1000, max = 500000, step = 1000 }) {
   const [isEncrypting, setIsEncrypting] = useState(false);
   const [cipherDisplay, setCipherDisplay] = useState('');
   const [showEncrypted, setShowEncrypted] = useState(false);

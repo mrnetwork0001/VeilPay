@@ -359,9 +359,9 @@ export default function PostJob() {
               label="Maximum Salary Budget"
               value={maxBudget}
               onChange={setMaxBudget}
-              min={30000}
+              min={1000}
               max={500000}
-              step={5000}
+              step={1000}
             />
 
             {/* ── Interview Bounty Card ── */}
