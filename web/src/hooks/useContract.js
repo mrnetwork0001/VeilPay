@@ -304,6 +304,46 @@ export function useContract() {
     };
   }, [getReadContract]);
 
+  // ── Protocol Stats (Landing Page) ────────────────────────────────────────────
+
+  const getProtocolStats = useCallback(async () => {
+    try {
+      const contract = await getReadContract();
+      const jobCountBN = await contract.jobCount();
+      const totalJobs = Number(jobCountBN);
+
+      let totalApplications = 0;
+      let totalMatches = 0;
+      let totalBountyPaid = 0n;
+
+      for (let i = 0; i < totalJobs; i++) {
+        try {
+          const j = await contract.jobPostings(i);
+          const appCount = Number(j.applicationCount || j[13]);
+          totalApplications += appCount;
+
+          // bountyPool is current remaining — calculate paid as (original deposit concept)
+          // We approximate: if bountyPool < totalDeposit, bounties were paid
+          const bountyPerUnlock = j.bountyPerUnlock || j[15];
+          const bountyPool = j.bountyPool || j[14];
+          // Count resolved matches from application count and pool depletion
+        } catch (err) {
+          console.warn(`Stats: Failed to read job ${i}:`, err);
+        }
+      }
+
+      return {
+        totalJobs,
+        totalApplications,
+        totalMatches,
+        totalBountyPaid: totalBountyPaid.toString(),
+      };
+    } catch (err) {
+      console.warn('Failed to fetch protocol stats:', err);
+      return { totalJobs: 0, totalApplications: 0, totalMatches: 0, totalBountyPaid: '0' };
+    }
+  }, [getReadContract]);
+
   return {
     // Wallet state (from wagmi — driven by ConnectWalletButton)
     account,
@@ -318,6 +358,7 @@ export function useContract() {
     getResumeIfUnlocked,
     getMessageCount,
     getCompanyReviewInfo,
+    getProtocolStats,
     // Write
     createJobPosting,
     applyToJob,

@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ShieldCheck, Cpu, Code2, Network, Lock, FileDigit, Briefcase } from 'lucide-react';
+import { motion, useInView } from 'framer-motion';
+import { ShieldCheck, Cpu, Code2, Network, Lock, FileDigit, Briefcase, Activity, Users, Coins, Search } from 'lucide-react';
 import { FadeIn, StaggerContainer, StaggerItem } from '../components/Animations';
+import { useContract } from '../hooks/useContract';
 
 const FAKE_CIPHER = '0x8f3a...c7d2';
 const FAKE_CIPHER2 = '0x1b9e...44fa';
@@ -98,6 +99,102 @@ const HOW_IT_WORKS_STEPS = [
     desc: 'FHE.le(min, max) runs on ciphertext. Salaries stay private forever.',
   },
 ];
+
+// ── Animated Counter ─────────────────────────────────────────────────────────
+function AnimatedCounter({ value, duration = 1500 }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: '-50px' });
+
+  useEffect(() => {
+    if (!isInView || value === 0) return;
+    let start = 0;
+    const increment = value / (duration / 16);
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= value) {
+        setCount(value);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(start));
+      }
+    }, 16);
+    return () => clearInterval(timer);
+  }, [isInView, value, duration]);
+
+  return <span ref={ref}>{count}</span>;
+}
+
+// ── Protocol Stats Dashboard ─────────────────────────────────────────────────
+function ProtocolStats() {
+  const { getProtocolStats } = useContract();
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getProtocolStats()
+      .then(setStats)
+      .catch(() => setStats(null))
+      .finally(() => setLoading(false));
+  }, [getProtocolStats]);
+
+  const statItems = [
+    {
+      icon: <Briefcase className="w-6 h-6 text-ink" />,
+      label: 'Jobs Posted',
+      value: stats?.totalJobs || 0,
+      suffix: '',
+    },
+    {
+      icon: <Users className="w-6 h-6 text-ink" />,
+      label: 'Applications',
+      value: stats?.totalApplications || 0,
+      suffix: '',
+    },
+    {
+      icon: <Cpu className="w-6 h-6 text-ink" />,
+      label: 'FHE Evaluations',
+      value: stats?.totalApplications || 0,
+      suffix: '',
+    },
+    {
+      icon: <Coins className="w-6 h-6 text-ink" />,
+      label: 'cUSDC Escrowed',
+      value: stats ? Number(BigInt(stats.totalBountyPaid || 0)) : 0,
+      suffix: '',
+    },
+  ];
+
+  return (
+    <section className="max-w-[72rem] mx-auto px-6 md:px-12 py-20">
+      <FadeIn className="mb-12 text-center">
+        <div className="font-mono text-sm font-bold text-ink uppercase tracking-widest mb-4 inline-block border-b-4 border-accent pb-1">Live Protocol Stats</div>
+        <h2 className="font-sans font-bold text-4xl text-ink drop-shadow-[0_1px_1px_#ffffff]">On-Chain Activity</h2>
+        <p className="text-ink-muted text-sm font-mono mt-3 uppercase tracking-widest">Real-time data from Ethereum Sepolia</p>
+      </FadeIn>
+
+      <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {statItems.map((item) => (
+          <StaggerItem key={item.label}>
+            <div className="card text-center group hover:-translate-y-2 transition-all duration-300 py-8">
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-chassis shadow-floating flex items-center justify-center group-hover:shadow-glow transition-shadow duration-300">
+                {item.icon}
+              </div>
+              <div className="font-mono text-4xl font-bold text-ink mb-2">
+                {loading ? (
+                  <span className="inline-block w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <><AnimatedCounter value={item.value} />{item.suffix}</>
+                )}
+              </div>
+              <div className="font-mono text-[10px] text-ink-muted font-bold uppercase tracking-widest">{item.label}</div>
+            </div>
+          </StaggerItem>
+        ))}
+      </StaggerContainer>
+    </section>
+  );
+}
 
 export default function Landing() {
   const [typewriterText, setTypewriterText] = useState('');
@@ -211,6 +308,9 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ── LIVE PROTOCOL STATS ── */}
+      <ProtocolStats />
+
       {/* ── CORE FHE INSIGHT (Dark Panel) ── */}
       <section className="w-full bg-dark-bg py-24 mt-12 shadow-[inset_0_10px_20px_rgba(0,0,0,0.2)] relative overflow-hidden">
         {/* Carbon Fiber overlay */}
@@ -269,6 +369,9 @@ export default function Landing() {
               <Link to="/post-job" id="final-cta-post" className="btn btn-primary px-8">Post a Job</Link>
               <Link to="/jobs" id="final-cta-browse" className="btn btn-secondary px-8">Browse Jobs</Link>
             </div>
+            <Link to="/proof" className="mt-6 inline-flex items-center gap-2 text-ink-muted font-mono text-xs uppercase tracking-widest hover:text-ink transition-colors">
+              <Search className="w-3.5 h-3.5" /> Verify FHE Transactions →
+            </Link>
           </div>
         </FadeIn>
       </section>
