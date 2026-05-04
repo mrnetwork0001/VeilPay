@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { path: '/', label: 'Home', id: 'nav-home' },
   { path: '/jobs', label: 'Browse Jobs', id: 'nav-jobs' },
   { path: '/post-job', label: 'Post a Job', id: 'nav-post-job' },
+  { path: '/proof', label: 'FHE Proof', id: 'nav-proof' },
   { path: '/dashboard/employer', label: 'Employer', id: 'nav-employer' },
   { path: '/dashboard/candidate', label: 'Applications', id: 'nav-candidate' },
 ];

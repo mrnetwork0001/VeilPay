@@ -11,6 +11,7 @@ import PostJob from './pages/PostJob';
 import ApplyJob from './pages/ApplyJob';
 import EmployerDashboard from './pages/EmployerDashboard';
 import CandidateDashboard from './pages/CandidateDashboard';
+import FheProof from './pages/FheProof';
 
 function AppRoutes() {
   const location = useLocation();
@@ -24,6 +25,7 @@ function AppRoutes() {
         <Route path="/apply/:jobId" element={<ApplyJob />} />
         <Route path="/dashboard/employer" element={<EmployerDashboard />} />
         <Route path="/dashboard/candidate" element={<CandidateDashboard />} />
+        <Route path="/proof" element={<FheProof />} />
       </Routes>
     </AnimatePresence>
   );
