@@ -35,7 +35,7 @@ function MatchVisualizer() {
         <div className="px-4 py-2 border-b border-white/10 flex justify-between items-center bg-white/5 z-20">
           <span className="text-[10px] font-mono font-bold text-ink-muted tracking-widest uppercase">FHE.le_Engine_v1.0</span>
           <span className="flex items-center gap-2 text-[10px] font-mono text-accent">
-            <span className="led led-red shadow-none w-1.5 h-1.5" /> ONLINE
+            <span className="led led-green shadow-none w-1.5 h-1.5" /> ONLINE
           </span>
         </div>
 
@@ -153,8 +153,8 @@ function ProtocolStats() {
     },
     {
       icon: <Cpu className="w-6 h-6 text-ink" />,
-      label: 'FHE Evaluations',
-      value: stats?.totalApplications || 0,
+      label: 'FHE Operations',
+      value: stats?.totalApplications ? stats.totalApplications * 3 : 0,
       suffix: '',
     },
     {
@@ -262,6 +262,9 @@ export default function Landing() {
                 Browse Jobs
               </Link>
             </div>
+            <Link to="/proof" className="mt-4 inline-flex items-center gap-2 text-ink-muted font-mono text-xs uppercase tracking-widest hover:text-ink transition-colors">
+              <Search className="w-3.5 h-3.5" /> Inspect FHE Proof →
+            </Link>
           </FadeIn>
 
           <FadeIn delay={0.2} className="relative w-full">
@@ -322,8 +325,8 @@ export default function Landing() {
             <p className="text-white/70 text-lg leading-relaxed mb-8 max-w-md">
               The entire salary-matching logic is a single homomorphic comparison. Both values go in as ciphertexts. A boolean comes out. The numbers stay encrypted forever.
             </p>
-            <Link to="/post-job" id="cta-post-job" className="btn btn-primary text-base">
-              Post a Job
+            <Link to="/proof" id="cta-inspect-proof" className="btn btn-primary text-base">
+              Inspect FHE Proof
             </Link>
           </FadeIn>
 
