@@ -199,7 +199,7 @@ export default function ApplyJob() {
                   Your application for this position has been submitted. The employer will review your encrypted credentials and run the FHE match scoring.
                 </p>
                 <div className="flex gap-3">
-                  <Link to="/candidate" className="btn btn-primary shadow-floating">
+                  <Link to="/dashboard/candidate" className="btn btn-primary shadow-floating">
                     Track in Dashboard
                   </Link>
                   <Link to="/jobs" className="btn btn-secondary shadow-card">

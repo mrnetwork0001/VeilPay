@@ -126,7 +126,7 @@ function JobCard({ job, reviewInfo, hasApplied }) {
           </span>
         ) : hasApplied ? (
           <Link
-            to="/candidate"
+            to="/dashboard/candidate"
             id={`applied-btn-${job.id}`}
             className="btn btn-secondary px-4 py-2 text-xs h-10 shadow-recessed text-green-700 border-green-500/30"
           >
