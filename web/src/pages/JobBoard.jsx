@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FadeIn, StaggerContainer, StaggerItem } from '../components/Animations';
 import { useContract } from '../hooks/useContract';
-import { MapPin, Briefcase, Search, Lock, Users, Clock, Coins, Wifi, Star, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MapPin, Briefcase, Search, Lock, Users, Clock, Coins, Wifi, Star, XCircle, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 
 function timeAgo(timestamp) {
   const diff = Math.floor((Date.now() / 1000) - timestamp);
@@ -35,7 +35,7 @@ function ReviewBadge({ reviewInfo }) {
   );
 }
 
-function JobCard({ job, reviewInfo }) {
+function JobCard({ job, reviewInfo, hasApplied }) {
   const hasLogo = job.logoUrl && job.logoUrl.trim().length > 0;
   const bountyPool = job.bountyPool ? (Number(job.bountyPool) / 1e6).toFixed(0) : '0';
   const bountyPerUnlock = job.bountyPerUnlock ? (Number(job.bountyPerUnlock) / 1e6).toFixed(0) : '0';
@@ -124,6 +124,14 @@ function JobCard({ job, reviewInfo }) {
           <span className="btn btn-secondary px-4 py-2 text-xs h-10 opacity-60 cursor-not-allowed">
             Closed
           </span>
+        ) : hasApplied ? (
+          <Link
+            to="/candidate"
+            id={`applied-btn-${job.id}`}
+            className="btn btn-secondary px-4 py-2 text-xs h-10 shadow-recessed text-green-700 border-green-500/30"
+          >
+            <CheckCircle className="w-3.5 h-3.5" /> Applied
+          </Link>
         ) : (
           <Link
             to={`/apply/${job.id}`}
@@ -139,9 +147,10 @@ function JobCard({ job, reviewInfo }) {
 }
 
 export default function JobBoard() {
-  const { getAllJobs, getCompanyReviewInfo } = useContract();
+  const { getAllJobs, getCompanyReviewInfo, checkIfApplied, account, isConnected } = useContract();
   const [jobs, setJobs] = useState([]);
   const [reviewMap, setReviewMap] = useState({});
+  const [appliedMap, setAppliedMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState('All');
   const [filterLocation, setFilterLocation] = useState('All');
@@ -174,6 +183,21 @@ export default function JobBoard() {
           })
         );
         setReviewMap(reviews);
+
+        // Check which jobs the current user has applied to
+        if (account) {
+          const applied = {};
+          await Promise.all(
+            allJobs.map(async (job) => {
+              try {
+                applied[job.id] = await checkIfApplied(account, job.id);
+              } catch {
+                applied[job.id] = false;
+              }
+            })
+          );
+          setAppliedMap(applied);
+        }
       } catch (err) {
         console.error("Error fetching jobs:", err);
       } finally {
@@ -181,7 +205,7 @@ export default function JobBoard() {
       }
     };
     fetchJobs();
-  }, [getAllJobs, getCompanyReviewInfo]);
+  }, [getAllJobs, getCompanyReviewInfo, checkIfApplied, account]);
 
   const jobTypes = ['All', ...new Set(jobs.map(j => j.jobType))];
   const locations = ['All', ...new Set(jobs.map(j => j.location))];
@@ -287,7 +311,7 @@ export default function JobBoard() {
           <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {paginatedJobs.map((job) => (
               <StaggerItem key={job.id}>
-                <JobCard job={job} reviewInfo={reviewMap[job.employer]} />
+                <JobCard job={job} reviewInfo={reviewMap[job.employer]} hasApplied={appliedMap[job.id]} />
               </StaggerItem>
             ))}
           </StaggerContainer>

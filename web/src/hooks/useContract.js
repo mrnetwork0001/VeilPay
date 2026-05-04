@@ -344,6 +344,22 @@ export function useContract() {
     }
   }, [getReadContract]);
 
+  /**
+   * Check if a candidate has already applied to a specific job.
+   * Returns true if candidateApplicationId[address][jobId] > 0 OR
+   * if the address is in the job's applicant list.
+   */
+  const checkIfApplied = useCallback(async (candidateAddress, jobId) => {
+    if (!candidateAddress) return false;
+    try {
+      const contract = await getReadContract();
+      const appId = await contract.candidateApplicationId(candidateAddress, jobId);
+      return Number(appId) > 0;
+    } catch {
+      return false;
+    }
+  }, [getReadContract]);
+
   return {
     // Wallet state (from wagmi - driven by ConnectWalletButton)
     account,
@@ -359,6 +375,7 @@ export function useContract() {
     getMessageCount,
     getCompanyReviewInfo,
     getProtocolStats,
+    checkIfApplied,
     // Write
     createJobPosting,
     applyToJob,

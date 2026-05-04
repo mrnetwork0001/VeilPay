@@ -8,13 +8,13 @@ import { useContract } from '../hooks/useContract';
 import { useFhevm } from '../hooks/useFhevm';
 import { useTransaction } from '../components/TransactionOverlay';
 import { uploadToIPFS, isIPFSConfigured } from '../utils/ipfs';
-import { Lock, MapPin, Briefcase, FileText, User, Award, Wifi, Coins } from 'lucide-react';
+import { Lock, MapPin, Briefcase, FileText, User, Award, Wifi, Coins, CheckCircle } from 'lucide-react';
 import { ethers } from 'ethers';
 
 export default function ApplyJob() {
   const { jobId } = useParams();
   const navigate = useNavigate();
-  const { account, isConnected, getJobPosting, applyToJob } = useContract();
+  const { account, isConnected, getJobPosting, applyToJob, checkIfApplied } = useContract();
   const { openConnectModal } = useWalletConnect();
   const { isReady: fhevmReady, fheLoaded, encryptApplicationInputs } = useFhevm();
   const { startTransaction, updateStep, failTransaction, STATUS } = useTransaction();
@@ -27,6 +27,7 @@ export default function ApplyJob() {
   const [isTxPending, setIsTxPending] = useState(false);
   const [resumeFile, setResumeFile] = useState(null);
   const [formData, setFormData] = useState({ candidateName: '' });
+  const [alreadyApplied, setAlreadyApplied] = useState(false);
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -41,6 +42,17 @@ export default function ApplyJob() {
     };
     fetchJob();
   }, [jobId, getJobPosting]);
+
+  // Check if user already applied
+  useEffect(() => {
+    const checkApplied = async () => {
+      if (isConnected && account && jobId) {
+        const applied = await checkIfApplied(account, jobId);
+        setAlreadyApplied(applied);
+      }
+    };
+    checkApplied();
+  }, [isConnected, account, jobId, checkIfApplied]);
 
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -175,6 +187,29 @@ export default function ApplyJob() {
             Your salary, experience, and remote preference are all encrypted via Zama FHE. Neither party learns the other's values unless there's a match.
           </p>
 
+          {/* Already Applied Banner */}
+          {alreadyApplied ? (
+            <div className="card bg-green-500/5 border-green-500/20">
+              <div className="flex flex-col items-center text-center py-8">
+                <div className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mb-4">
+                  <CheckCircle className="w-8 h-8 text-green-600" />
+                </div>
+                <h3 className="font-sans font-bold text-xl text-ink mb-2">You've Already Applied</h3>
+                <p className="text-ink-muted text-sm mb-6 max-w-md">
+                  Your application for this position has been submitted. The employer will review your encrypted credentials and run the FHE match scoring.
+                </p>
+                <div className="flex gap-3">
+                  <Link to="/candidate" className="btn btn-primary shadow-floating">
+                    Track in Dashboard
+                  </Link>
+                  <Link to="/jobs" className="btn btn-secondary shadow-card">
+                    Browse Other Jobs
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ) : (
+
           <form id="apply-job-form" onSubmit={handleSubmit} className="flex flex-col gap-6">
             <div className="card">
               <div className="absolute top-4 left-4 card-screw" />
@@ -294,6 +329,7 @@ export default function ApplyJob() {
               )}
             </div>
           </form>
+          )}
         </FadeIn>
       </div>
     </div>
