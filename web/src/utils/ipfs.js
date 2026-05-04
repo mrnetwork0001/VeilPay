@@ -1,5 +1,5 @@
 /**
- * uploadToIPFS — Upload a file to IPFS via a public pinning gateway.
+ * uploadToIPFS - Upload a file to IPFS via a public pinning gateway.
  *
  * Uses web3.storage / Pinata-compatible IPFS HTTP API.
  * Falls back to a local simulation if no API key is configured.
@@ -60,7 +60,7 @@ async function pinataUpload(file) {
 
 
 /**
- * Main upload function — uses Pinata if configured, otherwise demo mode
+ * Main upload function - uses Pinata if configured, otherwise demo mode
  */
 export async function uploadToIPFS(file) {
   if (!file) throw new Error('No file provided');

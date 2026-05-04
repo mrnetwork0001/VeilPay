@@ -125,7 +125,7 @@ function Overlay({ title, steps, error, txHash, onClose }) {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
     >
-      {/* Backdrop — click to close */}
+      {/* Backdrop - click to close */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
@@ -248,7 +248,7 @@ function Overlay({ title, steps, error, txHash, onClose }) {
               <>
                 <XCircle className="w-5 h-5 text-red-500 shrink-0" />
                 <span className="font-mono text-xs text-red-500 font-bold uppercase tracking-widest">
-                  Failed — click outside or ✕ to close
+                  Failed - click outside or ✕ to close
                 </span>
               </>
             ) : allDone ? (

@@ -30,7 +30,7 @@ function ReviewBadge({ reviewInfo }) {
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-500/10 rounded border border-yellow-500/20 text-[10px] font-mono font-bold text-yellow-700 uppercase tracking-widest shadow-recessed">
       <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
-      {avg > 0 ? `${avg}/5` : '—'} · {count} {count === 1 ? 'review' : 'reviews'}
+      {avg > 0 ? `${avg}/5` : '-'} · {count} {count === 1 ? 'review' : 'reviews'}
     </span>
   );
 }

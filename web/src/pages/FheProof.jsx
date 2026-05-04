@@ -182,7 +182,7 @@ export default function FheProof() {
       }
 
       // Check if any plaintext salary/budget numbers appear in calldata
-      const hasSalaryLeak = false; // By design — encrypted handles are opaque bytes32
+      const hasSalaryLeak = false; // By design - encrypted handles are opaque bytes32
 
       // Build the 4 phases
       const phases = [
@@ -190,7 +190,7 @@ export default function FheProof() {
           title: 'Encrypted Inputs Submitted',
           description: encryptedParams.length > 0
             ? `${encryptedParams.length} encrypted parameter(s) detected. No plaintext salary or budget values appear in the transaction data.`
-            : 'Transaction calldata contains no readable salary or budget values — all sensitive data was encrypted client-side before submission.',
+            : 'Transaction calldata contains no readable salary or budget values - all sensitive data was encrypted client-side before submission.',
           data: [
             { label: 'From', value: shortAddr(tx.from) },
             { label: 'To', value: isVeilPayTx ? `VeilPay (${shortAddr(tx.to)})` : shortAddr(tx.to) },
@@ -210,7 +210,7 @@ export default function FheProof() {
             : 'This transaction interacted with encrypted data on the Zama fhEVM. Homomorphic operations were evaluated on ciphertext.',
           data: [
             { label: 'Operations', value: functionName === 'resolveApplication' ? 'FHE.le() → FHE.ge() → FHE.eq() → FHE.select() × 3 → FHE.add() × 2' : functionName === 'createJobPosting' ? 'FHE.asEuint64() → FHE.asEuint8() → FHE.asEbool()' : functionName === 'applyToJob' ? 'FHE.asEuint64() → FHE.asEuint8() → FHE.asEbool()' : 'FHE ciphertext operations', highlight: true },
-            { label: 'Plaintext Leak', value: '✗ NONE — values stay encrypted', highlight: false },
+            { label: 'Plaintext Leak', value: '✗ NONE - values stay encrypted', highlight: false },
             { label: 'Execution', value: receipt?.status === 1 ? 'SUCCESS' : 'REVERTED', highlight: receipt?.status === 1 },
           ],
         },
@@ -226,7 +226,7 @@ export default function FheProof() {
                 highlight: true,
               }))
             : [
-                { label: 'Status', value: 'Zama logs present in receipt — ACL + Coprocessor confirmed', highlight: false },
+                { label: 'Status', value: 'Zama logs present in receipt - ACL + Coprocessor confirmed', highlight: false },
                 { label: 'Total Logs', value: `${receipt?.logs?.length || 0} event(s) emitted`, highlight: false },
               ],
         },
@@ -372,7 +372,7 @@ export default function FheProof() {
                   </div>
                 </div>
 
-                {/* Sidebar — What This Proves */}
+                {/* Sidebar - What This Proves */}
                 <div className="space-y-6">
                   {/* Verdict Card */}
                   <div className="card bg-chassis">

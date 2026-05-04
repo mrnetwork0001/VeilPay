@@ -11,7 +11,7 @@ function randomHex(length = 64) {
 }
 
 /**
- * EncryptionZone — The "magic" UI component
+ * EncryptionZone - The "magic" UI component
  *
  * Shows a salary input (slider + number), and on blur/change,
  * animates a "lock" icon and shows scrambled ciphertext in place of the value.

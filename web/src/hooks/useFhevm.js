@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 /**
- * useFhevm — Zama FHE Hook with graceful demo fallback
+ * useFhevm - Zama FHE Hook with graceful demo fallback
  *
  * Set VITE_FHE_LIVE=true in .env to enable real FHE encryption.
  * Without it, the hook skips SDK init entirely and uses demo mode.
@@ -12,7 +12,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
  * to target the same Zama infrastructure deployment.
  */
 
-// Gate real FHE behind an explicit flag — prevents UI freeze from
+// Gate real FHE behind an explicit flag - prevents UI freeze from
 // heavy ZK computation when contract addresses don't match anyway.
 const FHE_LIVE = import.meta.env.VITE_FHE_LIVE === 'true';
 
@@ -122,7 +122,7 @@ export function useFhevm() {
   }, []);
 
   /**
-   * decryptEbool — Public Decryption with Coprocessor Retry
+   * decryptEbool - Public Decryption with Coprocessor Retry
    *
    * The contract calls FHE.makePubliclyDecryptable(matched) in resolveApplication(),
    * so we use instance.publicDecrypt() which does NOT require per-user ACL permission.
@@ -147,7 +147,7 @@ export function useFhevm() {
         if (attempt > 0) {
           const delayMs = INITIAL_DELAY_MS * Math.pow(2, attempt - 1);
           const delaySec = Math.round(delayMs / 1000);
-          console.log(`[useFhevm] Retry ${attempt}/${MAX_RETRIES} — waiting ${delaySec}s for coprocessor sync...`);
+          console.log(`[useFhevm] Retry ${attempt}/${MAX_RETRIES} - waiting ${delaySec}s for coprocessor sync...`);
           if (onProgress) onProgress(`Waiting for coprocessor sync (${delaySec}s)... attempt ${attempt + 1}/${MAX_RETRIES}`);
           await new Promise(r => setTimeout(r, delayMs));
         }
@@ -264,7 +264,7 @@ export function useFhevm() {
   /**
    * encryptApplicationInputs
    *
-   * Same pattern for candidate applications — bundles salary expectation,
+   * Same pattern for candidate applications - bundles salary expectation,
    * experience, and remote preference into a single encrypted input.
    *
    * Returns { salaryHandle, expHandle, remoteHandle, inputProof }
@@ -294,7 +294,7 @@ export function useFhevm() {
   }, []);
 
   /**
-   * decryptUint8 — Public Decryption for match scores
+   * decryptUint8 - Public Decryption for match scores
    * Same retry logic as decryptEbool but returns the raw uint8 value.
    */
   const decryptUint8 = useCallback(async (handle, _walletClient, onProgress) => {

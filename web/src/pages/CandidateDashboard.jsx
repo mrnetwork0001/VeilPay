@@ -190,7 +190,7 @@ export default function CandidateDashboard() {
                       <div className="mb-6 bg-red-500/5 border border-red-500/10 rounded-lg p-4 shadow-recessed flex gap-3 opacity-80">
                         <XCircle className="w-4 h-4 text-red-500 shrink-0" />
                         <p className="text-xs text-ink-muted font-mono leading-relaxed">
-                          No match — your salary expectation was not within the employer's budget. Your number was never revealed. <Lock className="w-3 h-3 inline text-red-400" />
+                          No match - your salary expectation was not within the employer's budget. Your number was never revealed. <Lock className="w-3 h-3 inline text-red-400" />
                         </p>
                       </div>
                     )}

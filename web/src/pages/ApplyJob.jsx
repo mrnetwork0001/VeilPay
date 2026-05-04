@@ -83,7 +83,7 @@ export default function ApplyJob() {
       updateStep(0, STATUS.DONE, `CID: ${ipfsCid.slice(0, 16)}...`);
 
       // Step 2: Encrypt all three values in ONE call (shared inputProof)
-      // Critical — the contract verifies all 3 handles against the same proof
+      // Critical - the contract verifies all 3 handles against the same proof
       let salaryHandle, expHandle, remoteHandle, inputProof;
       try {
         const encResult = await encryptApplicationInputs(minExpectation, yearsExperience, remotePreference, account);
@@ -250,7 +250,7 @@ export default function ApplyJob() {
                     className={`form-input text-left font-bold uppercase tracking-widest cursor-pointer transition-all ${remotePreference ? 'bg-green-500/10 text-green-700 border-green-500/30' : 'bg-red-500/10 text-red-700 border-red-500/30'}`}
                     onClick={() => setRemotePreference(p => !p)}
                   >
-                    {remotePreference ? '✅ Yes — Open to Remote' : '❌ No — On-site Only'}
+                    {remotePreference ? '✅ Yes - Open to Remote' : '❌ No - On-site Only'}
                   </button>
                   <span className="text-[10px] font-mono text-ink-muted uppercase tracking-widest">Encrypted via FHE</span>
                 </div>
@@ -270,7 +270,7 @@ export default function ApplyJob() {
               <Lock className="w-5 h-5 text-green-600 shrink-0" />
               <p className="text-xs font-mono text-ink-muted leading-relaxed">
                 <strong className="text-green-600 uppercase tracking-widest">How It Works:</strong><br/>
-                Your salary, experience, and remote preference are matched against the employer's requirements using FHE. A weighted score (0-100) determines the match quality — all without revealing any values.
+                Your salary, experience, and remote preference are matched against the employer's requirements using FHE. A weighted score (0-100) determines the match quality - all without revealing any values.
               </p>
             </div>
 

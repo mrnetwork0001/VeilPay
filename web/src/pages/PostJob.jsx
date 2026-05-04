@@ -119,7 +119,7 @@ export default function PostJob() {
     ]);
 
     try {
-      // Step 1: Upload logo to IPFS (if provided) — uses image-aware uploader
+      // Step 1: Upload logo to IPFS (if provided) - uses image-aware uploader
       let logoUrl = '';
       if (logoFile) {
         try {
@@ -132,7 +132,7 @@ export default function PostJob() {
       updateStep(0, STATUS.DONE, logoUrl ? 'Logo uploaded to IPFS' : 'No logo (using initials)');
 
       // Step 2: Encrypt all three values in ONE call (shared inputProof)
-      // This is critical — the contract verifies all 3 handles against the same proof
+      // This is critical - the contract verifies all 3 handles against the same proof
       let budgetHandle, expHandle, remoteHandle, inputProof;
       try {
         const encResult = await encryptJobPostingInputs(maxBudget, requiredExperience, remoteOk, account);
@@ -343,7 +343,7 @@ export default function PostJob() {
                     className={`form-input text-left font-bold uppercase tracking-widest cursor-pointer transition-all ${remoteOk ? 'bg-green-500/10 text-green-700 border-green-500/30' : 'bg-red-500/10 text-red-700 border-red-500/30'}`}
                     onClick={() => setRemoteOk(p => !p)}
                   >
-                    {remoteOk ? '✅ Yes — Remote OK' : '❌ No — On-site Only'}
+                    {remoteOk ? '✅ Yes - Remote OK' : '❌ No - On-site Only'}
                   </button>
                   <span className="text-[10px] font-mono text-ink-muted uppercase tracking-widest">Encrypted via FHE</span>
                 </div>
@@ -377,7 +377,7 @@ export default function PostJob() {
                   <div>
                     <span className="text-[10px] font-mono text-ink-muted uppercase tracking-widest block mb-1">Your cUSDC Balance</span>
                     <span className="font-sans font-bold text-2xl text-ink">
-                      {cusdcBalance !== null ? cusdcBalance.toLocaleString() : '—'}
+                      {cusdcBalance !== null ? cusdcBalance.toLocaleString() : '-'}
                       <span className="text-sm font-mono text-ink-muted ml-1">cUSDC</span>
                     </span>
                   </div>
@@ -422,7 +422,7 @@ export default function PostJob() {
                 <span className="text-xs font-mono font-bold text-ink uppercase tracking-widest">
                   Max resumes you can unlock: {totalDeposit && bountyPerUnlock && parseFloat(bountyPerUnlock) > 0
                     ? Math.floor(parseFloat(totalDeposit) / parseFloat(bountyPerUnlock))
-                    : '—'}
+                    : '-'}
                 </span>
               </div>
             </div>

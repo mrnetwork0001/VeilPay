@@ -18,7 +18,7 @@ function shortenAddress(addr) {
 }
 
 /**
- * ConnectWalletButton — Custom wallet connection UI
+ * ConnectWalletButton - Custom wallet connection UI
  */
 export default function ConnectWalletButton({ variant = 'navbar' }) {
   const { address, isConnected, connector: activeConnector } = useAccount();
@@ -178,7 +178,7 @@ export default function ConnectWalletButton({ variant = 'navbar' }) {
 }
 
 /**
- * useWalletConnect — Replacement for RainbowKit's useConnectModal
+ * useWalletConnect - Replacement for RainbowKit's useConnectModal
  *
  * Pages call openConnectModal() to prompt the user. Since we no longer have
  * a global modal, this scrolls to the navbar connect button and pulses it.

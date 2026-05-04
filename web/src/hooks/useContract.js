@@ -17,7 +17,7 @@ const ERC20_ABI = [
 ];
 
 /**
- * useContract — React hook for VeilPay contract interactions
+ * useContract - React hook for VeilPay contract interactions
  *
  * Uses wagmi's useWalletClient for write calls and a public RPC for reads.
  * Wallet connection is handled externally by ConnectWalletButton (MetaMask, Coinbase, Rabby, injected).
@@ -30,7 +30,7 @@ export function useContract() {
   // ─── Contract helpers ───────────────────────────────────────────────────────
 
   const getReadContract = useCallback(async () => {
-    // Use ethers for read calls via public RPC — no wallet needed
+    // Use ethers for read calls via public RPC - no wallet needed
     const provider = new ethers.JsonRpcProvider(
       import.meta.env.VITE_SEPOLIA_RPC || 'https://rpc.sepolia.org'
     );
@@ -79,7 +79,7 @@ export function useContract() {
   }, [walletClient]);
 
   // ─── Read functions ─────────────────────────────────────────────────────────
-  // These use getReadContract (public RPC) — no wallet required.
+  // These use getReadContract (public RPC) - no wallet required.
 
   const getActiveJobs = useCallback(async () => {
     const contract = await getReadContract();
@@ -345,7 +345,7 @@ export function useContract() {
   }, [getReadContract]);
 
   return {
-    // Wallet state (from wagmi — driven by ConnectWalletButton)
+    // Wallet state (from wagmi - driven by ConnectWalletButton)
     account,
     isConnected,
     // Read

@@ -3,7 +3,7 @@ import { sepolia } from 'wagmi/chains';
 import { injected, walletConnect } from 'wagmi/connectors';
 
 /**
- * Wagmi config — Custom VeilPay Configuration
+ * Wagmi config - Custom VeilPay Configuration
  *
  * Supports:
  *   • Browser Wallet (Injected EIP-1193 / EIP-6963 like MetaMask, Rabby, OKX)

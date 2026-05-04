@@ -107,7 +107,7 @@ export default function ReviewModal({ isOpen, onClose, employerAddress, companyN
               <Shield className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
               <p className="text-[10px] font-mono text-ink-muted leading-relaxed">
                 Your rating is <strong className="text-green-600">encrypted with FHE</strong> before reaching the blockchain.
-                Individual scores are mathematically impossible to extract — only the aggregate average is ever revealed.
+                Individual scores are mathematically impossible to extract - only the aggregate average is ever revealed.
               </p>
             </div>
 

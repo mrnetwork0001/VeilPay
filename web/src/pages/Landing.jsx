@@ -90,7 +90,7 @@ const HOW_IT_WORKS_STEPS = [
     number: '02',
     icon: <FileDigit className="w-6 h-6 text-ink" />,
     title: 'Candidate Applies',
-    desc: 'Min salary encrypted client-side. Nobody sees this number — not even us.',
+    desc: 'Min salary encrypted client-side. Nobody sees this number - not even us.',
   },
   {
     number: '03',
@@ -331,7 +331,7 @@ export default function Landing() {
             <div className="bg-dark-panel rounded-xl shadow-card border border-white/10 p-6 font-mono text-sm relative overflow-hidden group">
               <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] opacity-20 pointer-events-none" />
               <div className="flex items-center gap-2 mb-4 pb-4 border-b border-white/10 text-white/50 text-xs">
-                <Code2 className="w-4 h-4" /> VeilPay.sol — resolveApplication()
+                <Code2 className="w-4 h-4" /> VeilPay.sol - resolveApplication()
               </div>
               <pre className="text-white/80 leading-loose overflow-x-auto">
 <span className="text-white/40">// THE CORE FHE COMPUTATION</span><br/>
