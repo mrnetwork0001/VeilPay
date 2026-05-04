@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAccount, useConnect, useDisconnect, useBalance } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Globe, Smartphone } from 'lucide-react';
 
 const WALLET_META = {
-  injected:      { name: 'Browser Wallet', icon: '🌐' },
-  walletConnect: { name: 'Mobile / QR', icon: '📱' },
+  injected:      { name: 'Browser Wallet', icon: <Globe className="w-4 h-4" /> },
+  walletConnect: { name: 'Mobile / QR', icon: <Smartphone className="w-4 h-4" /> },
 };
 
 function getWalletInfo(connectorId, connectorType) {
@@ -46,14 +47,14 @@ export default function ConnectWalletButton({ variant = 'navbar' }) {
     {
       id: 'browser-wallet',
       name: 'Browser Wallet',
-      icon: '🌐',
+      icon: <Globe className="w-4.5 h-4.5" />,
       desc: 'MetaMask, Rabby, OKX',
       connector: connectors.find(c => c.type === 'injected' || c.id === 'injected')
     },
     {
       id: 'wallet-connect',
       name: 'Mobile / QR',
-      icon: '📱',
+      icon: <Smartphone className="w-4.5 h-4.5" />,
       desc: 'WalletConnect compatible apps',
       connector: connectors.find(c => c.type === 'walletConnect' || c.id === 'walletConnect')
     }
@@ -105,7 +106,7 @@ export default function ConnectWalletButton({ variant = 'navbar' }) {
                     }}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-md bg-white shadow-sharp text-lg grayscale group-hover:grayscale-0 transition-all">
+                      <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-dark-bg border border-white/10 text-ink-muted group-hover:text-accent group-hover:border-accent/30 transition-all shadow-recessed">
                         {opt.icon}
                       </div>
                       <div className="flex flex-col items-start text-left">
@@ -140,7 +141,7 @@ export default function ConnectWalletButton({ variant = 'navbar' }) {
         className="flex items-center gap-2 px-3 py-1.5 bg-chassis border border-white/40 shadow-recessed rounded-md hover:shadow-card transition-all active:translate-y-[1px] active:shadow-pressed"
         onClick={() => setShowDropdown(prev => !prev)}
       >
-        <span className="text-sm">{walletInfo.icon}</span>
+        <span className="text-ink-muted">{walletInfo.icon}</span>
         <span className="font-mono text-xs font-bold text-ink">{shortenAddress(address)}</span>
         <span className="hidden sm:inline-flex px-1.5 py-0.5 rounded text-[9px] font-mono uppercase bg-accent text-ink font-bold border border-ink/10 shadow-floating">Sepolia</span>
       </button>
