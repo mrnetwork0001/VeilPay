@@ -1,8 +1,10 @@
-# 🔐 VeilPay — Confidential Hiring Protocol
+# 🔐 VeilPay - Confidential Hiring Protocol
 
 **The first hiring protocol where salary negotiations, candidate matching, and employer reviews happen entirely inside Fully Homomorphic Encryption.**
 
 Built on **Zama fhEVM** · Deployed on **Ethereum Sepolia** · Interview Bounties via **cUSDC**
+
+🌐 **Live Demo:** [veilpay.online](https://veilpay.online)
 
 [![Live on Sepolia](https://img.shields.io/badge/VeilPay-0xAd0E...5Adc-blue?style=flat-square)](https://sepolia.etherscan.io/address/0xAd0EBcAaD4189d93c1aEE90f13F806AC28655Adc#code)
 [![cUSDC Token](https://img.shields.io/badge/cUSDC-0x3559...7Ed7-green?style=flat-square)](https://sepolia.etherscan.io/address/0x35590DECa04165320bA76a3d9E8305f4F4927Ed7#code)
@@ -22,11 +24,11 @@ Hiring is fundamentally broken by **information asymmetry**:
 | "Blind" hiring platforms process salaries on centralized servers | Both | A trusted intermediary can peek, leak, or sell the data |
 | No accountability for employers who ghost candidates | Candidates | Wasted time with zero compensation for the interview process |
 
-> **Every existing solution requires trusting a middleman with the most sensitive number in a hiring negotiation — your salary.**
+> **Every existing solution requires trusting a middleman with the most sensitive number in a hiring negotiation - your salary.**
 
 ## 💡 VeilPay's Solution
 
-VeilPay eliminates trust entirely. Every sensitive computation happens inside **Fully Homomorphic Encryption** — math on ciphertexts, not plaintext. The protocol introduces three interconnected FHE-powered systems that, together, create a **complete confidential hiring lifecycle**:
+VeilPay eliminates trust entirely. Every sensitive computation happens inside **Fully Homomorphic Encryption** - math on ciphertexts, not plaintext. The protocol introduces three interconnected FHE-powered systems that, together, create a **complete confidential hiring lifecycle**:
 
 ---
 
@@ -34,7 +36,7 @@ VeilPay eliminates trust entirely. Every sensitive computation happens inside **
 
 ### 1️⃣ Multi-Variable Weighted Match Scoring
 
-**Not just "does the salary match?" — a comprehensive 0-100 compatibility score computed entirely on encrypted data.**
+**Not just "does the salary match?" - a comprehensive 0-100 compatibility score computed entirely on encrypted data.**
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -67,7 +69,7 @@ VeilPay eliminates trust entirely. Every sensitive computation happens inside **
 
 ### 2️⃣ "Good Faith" Interview Bounty (cUSDC Tokenomics)
 
-**Employers put money where their mouth is.** When posting a job, employers escrow **cUSDC tokens** into the smart contract. Each time they unlock a matched candidate's resume, a bounty is automatically transferred to the candidate — compensating them for the time invested in the application process.
+**Employers put money where their mouth is.** When posting a job, employers escrow **cUSDC tokens** into the smart contract. Each time they unlock a matched candidate's resume, a bounty is automatically transferred to the candidate - compensating them for the time invested in the application process.
 
 ```
 EMPLOYER                       SMART CONTRACT                     CANDIDATE
@@ -82,7 +84,7 @@ EMPLOYER                       SMART CONTRACT                     CANDIDATE
    │── closeJob() ────────────────▶│── transfer(refund) ───────────▶│ (employer)
 ```
 
-**Token:** `ConfidentialUSDC` (cUSDC) — a standard ERC-20 with 6 decimals and a built-in public faucet (1,000 cUSDC per claim, 1-hour cooldown) for testnet use.
+**Token:** `ConfidentialUSDC` (cUSDC) - a standard ERC-20 with 6 decimals and a built-in public faucet (1,000 cUSDC per claim, 1-hour cooldown) for testnet use.
 
 **Why cUSDC instead of ETH?** Stablecoins prevent bounty value from fluctuating during the hiring window. Employers deposit a known dollar amount, candidates receive a predictable reward.
 
@@ -90,13 +92,13 @@ EMPLOYER                       SMART CONTRACT                     CANDIDATE
 
 ### 3️⃣ FHE-Aggregated Anonymous Company Reviews
 
-**Candidates can rate employers — and individual ratings are mathematically impossible to extract.**
+**Candidates can rate employers - and individual ratings are mathematically impossible to extract.**
 
 ```solidity
 // Each rating is encrypted before submission
 euint32 encryptedRating = FHE.asEuint32(candidateRating); // 1-5 stars
 
-// Aggregated homomorphically — no individual rating is ever visible
+// Aggregated homomorphically - no individual rating is ever visible
 companyTotalScores[employer] = FHE.add(companyTotalScores[employer], encryptedRating);
 companyReviewCounts[employer]++;
 
@@ -106,7 +108,7 @@ companyReviewCounts[employer]++;
 
 **FHE operations used:** `FHE.asEuint32`, `FHE.add`
 
-> This protects candidates from employer retaliation — a common fear that suppresses honest feedback in real hiring. The FHE aggregation ensures that even with on-chain data, it's cryptographically impossible to determine what any individual candidate rated.
+> This protects candidates from employer retaliation - a common fear that suppresses honest feedback in real hiring. The FHE aggregation ensures that even with onchain data, it's cryptographically impossible to determine what any individual candidate rated.
 
 ---
 
@@ -124,7 +126,7 @@ companyReviewCounts[employer]++;
                                │ Encrypted handles + ZK proofs
                                ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                     ETHEREUM SEPOLIA (On-Chain)                      │
+│                     ETHEREUM SEPOLIA (Onchain)                       │
 │                                                                     │
 │  ┌─────────────────────────────────────────────────────────────┐    │
 │  │  ConfidentialUSDC.sol (cUSDC)                               │    │
@@ -134,19 +136,19 @@ companyReviewCounts[employer]++;
 │                               │                                     │
 │  ┌─────────────────────────────────────────────────────────────┐    │
 │  │  VeilPay.sol (Main Protocol)                                │    │
-│  │  • createJobPosting() — 3 encrypted inputs + cUSDC escrow   │    │
-│  │  • applyToJob() — 3 encrypted inputs per candidate          │    │
-│  │  • resolveApplication() — FHE weighted scoring (0-100)      │    │
-│  │  • unlockResume() — auto-transfer cUSDC bounty to candidate │    │
-│  │  • submitReview() — FHE.add aggregated anonymous ratings     │    │
-│  │  • closeJob() — refund remaining cUSDC to employer          │    │
+│  │  • createJobPosting() - 3 encrypted inputs + cUSDC escrow   │    │
+│  │  • applyToJob() - 3 encrypted inputs per candidate          │    │
+│  │  • resolveApplication() - FHE weighted scoring (0-100)      │    │
+│  │  • unlockResume() - auto-transfer cUSDC bounty to candidate │    │
+│  │  • submitReview() - FHE.add aggregated anonymous ratings     │    │
+│  │  • closeJob() - refund remaining cUSDC to employer          │    │
 │  └──────────────────────────┬──────────────────────────────────┘    │
 │                              │                                      │
 │  ┌───────────────────────────▼─────────────────────────────────┐    │
 │  │              Zama FHE Infrastructure                         │    │
-│  │  • Coprocessor — evaluates FHE.le, FHE.eq, FHE.add, etc.   │    │
-│  │  • ACL — ciphertext-level access control                    │    │
-│  │  • KMS — manages decryption requests                        │    │
+│  │  • Coprocessor - evaluates FHE.le, FHE.eq, FHE.add, etc.   │    │
+│  │  • ACL - ciphertext-level access control                    │    │
+│  │  • KMS - manages decryption requests                        │    │
 │  └─────────────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -235,22 +237,35 @@ Connect your wallet → Navigate to **Post Job** → Click **"🪙 Claim 1,000 c
 ## 🖥️ Frontend Features
 
 ### For Employers
-- **Post Jobs** — Title, description, logo (uploaded to IPFS), salary budget, experience requirement, remote preference → all sensitive fields encrypted client-side via Zama WASM
-- **cUSDC Faucet** — Claim test tokens directly in the Post Job form
-- **Deposit Bounty** — Lock cUSDC into the job's escrow pool with a configurable per-unlock amount
-- **Employer Dashboard** — View all postings with bounty pool balance, expand to see applicants
-- **Run FHE Match** — Trigger the on-chain weighted scoring for each applicant
-- **Batch Actions** — "Resolve All" and "Reveal All" for processing multiple applicants at once
-- **View Match Scores** — See the decrypted 0-100 score alongside match/no-match status
-- **Unlock Resumes** — Access matched candidates' IPFS-stored resumes (auto-pays cUSDC bounty)
-- **Close Job & Refund** — End the posting and reclaim remaining cUSDC from the escrow pool
+- **Post Jobs** - Title, description, logo (uploaded to IPFS), salary budget, experience requirement, remote preference → all sensitive fields encrypted client-side via Zama WASM
+- **cUSDC Faucet** - Claim test tokens directly in the Post Job form
+- **Deposit Bounty** - Lock cUSDC into the job's escrow pool with a configurable per-unlock amount
+- **Balance Validation** - Real-time cUSDC balance check prevents deposits exceeding wallet balance, with shortfall calculation
+- **Employer Dashboard** - View all postings with bounty pool balance, expand to see applicants
+- **Run FHE Match** - Trigger the onchain weighted scoring for each applicant
+- **Batch Actions** - "Resolve All" and "Reveal All" for processing multiple applicants at once
+- **View Match Scores** - See the decrypted 0-100 score alongside match/no-match status
+- **Unlock Resumes** - Access matched candidates' IPFS-stored resumes (auto-pays cUSDC bounty)
+- **Close Job & Refund** - End the posting and reclaim remaining cUSDC from the escrow pool
 
 ### For Candidates
-- **Browse Jobs** — View all active positions with company logos, descriptions, bounty amounts (salaries hidden by design)
-- **Apply** — Upload resume (IPFS), enter salary expectation, years of experience, remote preference → all encrypted
-- **Candidate Dashboard** — Track applications, match statuses, and scores
-- **Rate Employers** — Submit anonymous FHE-encrypted 1-5 star ratings after interviews
-- **Earn Bounties** — Receive cUSDC when employers unlock your resume
+- **Browse Jobs** - View all active positions with company logos, descriptions, bounty amounts (salaries hidden by design)
+- **Apply** - Upload resume (IPFS), enter salary expectation, years of experience, remote preference → all encrypted
+- **Candidate Dashboard** - Track applications, match statuses, and scores
+- **Rate Employers** - Submit anonymous FHE-encrypted 1-5 star ratings after interviews
+- **Earn Bounties** - Receive cUSDC when employers unlock your resume
+
+### Transparency & Verification
+- **FHE Proof Inspector** - Paste any VeilPay transaction hash to get a full 4-phase cryptographic proof breakdown showing encrypted inputs, FHE operations, Zama infrastructure interactions, and encrypted outputs stored onchain
+- **Per-Step Etherscan Links** - Every onchain operation in the transaction overlay includes a clickable "view" link to verify the transaction on Etherscan
+- **Live Protocol Stats** - Landing page displays real-time onchain metrics: jobs posted, applications submitted, FHE operations executed, and total cUSDC escrowed
+
+### UI/UX Polish
+- **Custom Wallet UI** - Themed wallet connection with Globe/Smartphone SVG icons matching the industrial neumorphic design system (no generic emojis)
+- **Transaction Overlay** - Multi-step modal with real-time progress, per-step status indicators, and clickable Etherscan verification links for every onchain confirmation
+- **Animated Match Visualizer** - Hero section shows a live demonstration of the FHE matching flow: plaintext → ciphertext → homomorphic evaluation → encrypted result
+- **Typewriter Hero** - Dynamic headline cycling through "Is Dead / Is Broken / Is Exposed / Is Outdated"
+- **Responsive Design** - Full mobile/tablet support with collapsible navigation drawer
 
 ---
 
@@ -259,10 +274,11 @@ Connect your wallet → Navigate to **Post Job** → Click **"🪙 Claim 1,000 c
 | Property | How It's Achieved |
 |----------|-------------------|
 | **Salary privacy** | Encrypted client-side via Zama WASM; only encrypted handles reach the chain |
-| **Zero plaintext exposure** | Smart contract only handles `euint64`, `euint8`, `ebool` types — never raw numbers |
+| **Zero plaintext exposure** | Smart contract only handles `euint64`, `euint8`, `ebool` types - never raw numbers |
 | **Access control** | Zama ACL ensures only authorized addresses can interact with specific ciphertexts |
 | **Review anonymity** | FHE.add aggregation makes individual ratings cryptographically unextractable |
 | **Bounty safety** | ERC-20 `transfer`/`transferFrom` with balance checks; refund on job close |
+| **Balance validation** | Frontend prevents deposit attempts exceeding wallet balance before transaction |
 | **No backdoors** | Contract is verified on Etherscan; no admin keys, no upgrade proxy |
 
 ---
@@ -271,13 +287,15 @@ Connect your wallet → Navigate to **Post Job** → Click **"🪙 Claim 1,000 c
 
 | Layer | Technology |
 |-------|-----------|
-| **FHE (Contracts)** | `@fhevm/solidity@0.11.1` — Zama's Solidity library for on-chain FHE |
-| **FHE (Frontend)** | `@zama-fhe/relayer-sdk@0.4.2` — Browser WASM encryption + ZK proof generation |
+| **FHE (Contracts)** | `@fhevm/solidity@0.11.1` - Zama's Solidity library for onchain FHE |
+| **FHE (Frontend)** | `@zama-fhe/relayer-sdk@0.4.2` - Browser WASM encryption + ZK proof generation |
 | **Smart Contracts** | Solidity 0.8.24, Hardhat (viaIR), Ethereum Sepolia |
-| **Bounty Token** | ConfidentialUSDC — custom ERC-20 (6 decimals) with public faucet |
+| **Bounty Token** | ConfidentialUSDC - custom ERC-20 (6 decimals) with public faucet |
 | **Frontend** | React 19, Vite 8, ethers.js v6, wagmi v2, Framer Motion |
-| **Wallet** | MetaMask, Coinbase Wallet, WalletConnect (via Web3Modal) |
+| **Wallet** | Custom UI supporting MetaMask, Coinbase Wallet, Rabby, OKX, WalletConnect |
+| **Icons** | Lucide React (themed SVG icons) |
 | **Storage** | IPFS via Pinata (resumes + company logos) |
+| **Hosting** | Vercel ([veilpay.online](https://veilpay.online)) |
 
 ---
 
@@ -298,36 +316,60 @@ VeilPay/
 │   ├── src/
 │   │   ├── abi/BlindHire.json       # VeilPay contract ABI
 │   │   ├── components/
+│   │   │   ├── ConnectWalletButton  # Custom themed wallet connection UI
 │   │   │   ├── ReviewModal.jsx      # FHE-encrypted star rating modal
 │   │   │   ├── EncryptionZone.jsx   # Salary encryption slider
 │   │   │   ├── FheChat.jsx          # Encrypted messaging
-│   │   │   └── TransactionOverlay   # Multi-step tx progress UI
+│   │   │   ├── TransactionOverlay   # Multi-step tx progress + Etherscan links
+│   │   │   ├── Navbar.jsx           # Responsive navbar with mobile drawer
+│   │   │   ├── Footer.jsx           # Site footer
+│   │   │   └── Animations.jsx       # FadeIn, Stagger animation components
 │   │   ├── hooks/
-│   │   │   ├── useContract.js       # Contract + cUSDC interactions
-│   │   │   └── useFhevm.js          # Zama SDK (encrypt/decrypt)
+│   │   │   ├── useContract.js       # Contract + cUSDC interactions + protocol stats
+│   │   │   └── useFhevm.js          # Zama SDK (encrypt/decrypt/retry)
 │   │   ├── pages/
-│   │   │   ├── Landing.jsx
-│   │   │   ├── JobBoard.jsx         # Browse jobs with logo cards
-│   │   │   ├── PostJob.jsx          # Post job + cUSDC faucet
+│   │   │   ├── Landing.jsx          # Hero + How It Works + Live Stats + FHE code
+│   │   │   ├── JobBoard.jsx         # Browse jobs with logo cards + bounty badges
+│   │   │   ├── PostJob.jsx          # Post job + cUSDC faucet + balance validation
 │   │   │   ├── ApplyJob.jsx         # Apply with 3 encrypted fields
-│   │   │   ├── EmployerDashboard.jsx # Scores, unlock, close/refund
-│   │   │   └── CandidateDashboard.jsx # Track apps, rate employers
-│   │   └── utils/ipfs.js           # Pinata IPFS uploads
+│   │   │   ├── EmployerDashboard    # Scores, unlock, batch, close/refund
+│   │   │   ├── CandidateDashboard   # Track apps, rate employers
+│   │   │   └── FheProof.jsx         # FHE Proof Inspector (tx verification)
+│   │   ├── config/wagmi.js          # Wagmi wallet configuration
+│   │   └── utils/ipfs.js            # Pinata IPFS uploads
 │   └── .env
 └── README.md
 ```
 
 ---
 
-## 🔍 Verifying Real FHE On-Chain
+## 🔍 FHE Proof Inspector
 
-You can independently verify that VeilPay uses real FHE (not simulation):
+VeilPay includes a built-in **FHE Proof Inspector** page (`/proof`) that allows anyone to independently verify real FHE usage:
 
-1. **Inspect any `createJobPosting` or `applyToJob` tx** on Etherscan — function params show `bytes32 encryptedBudget` + `bytes inputProof` (ciphertext handle + ZK proof)
-2. **No salary numbers** appear anywhere in decoded transaction data
-3. **Internal transactions** show calls to Zama's Coprocessor and ACL contracts
-4. **Verified source code** confirms `FHE.le()`, `FHE.select()`, `FHE.add()`, and `FHE.eq()` calls
-5. **`resolveApplication`** generates both `ebool` (match) and `euint8` (score) handles — two distinct encrypted outputs from a single computation
+1. **Paste any VeilPay transaction hash** from Sepolia
+2. The inspector performs a **4-phase analysis**:
+   - **Phase 1: Encrypted Inputs** - Confirms encrypted parameters (bytes32 handles) and ZK proofs are present in calldata, with no plaintext salary data
+   - **Phase 2: FHE Evaluation** - Identifies which FHE operations were executed (FHE.le, FHE.select, FHE.add, etc.)
+   - **Phase 3: Zama Infrastructure** - Detects interactions with Zama's ACL, Coprocessor, KMS Verifier, and TFHEExecutor contracts
+   - **Phase 4: Encrypted Result** - Confirms encrypted handles were stored onchain with no salary/budget values visible in any log
+3. **Verdict sidebar** shows pass/fail checks for each privacy guarantee
+4. **Direct Etherscan link** for independent verification
+
+> This feature is designed for hackathon judges and auditors who want to verify that VeilPay uses real FHE, not simulation.
+
+---
+
+## 📊 Live Protocol Stats
+
+The landing page displays real-time onchain metrics pulled directly from the deployed contract:
+
+| Metric | Source |
+|--------|--------|
+| **Jobs Posted** | `jobCount()` from VeilPay contract |
+| **Applications** | Sum of `applicationCount` across all jobs |
+| **FHE Operations** | Applications × 3 (each triggers salary, experience, and remote FHE ops) |
+| **cUSDC Escrowed** | Sum of `bountyPool` across all active jobs |
 
 ---
 
@@ -341,6 +383,12 @@ You can independently verify that VeilPay uses real FHE (not simulation):
 - [x] IPFS resume + logo storage
 - [x] Batch resolve/reveal for employers
 - [x] Encrypted match score decryption via Zama KMS
+- [x] FHE Proof Inspector for transaction verification
+- [x] Live onchain protocol stats dashboard
+- [x] Per-step Etherscan transaction links in all flows
+- [x] Real-time cUSDC balance validation with shortfall calculation
+- [x] Custom themed wallet connection UI (no RainbowKit dependency)
+- [x] Production deployment on Vercel (veilpay.online)
 - [ ] Multi-round salary negotiation via FHE (counter-offers in ciphertext)
 - [ ] ConfidentialERC20 bounty (fully encrypted balance transfers)
 - [ ] Cross-chain deployment (Ethereum mainnet / L2s)
@@ -350,13 +398,14 @@ You can independently verify that VeilPay uses real FHE (not simulation):
 
 ## 🏆 Why VeilPay Should Win
 
-1. **Depth of FHE usage** — 9 distinct FHE operations across 3 interconnected features, not a basic boolean demo
-2. **Real-world utility** — Solves a $200B+ recruiting industry problem with a protocol that could deploy today
-3. **Complete lifecycle** — Post → Apply → Match → Score → Unlock → Pay → Review — all on-chain, all confidential
-4. **Novel tokenomics** — First-ever "interview bounty" system where candidates are financially compensated for participating in encrypted matching
-5. **FHE aggregation** — Anonymous company reviews prove that FHE arithmetic (not just comparison) works in production
-6. **Production-quality frontend** — Premium UI with real-time transaction overlays, batch processing, and IPFS integration
-7. **Fully deployed & verified** — Both contracts live on Sepolia with verified source code
+1. **Depth of FHE usage** - 9 distinct FHE operations across 3 interconnected features, not a basic boolean demo
+2. **Real-world utility** - Solves a $200B+ recruiting industry problem with a protocol that could deploy today
+3. **Complete lifecycle** - Post → Apply → Match → Score → Unlock → Pay → Review - all onchain, all confidential
+4. **Novel tokenomics** - First-ever "interview bounty" system where candidates are financially compensated for participating in encrypted matching
+5. **FHE aggregation** - Anonymous company reviews prove that FHE arithmetic (not just comparison) works in production
+6. **Auditable transparency** - Built-in FHE Proof Inspector lets judges verify real FHE usage by pasting any transaction hash
+7. **Production-quality frontend** - Premium neumorphic UI with real-time transaction overlays, per-step Etherscan links, live stats, batch processing, and IPFS integration
+8. **Fully deployed & verified** - Both contracts live on Sepolia with verified source code, frontend deployed at [veilpay.online](https://veilpay.online)
 
 ---
 
@@ -367,6 +416,6 @@ MIT
 ---
 
 <p align="center">
-  <strong>Built with 🔐 by the VeilPay team — where privacy meets hiring.</strong><br/>
+  <strong>Built with 🔐 by the VeilPay team - where privacy meets hiring.</strong><br/>
   <em>Powered by <a href="https://www.zama.ai/">Zama</a> Fully Homomorphic Encryption</em>
 </p>

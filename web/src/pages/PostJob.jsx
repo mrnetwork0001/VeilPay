@@ -392,7 +392,7 @@ export default function PostJob() {
                     onClick={handleClaimFaucet}
                     disabled={claimingFaucet}
                   >
-                    {claimingFaucet ? 'Claiming...' : '🪙 Claim 1,000 cUSDC'}
+                    {claimingFaucet ? 'Claiming...' : <><span>🪙 Claim 1,000 </span><span className="normal-case">cUSDC</span></>}
                   </button>
                 </div>
               )}
@@ -453,8 +453,8 @@ export default function PostJob() {
                   {isTxPending
                     ? 'Processing...'
                     : insufficientBalance
-                    ? `Insufficient cUSDC (${(depositAmount - cusdcBalance).toLocaleString()} more needed)`
-                    : `Post Job Securely (Deposit ${totalDeposit} cUSDC)`}
+                    ? <>Insufficient <span className="normal-case">cUSDC</span> ({(depositAmount - cusdcBalance).toLocaleString()} more needed)</>
+                    : <>Post Job Securely (Deposit {totalDeposit} <span className="normal-case">cUSDC</span>)</>}
                 </button>
               )}
             </div>

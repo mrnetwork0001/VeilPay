@@ -294,7 +294,7 @@ function JobSection({ jobId, employerJobs, onResolve, onReveal, onBatchResolve, 
                     onClick={(e) => { e.stopPropagation(); onCloseJob(jobId); }}
                     disabled={isLoading}
                   >
-                    <Power className="w-3.5 h-3.5 mr-1" /> Close Job & Refund cUSDC
+                    <Power className="w-3.5 h-3.5 mr-1" /> Close Job & Refund <span className="normal-case">cUSDC</span>
                   </button>
                 </div>
               )}
