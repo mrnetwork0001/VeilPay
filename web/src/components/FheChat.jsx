@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useContract } from '../hooks/useContract';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Lock, Send, X, Unlock } from 'lucide-react';
+import { MessageSquare, Lock, Send, X, Unlock, ShieldCheck } from 'lucide-react';
 
 /**
  * FHE-Gated Chat Component
@@ -132,6 +133,10 @@ export default function FheChat({ jobId, applicationId, counterpartyName, isEmpl
                   FHE Match Confirmed
                 </span>
               </div>
+              {/* Verify Link */}
+              <Link to="/proof" className="flex items-center gap-1.5 px-3 py-1 bg-accent/10 hover:bg-accent/20 border border-accent/20 rounded text-[9px] font-mono font-bold text-ink-muted uppercase tracking-widest transition-colors mx-3 mb-0">
+                <ShieldCheck className="w-3 h-3" /> Verify this match on-chain →
+              </Link>
 
               {/* Messages Area */}
               <div className="h-[320px] overflow-y-auto p-4 flex flex-col gap-3 bg-[url('data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M1 1h18v18H1V1zm1 1v16h16V2H2z\' fill=\'%23d1d9e6\' fill-opacity=\'0.2\' fill-rule=\'evenodd\'/%3E%3C/svg%3E')]">
