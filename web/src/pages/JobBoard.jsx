@@ -271,7 +271,7 @@ export default function JobBoard() {
                 value={filterType}
                 onChange={e => setFilterType(e.target.value)}
               >
-                {jobTypes.map(t => <option key={t}>{t === 'All' ? 'TYPE: ALL' : t}</option>)}
+                {jobTypes.map(t => <option key={t} value={t}>{t === 'All' ? 'TYPE: ALL' : t}</option>)}
               </select>
               <select
                 id="filter-location"
@@ -279,7 +279,7 @@ export default function JobBoard() {
                 value={filterLocation}
                 onChange={e => setFilterLocation(e.target.value)}
               >
-                {locations.map(l => <option key={l}>{l === 'All' ? 'LOC: ALL' : l}</option>)}
+                {locations.map(l => <option key={l} value={l}>{l === 'All' ? 'LOC: ALL' : l}</option>)}
               </select>
               <select
                 id="filter-status"
