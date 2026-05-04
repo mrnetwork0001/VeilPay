@@ -379,7 +379,7 @@ export default function PostJob() {
               {isConnected && (
                 <div className="mb-5 bg-muted/30 rounded-lg border border-white/20 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div>
-                    <span className="text-[10px] font-mono text-ink-muted uppercase tracking-widest block mb-1">Your cUSDC Balance</span>
+                    <span className="text-[10px] font-mono text-ink-muted uppercase tracking-widest block mb-1">Your <span className="normal-case">cUSDC</span> Balance</span>
                     <span className="font-sans font-bold text-2xl text-ink">
                       {cusdcBalance !== null ? cusdcBalance.toLocaleString() : '-'}
                       <span className="text-sm font-mono text-ink-muted ml-1">cUSDC</span>
@@ -398,7 +398,7 @@ export default function PostJob() {
               )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="form-group">
-                  <label className="form-label" htmlFor="totalDeposit">Total Deposit (cUSDC)</label>
+                  <label className="form-label" htmlFor="totalDeposit">Total Deposit (<span className="normal-case">cUSDC</span>)</label>
                   <input
                     id="totalDeposit"
                     type="number"
@@ -410,7 +410,7 @@ export default function PostJob() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label" htmlFor="bountyPerUnlock">Per-Unlock Bounty (cUSDC)</label>
+                  <label className="form-label" htmlFor="bountyPerUnlock">Per-Unlock Bounty (<span className="normal-case">cUSDC</span>)</label>
                   <input
                     id="bountyPerUnlock"
                     type="number"

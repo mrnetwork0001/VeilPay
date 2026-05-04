@@ -104,7 +104,7 @@ function JobCard({ job, reviewInfo }) {
         </span>
         {parseFloat(bountyPool) > 0 && (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-500/10 rounded border border-green-500/20 text-[10px] font-mono font-bold text-green-700 uppercase tracking-widest shadow-recessed">
-            <Coins className="w-3 h-3" /> {bountyPool} cUSDC Pool
+            <Coins className="w-3 h-3" /> {bountyPool} <span className="normal-case">cUSDC</span> Pool
             {parseFloat(bountyPerUnlock) > 0 && <span className="text-green-600/60 ml-0.5">({bountyPerUnlock}/interview)</span>}
           </span>
         )}

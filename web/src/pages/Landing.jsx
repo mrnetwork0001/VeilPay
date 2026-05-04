@@ -159,7 +159,7 @@ function ProtocolStats() {
     },
     {
       icon: <Coins className="w-6 h-6 text-ink" />,
-      label: 'cUSDC Escrowed',
+      label: <><span className="normal-case">cUSDC</span> Escrowed</>,
       value: stats ? Math.floor(Number(BigInt(stats.totalBountyEscrowed || '0')) / 1e6) : 0,
       suffix: '',
     },

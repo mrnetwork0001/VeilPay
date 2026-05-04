@@ -237,7 +237,7 @@ function JobSection({ jobId, employerJobs, onResolve, onReveal, onBatchResolve, 
                 <span className="w-1 h-1 bg-ink-muted rounded-full" />
                 <span className="flex items-center gap-1 text-green-600">
                   <Coins className="w-3 h-3" />
-                  {(Number(job.bountyPool) / 1e6).toFixed(0)} cUSDC pool
+                  {(Number(job.bountyPool) / 1e6).toFixed(0)} <span className="normal-case">cUSDC</span> pool
                 </span>
               </>
             )}
