@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FadeIn, StaggerContainer, StaggerItem } from '../components/Animations';
 import { useContract } from '../hooks/useContract';
-import { MapPin, Briefcase, Search, Lock, Users, Clock, Coins, Wifi, Star, XCircle } from 'lucide-react';
+import { MapPin, Briefcase, Search, Lock, Users, Clock, Coins, Wifi, Star, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 
 function timeAgo(timestamp) {
   const diff = Math.floor((Date.now() / 1000) - timestamp);
@@ -147,6 +147,8 @@ export default function JobBoard() {
   const [filterLocation, setFilterLocation] = useState('All');
   const [filterStatus, setFilterStatus] = useState('All');
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const JOBS_PER_PAGE = 9;
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -194,6 +196,18 @@ export default function JobBoard() {
 
   const activeCount = jobs.filter(j => j.isActive).length;
   const closedCount = jobs.filter(j => !j.isActive).length;
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterType, filterLocation, filterStatus, search]);
+
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / JOBS_PER_PAGE);
+  const paginatedJobs = filtered.slice(
+    (currentPage - 1) * JOBS_PER_PAGE,
+    currentPage * JOBS_PER_PAGE
+  );
 
   return (
     <div className="min-h-screen pt-24 pb-32">
@@ -269,13 +283,56 @@ export default function JobBoard() {
             <p className="text-ink-muted text-sm font-mono uppercase tracking-widest">Try adjusting your filters or check back later.</p>
           </div>
         ) : (
+          <>
           <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((job) => (
+            {paginatedJobs.map((job) => (
               <StaggerItem key={job.id}>
                 <JobCard job={job} reviewInfo={reviewMap[job.employer]} />
               </StaggerItem>
             ))}
           </StaggerContainer>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-12">
+              <button
+                className="btn btn-ghost h-10 w-10 p-0 disabled:opacity-30"
+                onClick={() => { setCurrentPage(p => p - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                disabled={currentPage === 1}
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  className={`h-10 w-10 rounded-lg font-mono text-sm font-bold transition-all ${
+                    page === currentPage
+                      ? 'bg-accent text-ink shadow-floating border border-ink/10'
+                      : 'bg-chassis text-ink-muted shadow-recessed border border-white/20 hover:shadow-card'
+                  }`}
+                  onClick={() => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                className="btn btn-ghost h-10 w-10 p-0 disabled:opacity-30"
+                onClick={() => { setCurrentPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                disabled={currentPage === totalPages}
+                aria-label="Next page"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+
+              <span className="ml-4 font-mono text-xs text-ink-muted uppercase tracking-widest">
+                {filtered.length} job{filtered.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+          )}
+          </>
         )}
 
         <div className="text-center mt-20">
