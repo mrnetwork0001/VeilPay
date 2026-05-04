@@ -296,7 +296,14 @@ export default function FheProof() {
                   ref={inputRef}
                   type="text"
                   value={txHash}
-                  onChange={(e) => setTxHash(e.target.value)}
+                  onChange={(e) => {
+                    setTxHash(e.target.value);
+                    if (result) {
+                      setResult(null);
+                      setAnimPhase(-1);
+                      setError('');
+                    }
+                  }}
                   placeholder="0x... (Sepolia transaction hash)"
                   className="form-input w-full pl-12 pr-4 py-4 font-mono text-sm"
                   id="proof-tx-input"
