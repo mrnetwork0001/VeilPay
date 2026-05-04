@@ -98,8 +98,8 @@ export default function ApplyJob() {
       updateStep(1, STATUS.DONE, 'Salary + Experience + Remote encrypted');
 
       // Step 3: Submit to Sepolia
-      await applyToJob(Number(jobId), formData.candidateName, ipfsCid, salaryHandle, expHandle, remoteHandle, inputProof);
-      updateStep(2, STATUS.DONE, 'Application confirmed on-chain');
+      const applyReceipt = await applyToJob(Number(jobId), formData.candidateName, ipfsCid, salaryHandle, expHandle, remoteHandle, inputProof);
+      updateStep(2, STATUS.DONE, 'Application confirmed on-chain', applyReceipt?.hash || null);
 
       // Navigate after a short delay so user can see success
       setTimeout(() => navigate('/dashboard/candidate'), 2000);

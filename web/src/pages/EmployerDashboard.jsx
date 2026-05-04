@@ -336,8 +336,8 @@ export default function EmployerDashboard() {
       'Computing FHE.le() on encrypted salaries',
     ]);
     try {
-      await resolveApplication(jobId, appId);
-      updateStep(0, STATUS.DONE, 'Encrypted result stored on-chain');
+      const receipt = await resolveApplication(jobId, appId);
+      updateStep(0, STATUS.DONE, 'Encrypted result stored on-chain', receipt?.hash || null);
     } catch (err) {
       failTransaction(err.message || 'Failed to resolve.');
     } finally {
@@ -355,8 +355,8 @@ export default function EmployerDashboard() {
     ]);
     try {
       // Step 1: Re-resolve
-      await resolveApplication(jobId, appId);
-      updateStep(0, STATUS.DONE, 'FHE weighted scoring computed');
+      const resolveReceipt = await resolveApplication(jobId, appId);
+      updateStep(0, STATUS.DONE, 'FHE weighted scoring computed', resolveReceipt?.hash || null);
 
       // Step 2: Fetch fresh handles
       const apps = await getApplicationsForJob(jobId);
@@ -380,8 +380,8 @@ export default function EmployerDashboard() {
       updateStep(2, STATUS.DONE, `Match: ${decryptedMatch ? '✅' : '❌'} | Score: ${decryptedScore}/100`);
 
       // Step 4: Commit both result and score
-      await revealMatchResult(jobId, appId, decryptedMatch, decryptedScore);
-      updateStep(3, STATUS.DONE, 'Result confirmed on-chain');
+      const revealReceipt = await revealMatchResult(jobId, appId, decryptedMatch, decryptedScore);
+      updateStep(3, STATUS.DONE, 'Result confirmed on-chain', revealReceipt?.hash || null);
 
       loadJobs();
     } catch (err) {
@@ -402,8 +402,8 @@ export default function EmployerDashboard() {
       'Submitting unlock transaction to Sepolia',
     ]);
     try {
-      await unlockResume(jobId, appId);
-      updateStep(0, STATUS.DONE, 'Resume IPFS link is now accessible');
+      const receipt = await unlockResume(jobId, appId);
+      updateStep(0, STATUS.DONE, 'Resume IPFS link is now accessible', receipt?.hash || null);
     } catch (err) {
       failTransaction(err.message || 'Failed to unlock resume.');
     } finally {
@@ -419,8 +419,8 @@ export default function EmployerDashboard() {
     let completed = 0;
     try {
       for (const app of apps) {
-        await resolveApplication(jobId, app.appId);
-        updateStep(completed, STATUS.DONE, 'FHE comparison computed');
+        const receipt = await resolveApplication(jobId, app.appId);
+        updateStep(completed, STATUS.DONE, 'FHE comparison computed', receipt?.hash || null);
         completed++;
       }
     } catch (err) {
@@ -443,7 +443,7 @@ export default function EmployerDashboard() {
     let completed = 0;
     try {
       for (const app of apps) {
-        await resolveApplication(jobId, app.appId);
+        const resolveReceipt = await resolveApplication(jobId, app.appId);
         const freshApps = await getApplicationsForJob(jobId);
         const freshApp = freshApps.find(a => a.appId === app.appId);
         const decryptedMatch = await decryptEbool(freshApp.matchHandle, walletClient, (msg) => {
@@ -453,11 +453,11 @@ export default function EmployerDashboard() {
         if (freshApp.scoreHandle && BigInt(freshApp.scoreHandle) !== 0n) {
           decryptedScore = await decryptUint8(freshApp.scoreHandle, walletClient, () => {});
         }
-        updateStep(stepIdx, STATUS.DONE, `${decryptedMatch ? 'MATCH ✅' : 'NO MATCH ❌'} (Score: ${decryptedScore}/100)`);
+        updateStep(stepIdx, STATUS.DONE, `${decryptedMatch ? 'MATCH ✅' : 'NO MATCH ❌'} (Score: ${decryptedScore}/100)`, resolveReceipt?.hash || null);
         stepIdx++;
 
-        await revealMatchResult(jobId, app.appId, decryptedMatch, decryptedScore);
-        updateStep(stepIdx, STATUS.DONE, 'Confirmed on-chain');
+        const revealReceipt = await revealMatchResult(jobId, app.appId, decryptedMatch, decryptedScore);
+        updateStep(stepIdx, STATUS.DONE, 'Confirmed on-chain', revealReceipt?.hash || null);
         stepIdx++;
         completed++;
       }
@@ -475,8 +475,8 @@ export default function EmployerDashboard() {
       'Closing job and refunding remaining cUSDC',
     ]);
     try {
-      await closeJob(jobId);
-      updateStep(0, STATUS.DONE, 'Job closed. Remaining cUSDC refunded.');
+      const receipt = await closeJob(jobId);
+      updateStep(0, STATUS.DONE, 'Job closed. Remaining cUSDC refunded.', receipt?.hash || null);
       loadJobs();
     } catch (err) {
       failTransaction(err.message || 'Failed to close job.');

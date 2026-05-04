@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, XCircle, Loader2, Circle, X } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, Circle, X, ExternalLink } from 'lucide-react';
 
 // ── Step statuses ──────────────────────────────────────────────────────────────
 const STATUS = {
@@ -42,9 +42,9 @@ export function TransactionProvider({ children }) {
     setVisible(true);
   }, []);
 
-  const updateStep = useCallback((index, status, detail = null) => {
+  const updateStep = useCallback((index, status, detail = null, stepTxHash = null) => {
     stepsRef.current = stepsRef.current.map((step, i) => {
-      if (i === index) return { ...step, status, detail };
+      if (i === index) return { ...step, status, detail, txHash: stepTxHash || step.txHash };
       // When a step completes, activate the next pending one
       if (i === index + 1 && status === STATUS.DONE && step.status === STATUS.PENDING) {
         return { ...step, status: STATUS.ACTIVE };
@@ -203,6 +203,17 @@ function Overlay({ title, steps, error, txHash, onClose }) {
                     }`}>
                       {step.detail}
                     </p>
+                  )}
+                  {step.txHash && step.status === STATUS.DONE && (
+                    <a
+                      href={`https://sepolia.etherscan.io/tx/${step.txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 mt-1.5 px-2 py-0.5 bg-accent/10 hover:bg-accent/20 border border-accent/20 rounded text-[9px] font-mono font-bold text-ink-muted uppercase tracking-widest transition-colors w-fit"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      {step.txHash.slice(0, 10)}...{step.txHash.slice(-6)} · view
+                    </a>
                   )}
                 </div>
               </motion.div>

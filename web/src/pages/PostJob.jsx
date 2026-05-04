@@ -147,21 +147,22 @@ export default function PostJob() {
       updateStep(1, STATUS.DONE, 'Budget + Experience + Remote encrypted');
 
       // Step 3: Approve cUSDC spending
+      let approveReceipt;
       try {
-        await approveBountyToken(depositUnits);
+        approveReceipt = await approveBountyToken(depositUnits);
       } catch (approveErr) {
         failTransaction(`cUSDC approval failed: ${approveErr.message}`);
         return;
       }
-      updateStep(2, STATUS.DONE, `${totalDeposit} cUSDC approved`);
+      updateStep(2, STATUS.DONE, `${totalDeposit} cUSDC approved`, approveReceipt?.hash || null);
 
       // Step 4: Deploy to Sepolia with cUSDC deposit
-      await createJobPosting(
+      const deployReceipt = await createJobPosting(
         title, company, location, jobType, description, logoUrl,
         budgetHandle, expHandle, remoteHandle, inputProof,
         bountyUnits, depositUnits
       );
-      updateStep(3, STATUS.DONE, `Job deployed with ${totalDeposit} cUSDC bounty pool`);
+      updateStep(3, STATUS.DONE, `Job deployed with ${totalDeposit} cUSDC bounty pool`, deployReceipt?.hash || null);
 
       setTimeout(() => navigate('/dashboard/employer'), 2000);
     } catch (err) {
