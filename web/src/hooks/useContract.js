@@ -346,15 +346,23 @@ export function useContract() {
 
   /**
    * Check if a candidate has already applied to a specific job.
-   * Returns true if candidateApplicationId[address][jobId] > 0 OR
-   * if the address is in the job's applicant list.
+   * candidateApplicationId returns 0 for both "not applied" and "first applicant (appId=0)".
+   * So when appId=0, we also check if applications[jobId][0].candidate matches.
    */
   const checkIfApplied = useCallback(async (candidateAddress, jobId) => {
     if (!candidateAddress) return false;
     try {
       const contract = await getReadContract();
       const appId = await contract.candidateApplicationId(candidateAddress, jobId);
-      return Number(appId) > 0;
+      if (Number(appId) > 0) return true;
+      // appId is 0 — could be "never applied" or "first applicant"
+      // Check if application[jobId][0] exists and belongs to this candidate
+      try {
+        const app = await contract.applications(jobId, 0);
+        return app.candidate.toLowerCase() === candidateAddress.toLowerCase();
+      } catch {
+        return false; // No applications exist for this job
+      }
     } catch {
       return false;
     }
