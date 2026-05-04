@@ -40,6 +40,10 @@ export default function PostJob() {
 
   const toTokenUnits = (val) => BigInt(Math.round(parseFloat(val || '0') * 10 ** CUSDC_DECIMALS));
 
+  // Balance validation
+  const depositAmount = parseFloat(totalDeposit || '0');
+  const insufficientBalance = cusdcBalance !== null && depositAmount > cusdcBalance;
+
   // Fetch cUSDC balance when connected
   const refreshBalance = async () => {
     if (!account) return;
@@ -438,13 +442,19 @@ export default function PostJob() {
                   Connect Wallet to Proceed
                 </button>
               ) : (
-                <button
+              <button
                   id="submit-post-job-btn"
                   type="submit"
-                  className="btn btn-primary w-full py-4 text-base disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isTxPending || !fhevmReady}
+                  className={`btn w-full py-4 text-base disabled:opacity-50 disabled:cursor-not-allowed ${
+                    insufficientBalance ? 'btn-secondary border-red-500/30 text-red-600' : 'btn-primary'
+                  }`}
+                  disabled={isTxPending || !fhevmReady || insufficientBalance}
                 >
-                  {isTxPending ? 'Processing...' : `Post Job Securely (Deposit ${totalDeposit} cUSDC)`}
+                  {isTxPending
+                    ? 'Processing...'
+                    : insufficientBalance
+                    ? `Insufficient cUSDC (need ${totalDeposit}, have ${cusdcBalance?.toLocaleString()})`
+                    : `Post Job Securely (Deposit ${totalDeposit} cUSDC)`}
                 </button>
               )}
             </div>
