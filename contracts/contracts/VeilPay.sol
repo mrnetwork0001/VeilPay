@@ -23,6 +23,12 @@ interface IERC20 {
 
 contract VeilPay is ZamaEthereumConfig {
     // ─────────────────────────────────────────────────────────────
+    // Owner (deployer) — used for trusted operations
+    // ─────────────────────────────────────────────────────────────
+
+    address public owner;
+
+    // ─────────────────────────────────────────────────────────────
     // Bounty Token (cUSDC)
     // ─────────────────────────────────────────────────────────────
 
@@ -31,6 +37,7 @@ contract VeilPay is ZamaEthereumConfig {
     constructor(address _bountyToken) {
         require(_bountyToken != address(0), "VeilPay: Invalid token address");
         bountyToken = IERC20(_bountyToken);
+        owner = msg.sender;
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -756,6 +763,7 @@ contract VeilPay is ZamaEthereumConfig {
         address employer,
         uint8 decryptedAvg
     ) external {
+        require(msg.sender == owner, "VeilPay: Only owner can commit ratings");
         require(companyReviewCounts[employer] > 0, "VeilPay: No reviews");
         companyRevealedRating[employer] = decryptedAvg;
     }
