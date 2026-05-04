@@ -453,7 +453,7 @@ export default function PostJob() {
                   {isTxPending
                     ? 'Processing...'
                     : insufficientBalance
-                    ? `Insufficient cUSDC (need ${totalDeposit}, have ${cusdcBalance?.toLocaleString()})`
+                    ? `Insufficient cUSDC (${(depositAmount - cusdcBalance).toLocaleString()} more needed)`
                     : `Post Job Securely (Deposit ${totalDeposit} cUSDC)`}
                 </button>
               )}
