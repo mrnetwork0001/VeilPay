@@ -53,12 +53,6 @@ export default function Navbar() {
         </ul>
 
         <div className="flex items-center gap-4">
-          {/* LED Indicator (Desktop) */}
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-chassis shadow-recessed">
-            <div className="led led-green"></div>
-            <span className="font-mono text-[10px] font-bold text-ink-muted uppercase tracking-widest">Sepolia</span>
-          </div>
-
           {/* Wallet Button (Desktop) */}
           <div className="hidden md:block">
             <ConnectWalletButton variant="navbar" />
@@ -97,13 +91,6 @@ export default function Navbar() {
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             >
-              {/* Network Status */}
-              <div className="px-5 pt-6 pb-4 border-b border-ink/10">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-chassis shadow-recessed w-fit">
-                  <div className="led led-green"></div>
-                  <span className="font-mono text-[10px] font-bold text-ink-muted uppercase tracking-widest">Sepolia Testnet</span>
-                </div>
-              </div>
 
               {/* Nav Links */}
               <div className="flex flex-col gap-1 px-4 py-4">
