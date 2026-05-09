@@ -242,6 +242,11 @@ export default function Landing() {
       <section className="max-w-[72rem] mx-auto px-6 md:px-12 py-12 md:py-24">
         <div className="grid grid-cols-1 lg:grid-cols-[60%_40%] gap-12 items-center">
           <FadeIn>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-5 rounded-full bg-dark-bg border border-white/10 shadow-floating">
+              <Lock className="w-3.5 h-3.5 text-accent" />
+              <span className="font-mono text-[11px] font-bold text-white/80 uppercase tracking-widest">Built on</span>
+              <span className="font-mono text-[11px] font-bold text-accent uppercase tracking-widest">Zama fhEVM</span>
+            </div>
             <h1 className="font-sans font-extrabold text-5xl md:text-7xl text-ink tracking-tight mb-6 leading-[1.1] drop-shadow-[0_1px_1px_#ffffff]">
               The Salary<br/>Negotiation<br/>
               <span className="inline-block mt-2 px-4 py-1 bg-accent text-ink rounded-md shadow-floating rotate-[-2deg] border border-ink/10 min-w-[11ch]">
