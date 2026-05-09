@@ -35,7 +35,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 h-[80px] z-50 flex items-center justify-between px-6 md:px-12 bg-chassis border-b border-white/40 shadow-sm">
+      <nav className="fixed top-0 left-0 right-0 h-[80px] z-50 flex items-center justify-between px-6 lg:px-12 bg-chassis border-b border-white/40 shadow-sm">
         <Link to="/" className="flex items-center gap-3" id="nav-logo">
           <div className="flex h-10 w-10 items-center justify-center rounded-md shadow-card border border-white/20 overflow-hidden">
             <img src="/veilpay-logo.png" alt="VeilPay Logo" className="w-full h-full object-cover" />
@@ -44,7 +44,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Nav */}
-        <ul className="hidden md:flex items-center gap-1 lg:gap-2 absolute left-1/2 -translate-x-1/2 whitespace-nowrap">
+        <ul className="hidden lg:flex items-center gap-1 xl:gap-2 absolute left-1/2 -translate-x-1/2 whitespace-nowrap">
           {NAV_LINKS.map((link) => (
             <li key={link.path}>
               <Link to={link.path} className={getLinkClass(link.path)} id={link.id}>{link.label}</Link>
@@ -54,13 +54,13 @@ export default function Navbar() {
 
         <div className="flex items-center gap-4">
           {/* Wallet Button (Desktop) */}
-          <div className="hidden md:block">
+          <div className="hidden lg:block">
             <ConnectWalletButton variant="navbar" />
           </div>
 
           {/* Hamburger (Mobile) */}
           <button
-            className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-chassis shadow-card border border-white/30 active:shadow-recessed transition-shadow"
+            className="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-chassis shadow-card border border-white/30 active:shadow-recessed transition-shadow"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
             id="mobile-menu-toggle"
@@ -76,7 +76,7 @@ export default function Navbar() {
           <>
             {/* Backdrop */}
             <motion.div
-              className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+              className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -85,7 +85,7 @@ export default function Navbar() {
 
             {/* Drawer Panel */}
             <motion.div
-              className="fixed top-[80px] right-0 bottom-0 z-40 w-[280px] bg-chassis border-l border-white/30 shadow-card flex flex-col md:hidden overflow-y-auto"
+              className="fixed top-[80px] right-0 bottom-0 z-40 w-[280px] bg-chassis border-l border-white/30 shadow-card flex flex-col lg:hidden overflow-y-auto"
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
