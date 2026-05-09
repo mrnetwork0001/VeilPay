@@ -366,9 +366,9 @@ VeilPay includes a built-in **FHE Proof Inspector** page (`/proof`) that perform
 
 | Transaction Hash | Function | Expected Result |
 |-----------------|----------|----------------|
-| `0x5517c806c466507596cb24c129e4fb2ea4d31bce70ebbb7981947f4cb4464cf5` | `resolveApplication` | All 4 phases ✅ |
-| `0xa53ffdb900d8686a45bfc53acd678e47b39fe0577044f9b62f47f1c85c1d31bf` | `createJobPosting` | All 4 phases ✅ |
-| `0x081a300715b79453fdb4274d193f21f6b719c1ced1d27b303d47fc86b19efe4f` | `closeJob` | Phase 2,3 ✗ (not FHE) |
+| `0xccd687f5333437f7e7d8106faaca55ff660f07d6d1a20c26477d5d22dc73f85f` | `resolveApplication` | All 4 phases ✅ |
+| `0xe9368da89ffb0c90f495508e2bdf772df9c8fbb70b70b4574bd4be7686895f46` | `createJobPosting` | All 4 phases ✅ |
+| `0xcf2747a2847737c5638297b1c7632a5eead617d6176bbca3c682002d3d4b506c` | `closeJob` | Phase 1, 2,3 ✗ (not FHE) |
 | Any random Sepolia tx | Non-VeilPay | All phases ✗ |
 
 > **This is the proof that VeilPay uses real FHE.** Non-FHE functions correctly show red, random transactions correctly fail, and only genuine FHE operations produce all-green results. No simulation, no faking.
