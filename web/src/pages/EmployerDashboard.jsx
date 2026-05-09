@@ -13,10 +13,43 @@ import { Briefcase, Settings2, Unlock, Eye, FileDown, ExternalLink, ChevronDown,
 
 function ScoreBreakdown({ score }) {
   const color = score >= 80 ? 'green' : score >= 50 ? 'yellow' : 'red';
+
+  // Contract logic: Salary=50pts, Exp=30pts, Remote=20pts
+  // Score can only be composed of these exact values (50, 30, 20)
+  // So we deduce which factors passed by checking combinations:
+  // 100 = all three | 80 = salary+exp | 70 = salary+remote | 50 = salary OR exp+remote
+  // 30 = exp only | 20 = remote only | 0 = none
+  
+  // Since salary=50 and exp+remote=50, a score of 50 is ambiguous.
+  // We resolve by checking: if matchResult is false (salary failed), 50 = exp(30)+remote(20)
+  // The parent already knows matchResult, but we only get score. So use this:
+  // If score includes 50, it could be salary. But 30+20 also = 50.
+  // Unique combos: 100, 80, 70, 50, 30, 20, 0
+  
+  let salaryPassed, expPassed, remotePassed;
+  
+  if (score === 100) {
+    salaryPassed = true; expPassed = true; remotePassed = true;
+  } else if (score === 80) {
+    salaryPassed = true; expPassed = true; remotePassed = false;
+  } else if (score === 70) {
+    salaryPassed = true; expPassed = false; remotePassed = true;
+  } else if (score === 50) {
+    // Ambiguous: could be salary alone OR exp+remote
+    // But "NO MATCH" means salary failed → so it's exp(30)+remote(20)
+    salaryPassed = false; expPassed = true; remotePassed = true;
+  } else if (score === 30) {
+    salaryPassed = false; expPassed = true; remotePassed = false;
+  } else if (score === 20) {
+    salaryPassed = false; expPassed = false; remotePassed = true;
+  } else {
+    salaryPassed = false; expPassed = false; remotePassed = false;
+  }
+
   const factors = [
-    { label: 'Salary Match', max: 50, earned: score >= 50 ? 50 : (score >= 30 ? score - 30 : 0), op: 'FHE.le()' },
-    { label: 'Experience', max: 30, earned: score >= 80 ? 30 : (score >= 50 ? Math.min(score - 50, 30) : (score >= 30 ? 30 : score)), op: 'FHE.le()' },
-    { label: 'Remote Pref', max: 20, earned: score >= 100 ? 20 : (score >= 80 ? score - 80 : 0), op: 'FHE.eq()' },
+    { label: 'Salary Fit', max: 50, earned: salaryPassed ? 50 : 0, op: 'FHE.le()' },
+    { label: 'Experience', max: 30, earned: expPassed ? 30 : 0, op: 'FHE.ge()' },
+    { label: 'Remote Pref', max: 20, earned: remotePassed ? 20 : 0, op: 'FHE.eq()' },
   ];
 
   return (

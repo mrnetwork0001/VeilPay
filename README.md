@@ -229,8 +229,8 @@ Connect your wallet → Navigate to **Post Job** → Click **"🪙 Claim 1,000 c
 
 | Contract | Address | Verified |
 |----------|---------|----------|
-| **VeilPay** (main protocol) | [`0xAd0EBcAaD4189d93c1aEE90f13F806AC28655Adc`](https://sepolia.etherscan.io/address/0xAd0EBcAaD4189d93c1aEE90f13F806AC28655Adc#code) | ✅ |
-| **ConfidentialUSDC** (cUSDC bounty token) | [`0x35590DECa04165320bA76a3d9E8305f4F4927Ed7`](https://sepolia.etherscan.io/address/0x35590DECa04165320bA76a3d9E8305f4F4927Ed7#code) | ✅ |
+| **VeilPay** (main protocol) | [`0xf1259dB36778C0891d2f33dc0A2b5CEA0C75f232`](https://sepolia.etherscan.io/address/0xf1259dB36778C0891d2f33dc0A2b5CEA0C75f232#code) | ✅ |
+| **ConfidentialUSDC** (cUSDC bounty token) | [`0xc0b1b3c4760F6058ABf3E69Da26D28A0eA01Da76`](https://sepolia.etherscan.io/address/0xc0b1b3c4760F6058ABf3E69Da26D28A0eA01Da76#code) | ✅ |
 
 **Zama Infrastructure (auto-detected by FHE Proof Inspector):**
 
