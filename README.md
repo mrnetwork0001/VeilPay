@@ -2,6 +2,9 @@
 
 **The first hiring protocol where salary negotiations, candidate matching, and employer reviews happen entirely inside Fully Homomorphic Encryption.**
 
+<img width="1873" height="765" alt="09 05 2026_18 51 36_REC" src="https://github.com/user-attachments/assets/f639ac00-a015-4d31-a062-fef3015b4d0c" />
+
+
 Built on **Zama fhEVM** · Deployed on **Ethereum Sepolia** · Interview Bounties via **cUSDC**
 
 🌐 **Live Demo:** [veilpay.online](https://veilpay.online)
