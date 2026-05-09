@@ -1,15 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAccount, useConnect, useDisconnect, useBalance } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Globe, Smartphone } from 'lucide-react';
+import { Globe } from 'lucide-react';
 
 const WALLET_META = {
-  injected:      { name: 'Browser Wallet', icon: <Globe className="w-4 h-4" /> },
-  walletConnect: { name: 'Mobile / QR', icon: <Smartphone className="w-4 h-4" /> },
+  injected: { name: 'Browser Wallet', icon: <Globe className="w-4 h-4" /> },
 };
 
-function getWalletInfo(connectorId, connectorType) {
-  if (connectorType === 'walletConnect' || connectorId === 'walletConnect') return WALLET_META.walletConnect;
+function getWalletInfo() {
   return WALLET_META.injected;
 }
 
@@ -42,22 +40,15 @@ export default function ConnectWalletButton({ variant = 'navbar' }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Consolidate into 2 main options: Browser Wallet & WalletConnect
+  // Browser extension wallets only (MetaMask, Rabby, OKX, Coinbase, Brave)
   const displayOptions = [
     {
       id: 'browser-wallet',
       name: 'Browser Wallet',
       icon: <Globe className="w-4.5 h-4.5" />,
-      desc: 'MetaMask, Rabby, OKX',
+      desc: 'MetaMask, Rabby, OKX, Coinbase',
       connector: connectors.find(c => c.type === 'injected' || c.id === 'injected')
     },
-    {
-      id: 'wallet-connect',
-      name: 'Mobile / QR',
-      icon: <Smartphone className="w-4.5 h-4.5" />,
-      desc: 'WalletConnect compatible apps',
-      connector: connectors.find(c => c.type === 'walletConnect' || c.id === 'walletConnect')
-    }
   ].filter(opt => opt.connector);
 
   // ── Not connected: show connect button ──────────────────────────────────────

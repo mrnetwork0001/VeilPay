@@ -2,7 +2,7 @@
 
 **The world's first confidential, trustless salary-matching protocol powered by Zama's Fully Homomorphic Encryption.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](./LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](../LICENSE)
 [![Network: Sepolia](https://img.shields.io/badge/Network-Sepolia-blue.svg)](https://sepolia.etherscan.io)
 [![Powered by Zama](https://img.shields.io/badge/Powered%20by-Zama%20fhEVM-violet.svg)](https://www.zama.ai)
 
@@ -16,11 +16,13 @@ Both end up guessing — and both lose.
 
 ## 💡 The Solution
 
-BlindHire deploys a smart contract that holds:
+VeilPay deploys a smart contract that holds:
 - An **encrypted employer maximum budget** (`euint64 max_budget`)
 - An **encrypted candidate minimum salary expectation** (`euint64 min_expectation`)
+- An **encrypted experience requirement** (`euint8`)
+- An **encrypted remote work preference** (`ebool`)
 
-The Zama fhevm evaluates `TFHE.le(min_expectation, max_budget)` — a single homomorphic comparison — and outputs a **match boolean**.
+The Zama fhevm evaluates a **multi-variable weighted match score (0-100)** entirely on encrypted data using `FHE.le`, `FHE.ge`, `FHE.eq`, `FHE.select`, and `FHE.add` — without revealing any value, ever.
 
 **Result:** The company never knows how low the candidate would have accepted. The candidate never knows how high the company would have paid. The outcome is fair, final, and tamper-proof.
 
@@ -30,8 +32,9 @@ The Zama fhevm evaluates `TFHE.le(min_expectation, max_budget)` — a single hom
 
 | Resource | Link |
 |---|---|
-| Frontend (Vercel) | _[Deploy to Vercel — update after deployment]_ |
-| Smart Contract (Etherscan) | _[Update VITE_CONTRACT_ADDRESS after `npm run deploy:sepolia`]_ |
+| Frontend (Vercel) | [veilpay.online](https://veilpay.online) |
+| VeilPay Contract (Etherscan) | [`0xAd0EBcAaD4189d93c1aEE90f13F806AC28655Adc`](https://sepolia.etherscan.io/address/0xAd0EBcAaD4189d93c1aEE90f13F806AC28655Adc#code) |
+| cUSDC Token (Etherscan) | [`0x35590DECa04165320bA76a3d9E8305f4F4927Ed7`](https://sepolia.etherscan.io/address/0x35590DECa04165320bA76a3d9E8305f4F4927Ed7#code) |
 | Sepolia Faucet | https://sepoliafaucet.com |
 
 ---
@@ -40,15 +43,17 @@ The Zama fhevm evaluates `TFHE.le(min_expectation, max_budget)` — a single hom
 
 | Layer | Technology |
 |---|---|
-| Smart Contract | Solidity 0.8.24 + Zama `fhevm` / `@fhevm/solidity` |
-| FHE Primitives | `TFHE.le()`, `euint64`, `ebool`, `GatewayCaller` |
+| Smart Contract | Solidity 0.8.24 + `@fhevm/solidity` v0.11.1 |
+| FHE Primitives | `FHE.le()`, `FHE.ge()`, `FHE.eq()`, `FHE.select()`, `FHE.add()`, `Impl.verify()` |
 | Contract Dev | Hardhat, `@nomicfoundation/hardhat-toolbox` |
-| Frontend | Vite + React 18 |
-| FHE Client | `fhevmjs` (browser-side encryption) |
-| Wallet | ethers.js v6 + MetaMask |
+| Frontend | Vite 8 + React 19 |
+| FHE Client | `@zama-fhe/relayer-sdk` v0.4.2 (browser-side WASM encryption + ZK proofs) |
+| Wallet | ethers.js v6, wagmi v2, viem |
+| Bounty Token | ConfidentialUSDC (cUSDC) — custom ERC-20 with public faucet |
 | Animations | Framer Motion |
 | Notifications | react-hot-toast |
-| Routing | react-router-dom v6 |
+| Routing | react-router-dom v7 |
+| Storage | IPFS via Pinata |
 | Network | Sepolia Testnet (chainId 11155111) |
 
 ---
@@ -57,13 +62,13 @@ The Zama fhevm evaluates `TFHE.le(min_expectation, max_budget)` — a single hom
 
 ### Prerequisites
 - Node.js ≥ 18
-- MetaMask (or compatible wallet)
+- MetaMask (or compatible browser wallet)
 - Sepolia ETH: https://sepoliafaucet.com
 
 ### 1. Clone and install
 
 ```bash
-git clone <your-repo>
+git clone https://github.com/mrnetwork0001/BlindHire.git
 cd BlindHire
 
 # Install contract dependencies
@@ -76,32 +81,19 @@ cd web && npm install && cd ..
 ### 2. Configure environment
 
 ```bash
-cp .env.example contracts/.env
 cp .env.example web/.env
 ```
 
-Edit both `.env` files with your keys:
+Edit `web/.env` with your keys:
 ```env
-SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
-DEPLOYER_PRIVATE_KEY=0xYOUR_PRIVATE_KEY
-ETHERSCAN_API_KEY=YOUR_ETHERSCAN_KEY
-VITE_CONTRACT_ADDRESS=0x... (update after deployment)
+VITE_CONTRACT_ADDRESS=0xAd0EBcAaD4189d93c1aEE90f13F806AC28655Adc
+VITE_CUSDC_ADDRESS=0x35590DECa04165320bA76a3d9E8305f4F4927Ed7
 VITE_SEPOLIA_RPC=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
 VITE_CHAIN_ID=11155111
+VITE_FHE_LIVE=true
 ```
 
-### 3. Deploy the smart contract
-
-```bash
-cd contracts
-npx hardhat compile
-npx hardhat test
-npm run deploy:sepolia
-```
-
-Copy the deployed contract address into `web/.env` as `VITE_CONTRACT_ADDRESS`.
-
-### 4. Run the frontend
+### 3. Run the frontend
 
 ```bash
 cd web
@@ -110,14 +102,9 @@ npm run dev
 
 Open http://localhost:5173
 
-### 5. Deploy frontend to Vercel
+### 4. Get Test cUSDC
 
-```bash
-cd web
-npx vercel --prod
-```
-
-Set the same environment variables in your Vercel project settings.
+Connect your wallet → Navigate to **Post Job** → Click **"🪙 Claim 1,000 cUSDC"**. The faucet has a 1-hour cooldown per address.
 
 ---
 
@@ -126,22 +113,22 @@ Set the same environment variables in your Vercel project settings.
 ### As an Employer (Post a Job)
 1. Connect MetaMask (Sepolia)
 2. Navigate to **Post a Job**
-3. Fill in job details
-4. Set your maximum salary budget using the slider
-5. The value is **encrypted in your browser** using ZamaFHE before submission
-6. Click **Encrypt & Post Job** → transaction submits encrypted bytes to Ethereum
+3. Fill in job details + set salary budget, experience requirement, remote preference
+4. All 3 values are **encrypted in your browser** using the Zama relayer-sdk WASM before submission
+5. Deposit cUSDC as interview bounty
+6. Click **Encrypt & Post Job** → transaction submits encrypted handles to Ethereum
 
 ### As a Candidate (Apply)
 1. Browse **Jobs** — all listings show "Salary: Confidential"
 2. Click **Apply Now** on any listing
 3. Upload your resume (goes to IPFS — only revealed on match)
-4. Set your minimum salary expectation
-5. Click **Encrypt & Apply** → encrypted salary goes on-chain
+4. Set your minimum salary, experience, remote preference
+5. Click **Encrypt & Apply** → all 3 values encrypted, sent onchain
 
 ### After Applications
-1. **Employer Dashboard**: Click **Run FHE Match** to trigger `resolveApplication()` — the homomorphic comparison runs on-chain
-2. Click **Reveal Match Result** — Zama Gateway decrypts the `ebool` and callbacks with true/false
-3. On match: Click **Unlock Resume** to access the candidate's IPFS resume
+1. **Employer Dashboard**: Click **Run FHE Match** to trigger `resolveApplication()` — the multi-variable FHE scoring runs onchain
+2. Click **Reveal Score** — the relayer-sdk's `publicDecrypt()` retrieves the plaintext score (0-100) from the coprocessor
+3. On match: Click **Unlock Resume** to access the candidate's IPFS resume (auto-pays cUSDC bounty)
 
 ---
 
@@ -153,13 +140,14 @@ npx hardhat test
 ```
 
 Tests cover:
-- ✅ Job posting with encrypted budget
-- ✅ Application with encrypted expectation
-- ✅ resolveApplication FHE evaluation
+- ✅ Job posting with encrypted budget, experience, remote preference
+- ✅ Application with encrypted expectation, experience, remote preference
+- ✅ resolveApplication multi-variable FHE evaluation
 - ✅ Access control (only employer can reveal)
 - ✅ Salary confidentiality (never in plaintext views)
 - ✅ Multiple candidates per job
 - ✅ Closed job rejects applications
+- ✅ cUSDC bounty escrow and refund
 
 ---
 
@@ -171,4 +159,4 @@ Built for the **Zama Builder Track Hackathon**.
 
 ## 📄 License
 
-MIT License — see [LICENSE](./LICENSE)
+MIT License — see [LICENSE](../LICENSE)

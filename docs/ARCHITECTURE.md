@@ -4,9 +4,9 @@
 
 BlindHire is a multi-layer confidential dApp powered by Zama's Fully Homomorphic Encryption (FHE). It operates across three layers:
 
-1. **Browser (fhevmjs)** — Encrypts salary values client-side, never sending plaintext to any server
-2. **Ethereum Smart Contract (Solidity + TFHE)** — Stores encrypted values and performs homomorphic computation
-3. **Zama Gateway** — Decrypts specific `ebool` results and callbacks to the contract
+1. **Browser (@zama-fhe/relayer-sdk)** — Encrypts salary, experience, and remote preference client-side via WASM, never sending plaintext to any server
+2. **Ethereum Smart Contract (Solidity + FHE)** — Stores encrypted values and performs homomorphic computation using `FHE.*` operations
+3. **Zama Coprocessor + KMS** — Processes FHE operations asynchronously and manages public decryptability flags
 
 ---
 
@@ -14,24 +14,24 @@ BlindHire is a multi-layer confidential dApp powered by Zama's Fully Homomorphic
 
 ```mermaid
 graph TD
-    A[Employer Browser] -->|encryptUint64 max_budget via fhevmjs| B[einput + inputProof]
-    B --> C[BlindHire.sol - createJobPosting]
+    A[Employer Browser] -->|"relayer-sdk: encrypt(budget, exp, remote)"| B[bytes32 handles + inputProof]
+    B --> C[VeilPay.sol - createJobPosting]
     
-    D[Candidate Browser] -->|encryptUint64 min_expectation via fhevmjs| E[einput + inputProof]
-    E --> F[BlindHire.sol - applyToJob]
+    D[Candidate Browser] -->|"relayer-sdk: encrypt(salary, exp, remote)"| E[bytes32 handles + inputProof]
+    E --> F[VeilPay.sol - applyToJob]
     
     C --> G[euint64 max_budget stored encrypted]
     F --> H[euint64 min_expectation stored encrypted]
     
     G --> I[resolveApplication]
     H --> I
-    I -->|TFHE.le min_expectation max_budget| J[ebool isMatched stored encrypted]
+    I -->|"FHE.le + FHE.ge + FHE.eq + FHE.select + FHE.add"| J["euint8 matchScore (0-100, encrypted)"]
     
-    J --> K[revealMatchResult - Employer only]
-    K --> L[Zama Gateway requestDecryption]
-    L -->|callbackMatchResult| M[bool matchResult stored plaintext]
+    J --> K[FHE.makePubliclyDecryptable]
+    K --> L[Zama Coprocessor sync]
+    L --> M["publicDecrypt() via relayer-sdk"]
     
-    M -->|matchResult == true| N[Employer unlocks resume IPFS CID]
+    M -->|"score >= threshold"| N[Employer unlocks resume + pays cUSDC bounty]
     N --> O[Candidate resume revealed]
     
     style I fill:#7C3AED,color:#fff
@@ -46,65 +46,90 @@ graph TD
 ```
 Browser                    Contract                    Chain State
    |                           |                           |
-   |── fhevmjs.encrypt(140000) |                           |
-   |   → { handle, proof }     |                           |
+   |── relayer-sdk.encrypt()   |                           |
+   |   add64(budget)           |                           |
+   |   add8(experience)        |                           |
+   |   addBool(remoteOk)       |                           |
+   |   → { handles[], proof }  |                           |
    |                           |                           |
    |── createJobPosting() ────►|                           |
-   |   (handle, proof)         |── TFHE.asEuint64() ──────►|
-   |                           |   stores euint64           |
-   |                           |   max_budget (ciphertext) |
+   |   (3 handles, proof)      |── Impl.verify() x3 ─────►|
+   |                           |   FHE.allowThis()         |
+   |                           |   stores euint64, euint8, |
+   |                           |   ebool (all ciphertext)  |
 ```
 
 ### Step 2: Candidate Application
 ```
 Browser                    Contract                    Chain State
    |                           |                           |
-   |── fhevmjs.encrypt(120000) |                           |
-   |   → { handle, proof }     |                           |
+   |── relayer-sdk.encrypt()   |                           |
+   |   add64(salary)           |                           |
+   |   add8(experience)        |                           |
+   |   addBool(remotePref)     |                           |
+   |   → { handles[], proof }  |                           |
    |                           |                           |
    |── applyToJob() ──────────►|                           |
-   |   (handle, proof)         |── TFHE.asEuint64() ──────►|
-   |                           |   stores euint64           |
-   |                           |   min_expectation (cipher)|
+   |   (3 handles, proof)      |── Impl.verify() x3 ─────►|
+   |                           |   FHE.allowThis()         |
+   |                           |   stores euint64, euint8, |
+   |                           |   ebool (all ciphertext)  |
 ```
 
-### Step 3: FHE Comparison (The Core)
+### Step 3: Multi-Variable FHE Scoring (The Core)
 ```
-Contract (on-chain computation, no decryption)
+Contract (onchain computation, no decryption)
    |
-   |── TFHE.le(min_expectation, max_budget)
-   |   Both values remain encrypted throughout
-   |   Result: ebool isMatched (still encrypted!)
+   |── FHE.le(candidateMin, employerMax)     → salaryMatch  (ebool)
+   |── FHE.select(salaryMatch, 50, 0)        → salaryScore  (euint8)
    |
-   |── Stores encrypted ebool → Application.isMatched
+   |── FHE.ge(candidateExp, requiredExp)     → expMatch     (ebool)
+   |── FHE.select(expMatch, 30, 0)           → expScore     (euint8)
+   |
+   |── FHE.eq(candidateRemote, employerPref) → remoteMatch  (ebool)
+   |── FHE.select(remoteMatch, 20, 0)        → remoteScore  (euint8)
+   |
+   |── FHE.add(salary + exp + remote)        → totalScore   (euint8, 0-100)
+   |
+   |── FHE.makePubliclyDecryptable(totalScore)
+   |── Stores encrypted euint8 → Application.matchScore
 ```
 
-### Step 4: Gateway Reveal (Employer-triggered)
+### Step 4: Self-Relaying Decryption (Employer-triggered)
 ```
-Contract            Zama Gateway         Contract
-   |                     |                   |
-   |── requestDecryption(isMatched) ────────►|
-   |                     |                   |
-   |                     |── Decrypts ebool  |
-   |                     |── callbackMatchResult(jobId, appId, true/false)
-   |◄────────────────────────────────────────|
-   |── Stores matchResult (plaintext bool)   |
+Browser (relayer-sdk)     Zama Coprocessor        Contract
+   |                           |                      |
+   |── publicDecrypt(handle) ─►|                      |
+   |                           |── Decrypts euint8    |
+   |◄── clearValue (0-100) ───|                      |
+   |                           |                      |
+   |── revealMatchResult() ────────────────────────►  |
+   |   (pass decrypted bool +  |                      |
+   |    score as parameters)   |── Stores plaintext   |
+   |                           |   matchResult + score|
 ```
 
 ---
 
-## Key FHE Primitives
+## Key FHE Primitives (fhevm-solidity v0.11.x)
 
 | Primitive | Description | Used For |
 |---|---|---|
 | `euint64` | Encrypted 64-bit unsigned integer | max_budget, min_expectation |
-| `ebool` | Encrypted boolean | isMatched result |
-| `einput` | Raw encrypted input bytes (from fhevmjs) | Contract function parameters |
-| `TFHE.asEuint64(einput, proof)` | Converts browser ciphertext to contract euint64 | Input ingestion |
-| `TFHE.le(a, b)` | Homomorphic `a ≤ b` comparison returning `ebool` | Core matching logic |
-| `TFHE.allowThis(handle)` | Grants the contract permission to use a ciphertext | ACL management |
-| `TFHE.allow(handle, address)` | Grants a specific address permission | Employer access to ebool |
-| `GatewayCaller` | Base contract enabling Zama Gateway decryption callbacks | Match reveal |
+| `euint8` | Encrypted 8-bit unsigned integer | experience years, match score (0-100) |
+| `euint32` | Encrypted 32-bit unsigned integer | aggregated review ratings |
+| `ebool` | Encrypted boolean | remote preference, salary match result |
+| `Impl.verify(handle, proof, FheType)` | Verifies browser-encrypted input and returns typed handle | Input ingestion |
+| `FHE.le(a, b)` | Homomorphic `a ≤ b` comparison returning `ebool` | Salary matching |
+| `FHE.ge(a, b)` | Homomorphic `a ≥ b` comparison returning `ebool` | Experience matching |
+| `FHE.eq(a, b)` | Homomorphic equality check returning `ebool` | Remote preference matching |
+| `FHE.select(cond, a, b)` | Encrypted ternary: if cond then a else b | Conditional scoring |
+| `FHE.add(a, b)` | Homomorphic addition | Score aggregation, review aggregation |
+| `FHE.asEuint8(val)` | Convert plaintext to encrypted uint8 | Score constants (50, 30, 20, 0) |
+| `FHE.asEuint32(val)` | Upcast encrypted uint8 to uint32 | Review rating widening |
+| `FHE.allowThis(handle)` | Grants the contract permission to use a ciphertext | ACL management |
+| `FHE.allow(handle, address)` | Grants a specific address permission | Employer access |
+| `FHE.makePubliclyDecryptable(handle)` | Marks a ciphertext for public decryption via coprocessor | Self-relaying reveal |
 
 ---
 
@@ -112,13 +137,16 @@ Contract            Zama Gateway         Contract
 
 | Function | Caller | Description |
 |---|---|---|
-| `createJobPosting()` | Employer | Posts job with encrypted max_budget via einput |
-| `applyToJob()` | Candidate | Applies with encrypted min_expectation, saves IPFS CID |
-| `resolveApplication()` | Anyone | Triggers TFHE.le() — stores encrypted ebool result |
-| `revealMatchResult()` | Employer only | Requests Gateway decryption of ebool → bool |
-| `callbackMatchResult()` | Zama Gateway | Receives plaintext bool, stores in Application |
-| `unlockResume()` | Employer only | Unlocks IPFS CID access after confirmed match |
-| `closeJob()` | Employer only | Deactivates job posting |
+| `createJobPosting()` | Employer | Posts job with 3 encrypted inputs (budget, exp, remote) + cUSDC bounty escrow |
+| `applyToJob()` | Candidate | Applies with 3 encrypted inputs (salary, exp, remote) + IPFS resume |
+| `resolveApplication()` | Anyone | Triggers multi-variable FHE scoring (9 FHE ops → euint8 score 0-100) |
+| `revealMatchResult()` | Employer only | Stores decrypted match bool + score after client-side publicDecrypt() |
+| `unlockResume()` | Employer only | Unlocks IPFS CID + auto-transfers cUSDC bounty to candidate |
+| `closeJob()` | Employer only | Deactivates job + refunds remaining cUSDC bounty pool |
+| `submitReview()` | Candidate | Submits encrypted 1-5 star rating, FHE.add aggregated anonymously |
+| `requestRatingReveal()` | Anyone | Marks aggregated review score for public decryption |
+| `commitRevealedRating()` | Owner | Stores decrypted average rating onchain |
+| `sendMessage()` | Matched pair | FHE-gated chat — only unlocked after confirmed salary match |
 | `getActiveJobs()` | Anyone | Returns all active jobs (no salary data) |
 | `getApplicationsForJob()` | Employer only | Returns applications metadata (no salary data) |
 | `getMyApplications()` | Candidate | Returns own applications (no salary data) |
@@ -136,18 +164,23 @@ Contract            Zama Gateway         Contract
 | Plaintext max_budget | ❌ | ❌ | ❌ |
 | Encrypted min_expectation | ❌ | ✅ (as ciphertext) | ❌ |
 | Plaintext min_expectation | ❌ | ❌ | ❌ |
-| Match result (bool) | ✅ (after reveal) | ✅ (after reveal) | ❌ |
+| Match score (0-100) | ✅ (after reveal) | ✅ (after reveal) | ❌ |
 | Resume IPFS CID | ✅ (on match + unlock) | ✅ (own) | ❌ |
+| Company review (individual) | ❌ | ❌ | ❌ |
+| Company review (aggregate avg) | ✅ | ✅ | ✅ (after reveal) |
+| FHE-gated chat messages | ✅ (if matched) | ✅ (if matched) | ❌ |
 
 ---
 
 ## Security Properties
 
-1. **Salary Confidentiality**: Neither salary figure ever appears in plaintext on-chain, in events, in view functions, or in any return value
-2. **Verifiable Fairness**: The TFHE.le() computation is verifiable on-chain — no intermediary can manipulate the result
-3. **Access Control**: TFHE.allow() / TFHE.allowThis() ensure only authorized addresses can request decryption
+1. **Salary Confidentiality**: Neither salary figure ever appears in plaintext onchain, in events, in view functions, or in any return value
+2. **Verifiable Fairness**: The FHE.le() computation is verifiable onchain — no intermediary can manipulate the result
+3. **Access Control**: FHE.allow() / FHE.allowThis() ensure only authorized addresses can interact with specific ciphertexts
 4. **Input Authenticity**: `inputProof` ZKP ensures the encrypted value was created by the stated address — no replay attacks
-5. **Separation of Concerns**: The contract stores results, the browser encrypts inputs, the Gateway decrypts specific outputs — no single point of compromise
+5. **Review Anonymity**: FHE.add() aggregation makes individual ratings cryptographically unextractable from the onchain sum
+6. **Bounty Safety**: ERC-20 transfer/transferFrom with balance checks; remaining pool refunded on job close
+7. **Separation of Concerns**: The browser encrypts inputs, the contract computes on ciphertexts, the coprocessor manages decryptability — no single point of compromise
 
 ---
 
@@ -156,20 +189,29 @@ Contract            Zama Gateway         Contract
 ```
 web/src/
 ├── hooks/
-│   ├── useFhevm.js      → Manages fhevmjs WASM lifecycle, exposes encryptUint64()
-│   └── useContract.js   → Typed ethers.js contract calls + wallet management
+│   ├── useFhevm.js      → Manages @zama-fhe/relayer-sdk WASM lifecycle, exposes encrypt/decrypt
+│   └── useContract.js   → Typed ethers.js contract calls + protocol stats
 ├── components/
-│   ├── Navbar.jsx       → Navigation + wallet connect
-│   ├── Footer.jsx       → Footer with Etherscan link
-│   ├── Animations.jsx   → Framer Motion helpers (PageTransition, FadeIn, TxOverlay)
-│   └── EncryptionZone.jsx → The signature "lock" animation + salary slider
+│   ├── Navbar.jsx              → Navigation + wallet connect
+│   ├── Footer.jsx              → Footer with Etherscan link
+│   ├── Animations.jsx          → Framer Motion helpers (FadeIn, Stagger)
+│   ├── ConnectWalletButton.jsx → Custom themed wallet UI (browser extension only)
+│   ├── EncryptionZone.jsx      → The signature "lock" animation + salary slider
+│   ├── TransactionOverlay.jsx  → Multi-step tx progress + per-step Etherscan links
+│   ├── ReviewModal.jsx         → FHE-encrypted star rating modal
+│   └── FheChat.jsx             → FHE-gated messaging between matched pairs
 ├── pages/
-│   ├── Landing.jsx          → Hero + match visualizer + how-it-works
-│   ├── JobBoard.jsx         → Public jobs grid (live + demo fallback)
-│   ├── PostJob.jsx          → Employer: encrypt budget + post job
+│   ├── Landing.jsx          → Hero + match visualizer + how-it-works + live stats
+│   ├── JobBoard.jsx         → Public jobs grid with pagination + filters
+│   ├── PostJob.jsx          → Employer: encrypt budget + post job + cUSDC faucet
 │   ├── ApplyJob.jsx         → Candidate: encrypt expectation + upload resume
-│   ├── EmployerDashboard.jsx → Manage jobs, trigger FHE + Gateway flows
-│   └── CandidateDashboard.jsx → Track application statuses
+│   ├── EmployerDashboard.jsx → Scores, unlock, batch resolve/reveal, close/refund
+│   ├── CandidateDashboard.jsx → Track apps, rate employers
+│   └── FheProof.jsx         → FHE Proof Inspector (4-phase tx verification)
+├── config/
+│   └── wagmi.js             → Wagmi wallet configuration (Sepolia)
+├── utils/
+│   └── ipfs.js              → Pinata IPFS uploads
 └── abi/
-    └── BlindHire.json   → Contract ABI for ethers.js
+    └── BlindHire.json       → Contract ABI for ethers.js
 ```
