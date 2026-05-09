@@ -1,4 +1,4 @@
-# 🔐 VeilPay - Confidential Hiring Protocol
+# VeilPay - Confidential Hiring Protocol
 
 **The first hiring protocol where salary negotiations, candidate matching, and employer reviews happen entirely inside Fully Homomorphic Encryption.**
 
@@ -7,16 +7,12 @@
 
 Built on **Zama fhEVM** · Deployed on **Ethereum Sepolia** · Interview Bounties via **cUSDC**
 
-🌐 **Live Demo:** [veilpay.online](https://veilpay.online)
+**Live Demo:** [veilpay.online](https://veilpay.online)
 
-[![Live on Sepolia](https://img.shields.io/badge/VeilPay-0xAd0E...5Adc-blue?style=flat-square)](https://sepolia.etherscan.io/address/0xAd0EBcAaD4189d93c1aEE90f13F806AC28655Adc#code)
-[![cUSDC Token](https://img.shields.io/badge/cUSDC-0x3559...7Ed7-green?style=flat-square)](https://sepolia.etherscan.io/address/0x35590DECa04165320bA76a3d9E8305f4F4927Ed7#code)
-[![Built with Zama](https://img.shields.io/badge/FHE-Zama%20fhEVM-purple?style=flat-square)](https://docs.zama.ai/fhevm)
-[![Etherscan Verified](https://img.shields.io/badge/Etherscan-Verified%20✓-brightgreen?style=flat-square)](#deployed-contracts)
 
 ---
 
-## 🧠 The Problem
+## The Problem
 
 Hiring is fundamentally broken by **information asymmetry**:
 
@@ -29,15 +25,15 @@ Hiring is fundamentally broken by **information asymmetry**:
 
 > **Every existing solution requires trusting a middleman with the most sensitive number in a hiring negotiation - your salary.**
 
-## 💡 VeilPay's Solution
+## VeilPay's Solution
 
 VeilPay eliminates trust entirely. Every sensitive computation happens inside **Fully Homomorphic Encryption** - math on ciphertexts, not plaintext. The protocol introduces three interconnected FHE-powered systems that, together, create a **complete confidential hiring lifecycle**:
 
 ---
 
-## 🔬 Core FHE Features
+## Core FHE Features
 
-### 1️⃣ Multi-Variable Weighted Match Scoring
+### 1️Multi-Variable Weighted Match Scoring
 
 **Not just "does the salary match?" - a comprehensive 0-100 compatibility score computed entirely on encrypted data.**
 
@@ -70,7 +66,7 @@ VeilPay eliminates trust entirely. Every sensitive computation happens inside **
 
 ---
 
-### 2️⃣ "Good Faith" Interview Bounty (cUSDC Tokenomics)
+### 2️"Good Faith" Interview Bounty (cUSDC Tokenomics)
 
 **Employers put money where their mouth is.** When posting a job, employers escrow **cUSDC tokens** into the smart contract. Each time they unlock a matched candidate's resume, a bounty is automatically transferred to the candidate - compensating them for the time invested in the application process.
 
@@ -93,7 +89,7 @@ EMPLOYER                       SMART CONTRACT                     CANDIDATE
 
 ---
 
-### 3️⃣ FHE-Aggregated Anonymous Company Reviews
+### FHE-Aggregated Anonymous Company Reviews
 
 **Candidates can rate employers - and individual ratings are mathematically impossible to extract.**
 
@@ -115,7 +111,7 @@ companyReviewCounts[employer]++;
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -158,7 +154,7 @@ companyReviewCounts[employer]++;
 
 ---
 
-## 📊 FHE Operations Summary
+## FHE Operations Summary
 
 Every FHE operation in VeilPay maps to a real-world hiring use case:
 
@@ -179,7 +175,7 @@ Every FHE operation in VeilPay maps to a real-world hiring use case:
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - [Node.js](https://nodejs.org/) v18+
@@ -228,7 +224,7 @@ Connect your wallet → Navigate to **Post Job** → Click **"🪙 Claim 1,000 c
 
 ---
 
-## 📄 Deployed Contracts
+## Deployed Contracts
 
 | Contract | Address | Verified |
 |----------|---------|----------|
@@ -244,7 +240,7 @@ Connect your wallet → Navigate to **Post Job** → Click **"🪙 Claim 1,000 c
 
 ---
 
-## 🖥️ Frontend Features
+## Frontend Features
 
 ### For Employers
 - **Post Jobs** - Title, description, logo (uploaded to IPFS), salary budget, experience requirement, remote preference → all sensitive fields encrypted client-side via Zama WASM
@@ -279,7 +275,7 @@ Connect your wallet → Navigate to **Post Job** → Click **"🪙 Claim 1,000 c
 
 ---
 
-## 🛡️ Security Model
+## Security Model
 
 | Property | How It's Achieved |
 |----------|-------------------|
@@ -293,7 +289,7 @@ Connect your wallet → Navigate to **Post Job** → Click **"🪙 Claim 1,000 c
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
@@ -309,7 +305,7 @@ Connect your wallet → Navigate to **Post Job** → Click **"🪙 Claim 1,000 c
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 VeilPay/
@@ -353,7 +349,7 @@ VeilPay/
 
 ---
 
-## 🔍 FHE Proof Inspector — Real Verification, Not Simulation
+## FHE Proof Inspector — Real Verification, Not Simulation
 
 VeilPay includes a built-in **FHE Proof Inspector** page (`/proof`) that performs **genuine on-chain verification** with real pass/fail results:
 
@@ -379,7 +375,7 @@ VeilPay includes a built-in **FHE Proof Inspector** page (`/proof`) that perform
 
 ---
 
-## 📊 Live Protocol Stats
+## Live Protocol Stats
 
 The landing page displays real-time onchain metrics pulled directly from the deployed contract:
 
@@ -392,7 +388,7 @@ The landing page displays real-time onchain metrics pulled directly from the dep
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
 - [x] FHE-encrypted salary matching (`FHE.le`)
 - [x] Multi-variable weighted scoring (`FHE.select` + `FHE.add`, 0-100)
@@ -415,7 +411,7 @@ The landing page displays real-time onchain metrics pulled directly from the dep
 
 ---
 
-## 🏆 Why VeilPay Should Win
+## Why VeilPay Should Win
 
 1. **Depth of FHE usage** — 9 distinct FHE operations across 3 interconnected features, not a basic boolean demo
 2. **Real-world utility** — Solves a $200B+ recruiting industry problem with a protocol that could deploy today
@@ -429,7 +425,7 @@ The landing page displays real-time onchain metrics pulled directly from the dep
 
 ---
 
-## 📜 License
+## License
 
 MIT
 
