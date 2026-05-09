@@ -5,6 +5,7 @@ import { ShieldCheck, Cpu, Code2, Network, Lock, FileDigit, Briefcase, Activity,
 import { FadeIn, StaggerContainer, StaggerItem } from '../components/Animations';
 import { useContract } from '../hooks/useContract';
 
+
 const FAKE_CIPHER = '0x8f3a...c7d2';
 const FAKE_CIPHER2 = '0x1b9e...44fa';
 

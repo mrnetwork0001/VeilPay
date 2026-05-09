@@ -11,6 +11,49 @@ import { useTransaction } from '../components/TransactionOverlay';
 import FheChat from '../components/FheChat';
 import { Briefcase, Settings2, Unlock, Eye, FileDown, ExternalLink, ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, Power, Coins } from 'lucide-react';
 
+function ScoreBreakdown({ score }) {
+  const color = score >= 80 ? 'green' : score >= 50 ? 'yellow' : 'red';
+  const factors = [
+    { label: 'Salary Match', max: 50, earned: score >= 50 ? 50 : (score >= 30 ? score - 30 : 0), op: 'FHE.le()' },
+    { label: 'Experience', max: 30, earned: score >= 80 ? 30 : (score >= 50 ? Math.min(score - 50, 30) : (score >= 30 ? 30 : score)), op: 'FHE.le()' },
+    { label: 'Remote Pref', max: 20, earned: score >= 100 ? 20 : (score >= 80 ? score - 80 : 0), op: 'FHE.eq()' },
+  ];
+
+  return (
+    <div className="bg-dark-bg rounded-xl border border-white/10 shadow-card p-4">
+      <div className="font-mono text-[10px] text-accent uppercase tracking-widest mb-3 font-bold">FHE Score Breakdown</div>
+      <div className="space-y-2.5">
+        {factors.map((f) => (
+          <div key={f.label}>
+            <div className="flex justify-between items-center mb-1">
+              <span className="font-mono text-[10px] text-white/70">{f.label}</span>
+              <span className="font-mono text-[10px] text-white/50">{f.op}</span>
+            </div>
+            <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${f.earned === f.max ? 'bg-green-500' : f.earned > 0 ? 'bg-yellow-500' : 'bg-red-500/50'}`}
+                style={{ width: `${(f.earned / f.max) * 100}%` }}
+              />
+            </div>
+            <div className="flex justify-between mt-0.5">
+              <span className={`font-mono text-[9px] font-bold ${f.earned === f.max ? 'text-green-400' : f.earned > 0 ? 'text-yellow-400' : 'text-red-400'}`}>
+                {f.earned}/{f.max} pts
+              </span>
+              <span className="font-mono text-[9px] text-white/30">
+                {f.earned === f.max ? '✓' : '✗'}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 pt-3 border-t border-white/10 flex justify-between items-center">
+        <span className="font-mono text-[10px] text-white/60 font-bold">TOTAL</span>
+        <span className={`font-mono text-sm font-bold text-${color}-400`}>{score}/100</span>
+      </div>
+    </div>
+  );
+}
+
 function ScoreBadge({ score }) {
   const color = score >= 80 ? 'green' : score >= 50 ? 'yellow' : 'red';
   return (
@@ -117,6 +160,11 @@ function ApplicationRow({ app, jobId, onResolve, onReveal, onUnlockResume, isLoa
                   </button>
                 )}
               </div>
+
+              {/* Score Breakdown (inline) */}
+              {app.matchRevealed && app.revealedScore > 0 && (
+                <ScoreBreakdown score={app.revealedScore} />
+              )}
 
               {/* Resume Details */}
               {app.resumeUnlocked && (

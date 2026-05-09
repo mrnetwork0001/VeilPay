@@ -101,7 +101,9 @@ export default function FheProof() {
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
   const [animPhase, setAnimPhase] = useState(-1);
+  const [copied, setCopied] = useState(false);
   const inputRef = useRef(null);
+  const hasAutoRun = useRef(false);
 
   // Example tx hashes from the deployed contract
   const EXAMPLE_TXS = [
@@ -293,11 +295,33 @@ export default function FheProof() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    analyzeTx(txHash.trim());
+    const hash = txHash.trim();
+    analyzeTx(hash);
+    // Update URL for shareability
+    try { window.history.replaceState(null, '', `/proof?tx=${hash}`); } catch {}
   };
+
+  // Auto-run from URL ?tx= parameter
+  useEffect(() => {
+    if (hasAutoRun.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const urlTx = params.get('tx');
+    if (urlTx && urlTx.length === 66) {
+      hasAutoRun.current = true;
+      setTxHash(urlTx);
+      analyzeTx(urlTx);
+    }
+  }, []);
 
   const copyHash = () => {
     navigator.clipboard.writeText(txHash);
+  };
+
+  const shareProof = () => {
+    const url = `${window.location.origin}/proof?tx=${txHash}`;
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -442,7 +466,7 @@ export default function FheProof() {
                     </div>
                   </div>
 
-                  {/* Etherscan Link */}
+                  {/* Action Buttons */}
                   <a
                     href={`https://sepolia.etherscan.io/tx/${txHash}`}
                     target="_blank"
@@ -452,6 +476,14 @@ export default function FheProof() {
                   >
                     <ExternalLink className="w-4 h-4" /> View on Etherscan
                   </a>
+
+                  <button
+                    onClick={shareProof}
+                    className="btn btn-secondary w-full text-sm"
+                    id="proof-share-link"
+                  >
+                    <Copy className="w-4 h-4" /> {copied ? 'Link Copied!' : 'Share Proof Link'}
+                  </button>
 
                   {/* Privacy Guarantee */}
                   <div className="bg-dark-bg rounded-xl p-5 border border-white/10 relative overflow-hidden">
