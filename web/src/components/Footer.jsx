@@ -19,7 +19,7 @@ export default function Footer() {
         
         <div className="text-center md:text-right">
           <p className="text-xs font-mono text-ink-muted uppercase tracking-widest leading-relaxed">
-            Built for the Zama Builder Track Hackathon<br />
+            Built by <a href="https://x.com/encrypt_wizard" target="_blank" rel="noopener noreferrer" className="text-ink font-black hover:text-accent transition-colors">MrNetwork</a>. Powered by <a href="https://zama.ai" target="_blank" rel="noopener noreferrer" className="text-ink font-black hover:text-accent transition-colors">Zama</a><br />
             Deployed on Sepolia
           </p>
           <a
