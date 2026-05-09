@@ -10,10 +10,8 @@ const RPC_URL = import.meta.env.VITE_SEPOLIA_RPC || 'https://rpc.sepolia.org';
 
 // Known Zama infrastructure contracts on Sepolia (lowercased for matching)
 const ZAMA_CONTRACTS = {
-  '0x2e72ba39bc20b3f1e802df60c4a44bbec6c3b3a3': 'Zama ACL',
-  '0x05fd9b5efe0a996095f42ed7e77c390039e5afbc': 'Zama Coprocessor',
-  '0x235cfa0b203a77390c609189524ddf8789b8a04d': 'Zama KMS Verifier',
-  '0xbf21b5c25a5e5a31ac5012c53eba8e42b6a99a87': 'Zama TFHEExecutor',
+  '0x92c920834ec8941d2c77d188936e1f7a6f49c127': 'Zama TFHEExecutor',
+  '0xf0ffdc93b7e186bc2f8cb3daa75d86d1930a433d': 'Zama ACL',
 };
 
 // VeilPay function selectors
@@ -41,12 +39,9 @@ function shortAddr(addr) {
 
 // Phase component for the timeline
 function TimelinePhase({ phase, index, isActive, isComplete }) {
-  const phaseColors = {
-    0: 'accent',
-    1: 'blue-500',
-    2: 'purple-500',
-    3: 'green-500',
-  };
+  // Use real pass/fail from phase data once animation completes
+  const passed = phase.passed;
+  const showResult = isComplete;
 
   return (
     <motion.div
@@ -57,26 +52,30 @@ function TimelinePhase({ phase, index, isActive, isComplete }) {
     >
       {/* Timeline Dot */}
       <div className={`absolute left-[-9px] top-0 w-4 h-4 rounded-full border-2 ${
-        isComplete ? 'bg-green-500 border-green-400 shadow-glow-green' :
+        showResult && passed ? 'bg-green-500 border-green-400 shadow-glow-green' :
+        showResult && !passed ? 'bg-red-500 border-red-400 shadow-[0_0_8px_rgba(239,68,68,0.5)]' :
         isActive ? 'bg-accent border-accent shadow-glow animate-pulse' :
         'bg-white/10 border-white/20'
       }`} />
 
       <div className={`bg-dark-panel rounded-xl border ${
-        isComplete ? 'border-green-500/30' :
+        showResult && passed ? 'border-green-500/30' :
+        showResult && !passed ? 'border-red-500/30' :
         isActive ? 'border-accent/30' :
         'border-white/10'
       } p-5 shadow-lg`}>
         <div className="flex items-center gap-3 mb-3">
           <span className={`font-mono text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${
-            isComplete ? 'bg-green-500/20 text-green-400' :
+            showResult && passed ? 'bg-green-500/20 text-green-400' :
+            showResult && !passed ? 'bg-red-500/20 text-red-400' :
             isActive ? 'bg-accent/20 text-accent' :
             'bg-white/5 text-white/40'
           }`}>
             Phase {index + 1}
           </span>
           <span className="font-sans font-bold text-white text-sm">{phase.title}</span>
-          {isComplete && <CheckCircle2 className="w-4 h-4 text-green-400" />}
+          {showResult && passed && <CheckCircle2 className="w-4 h-4 text-green-400" />}
+          {showResult && !passed && <XCircle className="w-4 h-4 text-red-400" />}
         </div>
         <p className="text-white/60 text-xs font-mono leading-relaxed mb-3">{phase.description}</p>
         {phase.data && (
@@ -181,21 +180,41 @@ export default function FheProof() {
         }
       }
 
-      // Check if any plaintext salary/budget numbers appear in calldata
-      const hasSalaryLeak = false; // By design - encrypted handles are opaque bytes32
+      // Real verification checks
+      const isFheFunction = ['resolveApplication', 'createJobPosting', 'applyToJob', 'submitReview'].includes(functionName);
+      const txSucceeded = receipt?.status === 1;
+      const hasZamaLogs = zamaInteractions.length > 0;
+      const hasEvents = (receipt?.logs?.length || 0) > 0;
+      // resolveApplication operates on STORED encrypted handles, not calldata handles
+      const usesStoredHandles = ['resolveApplication', 'submitReview'].includes(functionName);
 
-      // Build the 4 phases
+      // Phase 1: Did the tx target VeilPay with encrypted inputs (or use stored encrypted data)?
+      const phase1Passed = isVeilPayTx && (encryptedParams.length > 0 || usesStoredHandles);
+      // Phase 2: Is it a known FHE function that succeeded?
+      const phase2Passed = isVeilPayTx && isFheFunction && txSucceeded;
+      // Phase 3: Were Zama infra contracts actually involved?
+      const phase3Passed = hasZamaLogs;
+      // Phase 4: Tx succeeded with events and no plaintext leaks
+      const phase4Passed = txSucceeded && hasEvents;
+
+      // Build the 4 phases with real pass/fail
       const phases = [
         {
           title: 'Encrypted Inputs Submitted',
-          description: encryptedParams.length > 0
-            ? `${encryptedParams.length} encrypted parameter(s) detected. No plaintext salary or budget values appear in the transaction data.`
-            : 'Transaction calldata contains no readable salary or budget values - all sensitive data was encrypted client-side before submission.',
+          passed: phase1Passed,
+          description: !isVeilPayTx
+            ? '✗ This transaction does NOT target the VeilPay contract. No encrypted inputs can be verified.'
+            : encryptedParams.length > 0
+            ? `✓ ${encryptedParams.length} encrypted parameter(s) detected. No plaintext salary or budget values appear in the transaction data.`
+            : usesStoredHandles
+            ? `✓ ${functionName}() operates on previously-stored encrypted handles. The encrypted salary/experience data was submitted during createJobPosting/applyToJob and is now being evaluated homomorphically.`
+            : '✗ No encrypted parameters (bytes32 handles) found in calldata. This may not be an FHE transaction.',
           data: [
             { label: 'From', value: shortAddr(tx.from) },
-            { label: 'To', value: isVeilPayTx ? `VeilPay (${shortAddr(tx.to)})` : shortAddr(tx.to) },
+            { label: 'To', value: isVeilPayTx ? `VeilPay (${shortAddr(tx.to)})` : shortAddr(tx.to), highlight: isVeilPayTx },
             { label: 'Function', value: functionName, highlight: true },
             { label: 'Gas Used', value: receipt ? `${Number(receipt.gasUsed).toLocaleString()} wei` : 'N/A' },
+            { label: 'Encrypted', value: encryptedParams.length > 0 ? `${encryptedParams.length} handle(s) found` : 'NONE detected', highlight: encryptedParams.length > 0 },
             ...encryptedParams.map(p => ({
               label: p.name,
               value: p.handle,
@@ -205,52 +224,64 @@ export default function FheProof() {
         },
         {
           title: 'FHE Evaluation on Ciphertext',
-          description: isVeilPayTx && (functionName === 'resolveApplication' || functionName === 'createJobPosting' || functionName === 'applyToJob')
-            ? `The ${functionName}() function triggers homomorphic computations (FHE.le, FHE.select, FHE.add) on encrypted values. The Zama Coprocessor evaluates these operations without ever decrypting the underlying data.`
-            : 'This transaction interacted with encrypted data on the Zama fhEVM. Homomorphic operations were evaluated on ciphertext.',
+          passed: phase2Passed,
+          description: !isFheFunction
+            ? `✗ "${functionName}" is not a known FHE function. Expected: resolveApplication, createJobPosting, applyToJob, or submitReview.`
+            : !txSucceeded
+            ? `✗ ${functionName}() is a valid FHE function but the transaction REVERTED. The FHE computation did not complete.`
+            : `✓ The ${functionName}() function triggers homomorphic computations (FHE.le, FHE.select, FHE.add) on encrypted values. The Zama Coprocessor evaluates these operations without ever decrypting the underlying data.`,
           data: [
-            { label: 'Operations', value: functionName === 'resolveApplication' ? 'FHE.le() → FHE.ge() → FHE.eq() → FHE.select() × 3 → FHE.add() × 2' : functionName === 'createJobPosting' ? 'FHE.asEuint64() → FHE.asEuint8() → FHE.asEbool()' : functionName === 'applyToJob' ? 'FHE.asEuint64() → FHE.asEuint8() → FHE.asEbool()' : 'FHE ciphertext operations', highlight: true },
-            { label: 'Plaintext Leak', value: '✗ NONE - values stay encrypted', highlight: false },
-            { label: 'Execution', value: receipt?.status === 1 ? 'SUCCESS' : 'REVERTED', highlight: receipt?.status === 1 },
+            { label: 'Operations', value: functionName === 'resolveApplication' ? 'FHE.le() → FHE.ge() → FHE.eq() → FHE.select() × 3 → FHE.add() × 2' : functionName === 'createJobPosting' ? 'FHE.asEuint64() → FHE.asEuint8() → FHE.asEbool()' : functionName === 'applyToJob' ? 'FHE.asEuint64() → FHE.asEuint8() → FHE.asEbool()' : 'Unknown — not a recognized FHE function', highlight: isFheFunction },
+            { label: 'FHE Function', value: isFheFunction ? `✓ ${functionName}` : '✗ Not recognized', highlight: isFheFunction },
+            { label: 'Execution', value: txSucceeded ? 'SUCCESS' : 'REVERTED', highlight: txSucceeded },
           ],
         },
         {
           title: 'Zama Infrastructure Interactions',
-          description: zamaInteractions.length > 0
-            ? `${zamaInteractions.length} interaction(s) with Zama infrastructure contracts detected. These handle ACL permissions, ciphertext verification, and FHE computation routing.`
-            : 'Zama infrastructure contracts (ACL, Coprocessor, KMS) processed the encrypted computation. Event logs confirm ciphertext-level access control was enforced.',
-          data: zamaInteractions.length > 0
+          passed: phase3Passed,
+          description: hasZamaLogs
+            ? `✓ ${zamaInteractions.length} interaction(s) with Zama infrastructure contracts (ACL, Coprocessor, KMS) detected in receipt logs.`
+            : '✗ No interactions with known Zama infrastructure contracts found in transaction logs. This transaction may not involve real FHE.',
+          data: hasZamaLogs
             ? zamaInteractions.map(z => ({
                 label: z.contract,
                 value: `${shortAddr(z.address)} · ${z.topics} topics · ${z.dataSize} bytes`,
                 highlight: true,
               }))
             : [
-                { label: 'Status', value: 'Zama logs present in receipt - ACL + Coprocessor confirmed', highlight: false },
-                { label: 'Total Logs', value: `${receipt?.logs?.length || 0} event(s) emitted`, highlight: false },
+                { label: 'Status', value: '✗ No Zama contract logs found', highlight: false },
+                { label: 'Total Logs', value: `${receipt?.logs?.length || 0} event(s) emitted (none from Zama)`, highlight: false },
               ],
         },
         {
           title: 'Encrypted Result Stored',
-          description: functionName === 'resolveApplication'
-            ? 'The encrypted match score (euint8, 0-100) and salary match boolean (ebool) were stored onchain. Only the employer can decrypt these via the Zama KMS. Individual salary values remain permanently encrypted.'
-            : 'Encrypted handles were stored onchain. Only authorized parties (per the Zama ACL) can request decryption via the KMS.',
+          passed: phase4Passed,
+          description: !txSucceeded
+            ? '✗ Transaction reverted — no encrypted results were stored onchain.'
+            : !hasEvents
+            ? '✗ Transaction succeeded but emitted no events. State changes could not be confirmed.'
+            : functionName === 'resolveApplication'
+            ? '✓ The encrypted match score (euint8, 0-100) and salary match boolean (ebool) were stored onchain. Only the employer can decrypt these via the Zama KMS.'
+            : '✓ Encrypted handles were stored onchain. Only authorized parties (per the Zama ACL) can request decryption via the KMS.',
           data: [
             { label: 'Block', value: `#${receipt?.blockNumber || 'N/A'}` },
             { label: 'Tx Index', value: `${receipt?.index ?? 'N/A'}` },
-            { label: 'Events', value: `${receipt?.logs?.length || 0} emitted` },
-            { label: 'Privacy', value: '✓ No salary, budget, or score values visible in any log', highlight: true },
+            { label: 'Events', value: `${hasEvents ? receipt.logs.length : 0} emitted`, highlight: hasEvents },
+            { label: 'Privacy', value: hasEvents ? '✓ No salary, budget, or score values visible in any log' : '— No events to verify', highlight: hasEvents },
           ],
         },
       ];
 
-      setResult({ tx, receipt, phases, isVeilPayTx, functionName, zamaInteractions, encryptedParams, hasSalaryLeak });
+      setResult({ tx, receipt, phases, isVeilPayTx, functionName, zamaInteractions, encryptedParams, phase1Passed, phase2Passed, phase3Passed, phase4Passed });
 
       // Animate phases sequentially
       for (let i = 0; i < 4; i++) {
         await new Promise(r => setTimeout(r, 400));
         setAnimPhase(i);
       }
+      // One final bump so phase 4 (index 3) also flips to "complete"
+      await new Promise(r => setTimeout(r, 400));
+      setAnimPhase(4);
 
     } catch (err) {
       console.error('Analysis error:', err);
@@ -393,11 +424,11 @@ export default function FheProof() {
 
                     <div className="space-y-3">
                       {[
-                        { check: true, text: 'No plaintext salary in calldata' },
-                        { check: true, text: 'Encrypted handles (bytes32) submitted' },
-                        { check: result.zamaInteractions.length > 0 || (result.receipt?.logs?.length || 0) > 0, text: 'Zama infrastructure involved' },
-                        { check: result.receipt?.status === 1, text: 'Transaction executed successfully' },
-                        { check: result.isVeilPayTx, text: 'Verified VeilPay contract call' },
+                        { check: result.isVeilPayTx, text: 'Targets VeilPay contract' },
+                        { check: result.phase1Passed, text: 'Encrypted handles (bytes32) in calldata' },
+                        { check: result.phase2Passed, text: 'Known FHE function executed successfully' },
+                        { check: result.phase3Passed, text: 'Zama infrastructure logs detected' },
+                        { check: result.phase4Passed, text: 'Encrypted result stored onchain' },
                       ].map((item, i) => (
                         <div key={i} className="flex items-center gap-2">
                           {item.check ? (
