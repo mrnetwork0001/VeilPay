@@ -262,7 +262,7 @@ Connect your wallet → Navigate to **Post Job** → Click **"🪙 Claim 1,000 c
 - **Earn Bounties** - Receive cUSDC when employers unlock your resume
 
 ### Transparency & Verification
-- **FHE Proof Inspector** - Paste any Sepolia transaction hash to get a real-time 4-phase verification with **pass/fail (green ✓ / red ✗)** indicators. Each phase performs genuine on-chain checks — not cosmetic animations. Non-FHE transactions (e.g. `closeJob`, `unlockResume`) correctly show red phases, proving the verification is real.
+- **FHE Proof Inspector** - Paste any Sepolia transaction hash to get a real-time 4-phase verification with **pass/fail (green ✓ / red ✗)** indicators. Each phase performs genuine on-chain checks - not cosmetic animations. Non-FHE transactions (e.g. `closeJob`, `unlockResume`) correctly show red phases, proving the verification is real.
 - **Per-Step Etherscan Links** - Every onchain operation in the transaction overlay includes a clickable "view" link to verify the transaction on Etherscan
 - **Live Protocol Stats** - Landing page displays real-time onchain metrics: jobs posted, applications submitted, FHE operations executed, and total cUSDC escrowed
 
@@ -349,20 +349,20 @@ VeilPay/
 
 ---
 
-## FHE Proof Inspector — Real Verification, Not Simulation
+## FHE Proof Inspector - Real Verification, Not Simulation
 
 VeilPay includes a built-in **FHE Proof Inspector** page (`/proof`) that performs **genuine on-chain verification** with real pass/fail results:
 
-1. **Paste any Sepolia transaction hash** — VeilPay or not
+1. **Paste any Sepolia transaction hash** - VeilPay or not
 2. The inspector performs a **4-phase verification** with **green ✓ (pass) / red ✗ (fail)** per phase:
-   - **Phase 1: Encrypted Inputs** — Checks for encrypted parameters (bytes32 handles) or stored-handle operations (`resolveApplication`) in calldata. ✗ if no encrypted data found.
-   - **Phase 2: FHE Evaluation** — Validates the function is a known FHE operation (`createJobPosting`, `applyToJob`, `resolveApplication`, `submitReview`) and the transaction succeeded. ✗ if unrecognized or reverted.
-   - **Phase 3: Zama Infrastructure** — Scans receipt logs for real interactions with Zama's `TFHEExecutor` (`0x92c9...c127`) and `ACL` (`0xf0ff...433d`). ✗ if no Zama contract logs detected.
-   - **Phase 4: Encrypted Result** — Confirms transaction succeeded with events emitted and no plaintext salary/budget values visible in any log.
+   - **Phase 1: Encrypted Inputs** - Checks for encrypted parameters (bytes32 handles) or stored-handle operations (`resolveApplication`) in calldata. ✗ if no encrypted data found.
+   - **Phase 2: FHE Evaluation** - Validates the function is a known FHE operation (`createJobPosting`, `applyToJob`, `resolveApplication`, `submitReview`) and the transaction succeeded. ✗ if unrecognized or reverted.
+   - **Phase 3: Zama Infrastructure** - Scans receipt logs for real interactions with Zama's `TFHEExecutor` (`0x92c9...c127`) and `ACL` (`0xf0ff...433d`). ✗ if no Zama contract logs detected.
+   - **Phase 4: Encrypted Result** - Confirms transaction succeeded with events emitted and no plaintext salary/budget values visible in any log.
 3. **Verdict sidebar** shows 5 real-time pass/fail checks with green/red indicators
 4. **Direct Etherscan link** for independent cross-verification
 
-**Try it yourself** — paste these hashes on [veilpay.online/proof](https://veilpay.online/proof):
+**Try it yourself** - paste these hashes on [veilpay.online/proof](https://veilpay.online/proof):
 
 | Transaction Hash | Function | Expected Result |
 |-----------------|----------|----------------|
@@ -413,45 +413,45 @@ The landing page displays real-time onchain metrics pulled directly from the dep
 
 ## Why VeilPay Should Win
 
-1. **Depth of FHE usage** — 9 distinct FHE operations across 3 interconnected features, not a basic boolean demo
-2. **Real-world utility** — Solves a $200B+ recruiting industry problem with a protocol that could deploy today
-3. **Complete lifecycle** — Post → Apply → Match → Score → Unlock → Pay → Review — all onchain, all confidential
-4. **Novel tokenomics** — First-ever "interview bounty" system where candidates are financially compensated for participating in encrypted matching
-5. **FHE aggregation** — Anonymous company reviews prove that FHE arithmetic (not just comparison) works in production
-6. **Provable, not cosmetic** — The FHE Proof Inspector performs **real on-chain verification** with genuine pass/fail results. Non-FHE functions correctly show red. Random transactions correctly fail. No simulation, no faking — paste any tx hash and see for yourself.
-7. **Production-quality frontend** — Premium neumorphic UI with real-time transaction overlays, per-step Etherscan links, live stats, batch processing, and IPFS integration
-8. **Fully deployed & verified** — Both contracts live on Sepolia with verified source code, frontend deployed at [veilpay.online](https://veilpay.online)
-9. **Zama infrastructure integration** — Real TFHEExecutor and ACL log detection from actual Sepolia addresses, not hardcoded assumptions
+1. **Depth of FHE usage** - 9 distinct FHE operations across 3 interconnected features, not a basic boolean demo
+2. **Real-world utility** - Solves a $200B+ recruiting industry problem with a protocol that could deploy today
+3. **Complete lifecycle** - Post → Apply → Match → Score → Unlock → Pay → Review — all onchain, all confidential
+4. **Novel tokenomics** - First-ever "interview bounty" system where candidates are financially compensated for participating in encrypted matching
+5. **FHE aggregation** - Anonymous company reviews prove that FHE arithmetic (not just comparison) works in production
+6. **Provable, not cosmetic** - The FHE Proof Inspector performs **real on-chain verification** with genuine pass/fail results. Non-FHE functions correctly show red. Random transactions correctly fail. No simulation, no faking - paste any tx hash and see for yourself.
+7. **Production-quality frontend** - Premium neumorphic UI with real-time transaction overlays, per-step Etherscan links, live stats, batch processing, and IPFS integration
+8. **Fully deployed & verified** - Both contracts live on Sepolia with verified source code, frontend deployed at [veilpay.online](https://veilpay.online)
+9. **Zama infrastructure integration** - Real TFHEExecutor and ACL log detection from actual Sepolia addresses, not hardcoded assumptions
 
 ---
 
 ## 🔮 Post-Hackathon Roadmap
 
-### Phase 1 — Protocol Hardening (1-2 months)
-- **Multi-chain deployment** — Deploy on Zama mainnet when available + L2 rollups
-- **Gas optimization** — Batch FHE operations to reduce per-match cost
-- **Formal security audit** — Smart contract audit for production readiness
+### Phase 1 - Protocol Hardening (1-2 months)
+- **Multi-chain deployment** - Deploy on Zama mainnet when available + L2 rollups
+- **Gas optimization** - Batch FHE operations to reduce per-match cost
+- **Formal security audit** - Smart contract audit for production readiness
 
-### Phase 2 — Advanced FHE Features (2-4 months)
-- **Encrypted Skills Matching** — FHE-powered skill tag comparison beyond salary/experience/remote
-- **Confidential Salary Ranges** — Employers see a proximity band (e.g., "within 10% of budget") without exact figures
-- **FHE-Aggregated Market Rates** — Anonymously compute industry salary averages from all encrypted inputs across the protocol
-- **Threshold Decryption** — Multi-party decryption requiring both employer + candidate consent
+### Phase 2 - Advanced FHE Features (2-4 months)
+- **Encrypted Skills Matching** - FHE-powered skill tag comparison beyond salary/experience/remote
+- **Confidential Salary Ranges** - Employers see a proximity band (e.g., "within 10% of budget") without exact figures
+- **FHE-Aggregated Market Rates** - Anonymously compute industry salary averages from all encrypted inputs across the protocol
+- **Threshold Decryption** - Multi-party decryption requiring both employer + candidate consent
 
-### Phase 3 — Platform Expansion (4-6 months)
-- **Portable Candidate Reputation** — Encrypted on-chain work history aggregated from past employers via FHE
-- **DAO Governance** — Token-gated protocol upgrades, fee structures, and dispute resolution
-- **Enterprise API** — White-label integration for existing HR platforms (Workday, Greenhouse, Lever)
-- **Mobile App** — React Native client with biometric wallet authentication
+### Phase 3 - Platform Expansion (4-6 months)
+- **Portable Candidate Reputation** - Encrypted on-chain work history aggregated from past employers via FHE
+- **DAO Governance** - Token-gated protocol upgrades, fee structures, and dispute resolution
+- **Enterprise API** - White-label integration for existing HR platforms (Workday, Greenhouse, Lever)
+- **Mobile App** - React Native client with biometric wallet authentication
 
-### Phase 4 — Ecosystem (6-12 months)
-- **VeilPay SDK** — Open-source toolkit for other protocols to add confidential matching primitives
-- **Cross-Protocol Identity** — Portable encrypted credentials (experience, certifications) usable across dApps
-- **AI Interview Copilot** — On-chain AI agent that conducts initial screening while keeping candidate data encrypted
+### Phase 4 - Ecosystem (6-12 months)
+- **VeilPay SDK** - Open-source toolkit for other protocols to add confidential matching primitives
+- **Cross-Protocol Identity** - Portable encrypted credentials (experience, certifications) usable across dApps
+- **AI Interview Copilot** - Onchain AI agent that conducts initial screening while keeping candidate data encrypted
 
 ---
 
-## 📜 License
+## License
 
 MIT
 
