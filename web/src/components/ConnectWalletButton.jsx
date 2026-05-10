@@ -25,7 +25,6 @@ export default function ConnectWalletButton({ variant = 'navbar' }) {
   const { disconnect } = useDisconnect();
   const { data: balance } = useBalance({ address });
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showWalletMenu, setShowWalletMenu] = useState(false);
   const dropdownRef = useRef(null);
 
   // Close dropdown on outside click
@@ -33,7 +32,6 @@ export default function ConnectWalletButton({ variant = 'navbar' }) {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setShowDropdown(false);
-        setShowWalletMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -53,72 +51,30 @@ export default function ConnectWalletButton({ variant = 'navbar' }) {
 
   // ── Not connected: show connect button ──────────────────────────────────────
   if (!isConnected) {
+    const injectedConnector = connectors.find(c => c.type === 'injected' || c.id === 'injected');
+
+    const handleConnect = () => {
+      if (injectedConnector) {
+        connect({ connector: injectedConnector });
+      }
+    };
+
     return (
-      <div className="relative z-50" ref={dropdownRef}>
-        <button
-          id="connect-wallet-btn"
-          className={`btn ${variant === 'navbar' ? 'btn-primary px-4 py-2 text-xs' : 'btn-primary w-full'}`}
-          onClick={() => setShowWalletMenu(prev => !prev)}
-          disabled={isPending}
-        >
-          {isPending ? (
-            <span className="flex items-center gap-2">
-              <span className="w-3 h-3 border-2 border-ink/30 border-t-ink rounded-full animate-spin" />
-              Connecting...
-            </span>
-          ) : (
-            'Connect Wallet'
-          )}
-        </button>
-
-        <AnimatePresence>
-          {showWalletMenu && (
-            <motion.div
-              className="absolute right-0 mt-3 w-72 bg-chassis border border-white/40 shadow-floating rounded-xl overflow-hidden p-3"
-              initial={{ opacity: 0, y: -8, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.95 }}
-              transition={{ duration: 0.15, ease: [0.175, 0.885, 0.32, 1.275] }}
-            >
-              <div className="px-3 py-2 text-[10px] font-mono font-bold text-ink-muted uppercase tracking-wider mb-2 flex items-center justify-between">
-                <span>Select Interface</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse shadow-glow"></span>
-              </div>
-              
-              <div className="flex flex-col gap-2">
-                {displayOptions.map((opt) => (
-                  <button
-                    key={opt.id}
-                    id={`wallet-option-${opt.id}`}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-chassis border border-ink/5 shadow-recessed hover:shadow-floating hover:border-white/40 rounded-lg transition-all group"
-                    onClick={() => {
-                      connect({ connector: opt.connector });
-                      setShowWalletMenu(false);
-                    }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-dark-bg border border-white/10 text-ink-muted group-hover:text-accent group-hover:border-accent/30 transition-all shadow-recessed">
-                        {opt.icon}
-                      </div>
-                      <div className="flex flex-col items-start text-left">
-                        <span className="text-sm font-sans font-bold text-ink">{opt.name}</span>
-                        <span className="text-[10px] font-mono text-ink-muted uppercase tracking-wider">{opt.desc}</span>
-                      </div>
-                    </div>
-                    <span className="text-ink-muted group-hover:translate-x-1 group-hover:text-ink transition-all">→</span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="mt-3 text-center">
-                <span className="inline-block px-2 py-1 text-[9px] font-mono font-bold text-ink uppercase bg-accent rounded border border-ink/10 shadow-recessed">
-                  Sepolia Testnet
-                </span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      <button
+        id="connect-wallet-btn"
+        className={`btn ${variant === 'navbar' ? 'btn-primary px-4 py-2 text-xs' : 'btn-primary w-full'}`}
+        onClick={handleConnect}
+        disabled={isPending}
+      >
+        {isPending ? (
+          <span className="flex items-center gap-2">
+            <span className="w-3 h-3 border-2 border-ink/30 border-t-ink rounded-full animate-spin" />
+            Connecting...
+          </span>
+        ) : (
+          'Connect Wallet'
+        )}
+      </button>
     );
   }
 
