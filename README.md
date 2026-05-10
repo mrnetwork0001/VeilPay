@@ -443,13 +443,13 @@ The landing page displays real-time onchain metrics pulled directly from the dep
 - **FHE-Aggregated Market Rates** - Anonymously compute industry salary averages from all encrypted inputs across the protocol
 - **Threshold Decryption** - Multi-party decryption requiring both employer + candidate consent
 
-### Phase 3 — Platform Expansion (4-6 months)
+### Phase 3 - Platform Expansion (4-6 months)
 - **Portable Candidate Reputation** - Encrypted onchain work history aggregated from past employers via FHE
 - **DAO Governance** - Token-gated protocol upgrades, fee structures, and dispute resolution
 - **Enterprise API** - White-label integration for existing HR platforms (Workday, Greenhouse, Lever)
 - **Mobile App** - React Native client with biometric wallet authentication
 
-### Phase 4 — Ecosystem (6-12 months)
+### Phase 4 - Ecosystem (6-12 months)
 - **VeilPay SDK** - Open-source toolkit for other protocols to add confidential matching primitives
 - **Cross-Protocol Identity** - Portable encrypted credentials (experience, certifications) usable across dApps
 - **AI Interview Copilot** - Onchain AI agent that conducts initial screening while keeping candidate data encrypted
