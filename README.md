@@ -433,7 +433,7 @@ The landing page displays real-time onchain metrics pulled directly from the dep
 - Implement delegated decryption for programmable auditability
 
 ### Phase 1 - Protocol Hardening (1-2 months)
-- **Multi-chain deployment** - Deploy on Zama mainnet when available + L2 rollups
+- **Mainnet deployment** - Deploy on Ethereum mainnet
 - **Gas optimization** - Batch FHE operations to reduce per-match cost
 - **Formal security audit** - Smart contract audit for production readiness
 
