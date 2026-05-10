@@ -35,7 +35,7 @@ VeilPay eliminates trust entirely. Every sensitive computation happens inside **
 
 ## Core FHE Features
 
-### 1️Multi-Variable Weighted Match Scoring
+### 1️. Multi-Variable Weighted Match Scoring
 
 **Not just "does the salary match?" - a comprehensive 0-100 compatibility score computed entirely on encrypted data.**
 
@@ -68,7 +68,7 @@ VeilPay eliminates trust entirely. Every sensitive computation happens inside **
 
 ---
 
-### 2️"Good Faith" Interview Bounty (cUSDC Tokenomics)
+### 2️. "Good Faith" Interview Bounty (cUSDC Tokenomics)
 
 **Employers put money where their mouth is.** When posting a job, employers escrow **cUSDC tokens** into the smart contract. Each time they unlock a matched candidate's resume, a bounty is automatically transferred to the candidate - compensating them for the time invested in the application process.
 
