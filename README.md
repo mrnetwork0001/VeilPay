@@ -9,7 +9,7 @@ Built on **Zama fhEVM** · Deployed on **Ethereum Sepolia** · Interview Bountie
 
 **Live Demo:** [veilpay.online](https://veilpay.online)
 
-**Demo Video:** [VeilPay Youtube Video](https://veilpay.online)
+**Demo Video:** [VeilPay Youtube Video](https://youtu.be/HzjV801eaLE?si=Y9fMnWWG2BbJPO7s)
 
 
 ---
