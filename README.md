@@ -408,6 +408,9 @@ The landing page displays real-time onchain metrics pulled directly from the dep
 - [ ] ConfidentialERC20 bounty (fully encrypted balance transfers)
 - [ ] Cross-chain deployment (Ethereum mainnet / L2s)
 - [ ] AI-powered resume parsing with privacy-preserving NLP
+- [ ] Migrate to official Zama [ERC-7984](https://docs.zama.org/protocol) cUSDC/cUSDT wrappers (announced May 7, 2026)
+- [ ] Adopt new [Zama TypeScript SDK](https://docs.zama.org/protocol/sdk/getting-started/quick-start) for simplified frontend encryption
+- [ ] Implement delegated decryption for programmable auditability
 
 ---
 
