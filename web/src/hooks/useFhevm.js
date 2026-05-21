@@ -15,6 +15,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 // Gate real FHE behind an explicit flag - prevents UI freeze from
 // heavy ZK computation when contract addresses don't match anyway.
 const FHE_LIVE = import.meta.env.VITE_FHE_LIVE === 'true';
+const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || '0xf1259dB36778C0891d2f33dc0A2b5CEA0C75f232';
 
 let fhevmInstance = null;
 let initPromise = null;
@@ -92,8 +93,6 @@ export function useFhevm() {
    * Demo mode: returns deterministically hashed ciphertext for UI demonstrations.
    */
   const encryptUint64 = useCallback(async (value, userAddress) => {
-    const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
-
     if (!userAddress) throw new Error("User address required for encryption");
 
     let instance = fhevmInstance;
@@ -192,7 +191,6 @@ export function useFhevm() {
    * Encrypts a small uint value (0-255) for experience years or ratings.
    */
   const encryptUint8 = useCallback(async (value, userAddress) => {
-    const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
     if (!userAddress) throw new Error("User address required for encryption");
 
     let instance = fhevmInstance;
@@ -212,7 +210,6 @@ export function useFhevm() {
    * Encrypts a boolean value for remote preference.
    */
   const encryptBool = useCallback(async (value, userAddress) => {
-    const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
     if (!userAddress) throw new Error("User address required for encryption");
 
     let instance = fhevmInstance;
@@ -238,7 +235,6 @@ export function useFhevm() {
    * Returns { budgetHandle, expHandle, remoteHandle, inputProof }
    */
   const encryptJobPostingInputs = useCallback(async (budgetValue, experienceValue, remoteValue, userAddress) => {
-    const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
     if (!userAddress) throw new Error("User address required for encryption");
 
     let instance = fhevmInstance;
@@ -270,7 +266,6 @@ export function useFhevm() {
    * Returns { salaryHandle, expHandle, remoteHandle, inputProof }
    */
   const encryptApplicationInputs = useCallback(async (salaryValue, experienceValue, remoteValue, userAddress) => {
-    const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
     if (!userAddress) throw new Error("User address required for encryption");
 
     let instance = fhevmInstance;

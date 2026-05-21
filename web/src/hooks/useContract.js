@@ -3,8 +3,17 @@ import { useWalletClient, usePublicClient, useAccount } from 'wagmi';
 import { ethers } from 'ethers';
 import BLINDHIRE_ABI from '../abi/BlindHire.json';
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
-const CUSDC_ADDRESS = import.meta.env.VITE_CUSDC_ADDRESS;
+export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || '0xf1259dB36778C0891d2f33dc0A2b5CEA0C75f232';
+export const CUSDC_ADDRESS = import.meta.env.VITE_CUSDC_ADDRESS || '0xc0b1b3c4760F6058ABf3E69Da26D28A0eA01Da76';
+
+// Optimize provider instantiation: define a static network and use staticNetwork: true
+// to completely bypass network auto-detection and prevent RPC hangups.
+const staticNetwork = {
+  chainId: 11155111,
+  name: 'sepolia',
+};
+const rpcUrl = import.meta.env.VITE_SEPOLIA_RPC || 'https://ethereum-sepolia-rpc.publicnode.com';
+const sharedReadProvider = new ethers.JsonRpcProvider(rpcUrl, staticNetwork, { staticNetwork: true });
 
 // Minimal ERC-20 ABI for cUSDC interactions
 const ERC20_ABI = [
@@ -31,10 +40,7 @@ export function useContract() {
 
   const getReadContract = useCallback(async () => {
     // Use ethers for read calls via public RPC - no wallet needed
-    const provider = new ethers.JsonRpcProvider(
-      import.meta.env.VITE_SEPOLIA_RPC || 'https://rpc.sepolia.org'
-    );
-    return new ethers.Contract(CONTRACT_ADDRESS, BLINDHIRE_ABI.abi, provider);
+    return new ethers.Contract(CONTRACT_ADDRESS, BLINDHIRE_ABI.abi, sharedReadProvider);
   }, []);
 
   const getWriteContract = useCallback(async () => {
@@ -258,10 +264,7 @@ export function useContract() {
       const contract = await getWriteContract();
       return new ethers.Contract(CUSDC_ADDRESS, ERC20_ABI, contract.runner);
     }
-    const provider = new ethers.JsonRpcProvider(
-      import.meta.env.VITE_SEPOLIA_RPC || 'https://rpc.sepolia.org'
-    );
-    return new ethers.Contract(CUSDC_ADDRESS, ERC20_ABI, provider);
+    return new ethers.Contract(CUSDC_ADDRESS, ERC20_ABI, sharedReadProvider);
   }, [getWriteContract]);
 
   const approveBountyToken = useCallback(async (amount) => {
@@ -272,8 +275,7 @@ export function useContract() {
 
   const claimFaucet = useCallback(async () => {
     const token = await getTokenContract(true);
-    const tx = await token.faucet();
-    return await tx.wait();
+    return await token.faucet();
   }, [getTokenContract]);
 
   const getBountyBalance = useCallback(async (address) => {

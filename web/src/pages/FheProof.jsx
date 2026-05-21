@@ -5,8 +5,8 @@ import { Search, ShieldCheck, Lock, Cpu, CheckCircle2, XCircle, ExternalLink, Co
 import { ethers } from 'ethers';
 import BLINDHIRE_ABI from '../abi/BlindHire.json';
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
-const RPC_URL = import.meta.env.VITE_SEPOLIA_RPC || 'https://rpc.sepolia.org';
+const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || '0xf1259dB36778C0891d2f33dc0A2b5CEA0C75f232';
+const RPC_URL = import.meta.env.VITE_SEPOLIA_RPC || 'https://ethereum-sepolia-rpc.publicnode.com';
 
 // Known Zama infrastructure contracts on Sepolia (lowercased for matching)
 const ZAMA_CONTRACTS = {
@@ -122,7 +122,7 @@ export default function FheProof() {
     setAnimPhase(-1);
 
     try {
-      const provider = new ethers.JsonRpcProvider(RPC_URL);
+      const provider = new ethers.JsonRpcProvider(RPC_URL, { chainId: 11155111, name: 'sepolia' }, { staticNetwork: true });
 
       // Fetch tx + receipt in parallel
       const [tx, receipt] = await Promise.all([

@@ -61,16 +61,23 @@ export default function PostJob() {
 
   const handleClaimFaucet = async () => {
     setClaimingFaucet(true);
+    startTransaction('Claiming Faucet Tokens', [
+      'Confirming faucet transaction onchain',
+    ]);
     try {
-      await claimFaucet();
+      const tx = await claimFaucet();
+      updateStep(0, STATUS.ACTIVE, `Tx: ${tx.hash.slice(0, 10)}...`);
+      const receipt = await tx.wait();
+      updateStep(0, STATUS.DONE, '1,000 cUSDC claimed successfully!', receipt?.hash || null);
       toast.success('Claimed 1,000 cUSDC!', { icon: '🪙' });
       await refreshBalance();
     } catch (err) {
+      console.error(err);
       const msg = err.message || '';
       if (msg.includes('cooldown')) {
-        toast.error('Faucet cooldown active. Try again in 1 hour.');
+        failTransaction('Faucet cooldown active. Try again in 1 hour.');
       } else {
-        toast.error('Faucet claim failed: ' + msg.slice(0, 80));
+        failTransaction(msg.slice(0, 80));
       }
     } finally {
       setClaimingFaucet(false);
@@ -376,26 +383,42 @@ export default function PostJob() {
               </p>
 
               {/* cUSDC Balance + Faucet */}
-              {isConnected && (
-                <div className="mb-5 bg-muted/30 rounded-lg border border-white/20 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div>
-                    <span className="text-[10px] font-mono text-ink-muted uppercase tracking-widest block mb-1">Your <span className="normal-case">cUSDC</span> Balance</span>
-                    <span className="font-sans font-bold text-2xl text-ink">
-                      {cusdcBalance !== null ? cusdcBalance.toLocaleString() : '-'}
-                      <span className="text-sm font-mono text-ink-muted ml-1">cUSDC</span>
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    id="claim-faucet-btn"
-                    className="btn btn-secondary text-xs h-10 px-5 shrink-0 shadow-floating"
-                    onClick={handleClaimFaucet}
-                    disabled={claimingFaucet}
-                  >
-                    {claimingFaucet ? 'Claiming...' : <><span>🪙 Claim 1,000 </span><span className="normal-case">cUSDC</span></>}
-                  </button>
-                </div>
-              )}
+              <div className="mb-5 bg-muted/30 rounded-lg border border-white/20 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                {isConnected ? (
+                  <>
+                    <div>
+                      <span className="text-[10px] font-mono text-ink-muted uppercase tracking-widest block mb-1">Your <span className="normal-case">cUSDC</span> Balance</span>
+                      <span className="font-sans font-bold text-2xl text-ink">
+                        {cusdcBalance !== null ? cusdcBalance.toLocaleString() : '-'}
+                        <span className="text-sm font-mono text-ink-muted ml-1">cUSDC</span>
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      id="claim-faucet-btn"
+                      className="btn btn-secondary text-xs h-10 px-5 shrink-0 shadow-floating"
+                      onClick={handleClaimFaucet}
+                      disabled={claimingFaucet}
+                    >
+                      {claimingFaucet ? 'Claiming...' : <><span>🪙 Claim 1,000 </span><span className="normal-case">cUSDC</span></>}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] font-mono text-ink-muted uppercase tracking-widest block">🪙 Token Faucet</span>
+                      <span className="text-xs font-mono text-ink-muted">Connect wallet to claim 1,000 free cUSDC test tokens.</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="w-full sm:w-auto btn btn-primary text-xs h-10 px-5 shrink-0 shadow-floating"
+                      onClick={openConnectModal}
+                    >
+                      Connect Wallet
+                    </button>
+                  </>
+                )}
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="form-group">
                   <label className="form-label" htmlFor="totalDeposit">Total Deposit (<span className="normal-case">cUSDC</span>)</label>
